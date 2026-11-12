@@ -1,0 +1,2053 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>รายงานเคสเวร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+
+/* ฟอร์มรายงานเคสเวร — phone-first (เปิดใน LINE) · จอกว้าง: ตัวอย่างการ์ดอยู่ขวาแบบ sticky */
+:root {
+  --bg: #eef3f3;
+  --surface: #ffffff;
+  --ink: #142228;
+  --mute: #5b6d74;
+  --line: #d3dfe1;
+  --acc: #0f6b78;
+  --acc-ink: #ffffff;
+  --acc-soft: #dcefF1;
+  --chip: #f1f5f6;
+  --warn: #8a5300;
+  --warn-soft: #fff1d6;
+  --bad: #b3261e;
+  --bad-soft: #fde6e4;
+  --ok: #1d6f46;
+  --ok-soft: #e0f3e8;
+  --msg-bg: #e4f2e6;
+  --msg-ink: #10261a;
+  --chat-bg: #c5d3e2;
+  --chat-ink: #34485c;
+  --card: #ffffff;
+  --h-new: #0f6b78;
+  --h-consult: #44579e;
+  --h-notify: #55666d;
+  --h-upd: #9a5b00;
+  --h-call: #b3261e;
+  --h-ink: #ffffff;
+  --f-ui: "IBM Plex Sans Thai", "Sarabun", "Leelawadee UI", "Thonburi", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1517; --surface: #142024; --ink: #e2ebed; --mute: #93a7ae; --line: #263a40;
+    --acc: #4db3bf; --acc-ink: #06262b; --acc-soft: #163439; --chip: #1b2a2e;
+    --warn: #f2b765; --warn-soft: #3a2a10; --bad: #ff8b82; --bad-soft: #3e1b18; --ok: #6fd09a; --ok-soft: #14321f;
+    --msg-bg: #17301f; --msg-ink: #d9f0df; color-scheme: dark;
+    --chat-bg: #111c22; --chat-ink: #9fb3c2; --card: #1c292e; --h-new: #4db3bf; --h-consult: #93a3ec; --h-notify: #a9b8be; --h-upd: #f2b765; --h-call: #ff8b82; --h-ink: #0b1a1d;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1517; --surface: #142024; --ink: #e2ebed; --mute: #93a7ae; --line: #263a40;
+  --acc: #4db3bf; --acc-ink: #06262b; --acc-soft: #163439; --chip: #1b2a2e;
+  --warn: #f2b765; --warn-soft: #3a2a10; --bad: #ff8b82; --bad-soft: #3e1b18; --ok: #6fd09a; --ok-soft: #14321f;
+  --msg-bg: #17301f; --msg-ink: #d9f0df; color-scheme: dark;
+    --chat-bg: #111c22; --chat-ink: #9fb3c2; --card: #1c292e; --h-new: #4db3bf; --h-consult: #93a3ec; --h-notify: #a9b8be; --h-upd: #f2b765; --h-call: #ff8b82; --h-ink: #0b1a1d;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 96px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-block: 12px 10px; border-bottom: 1px solid var(--line);
+}
+.top h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+.top .demo { font-size: 12px; font-weight: 600; color: var(--warn); background: var(--warn-soft); border-radius: 999px; padding: 2px 10px; }
+.top .spacer { flex: 1; }
+.timer { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 14px; color: var(--mute); }
+.timer b { color: var(--ink); font-weight: 500; }
+.samples { display: flex; gap: 6px; flex-wrap: wrap; padding-block: 10px 2px; }
+.ghost { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+.ghost:hover { border-color: var(--acc); }
+
+.layout { display: grid; gap: 18px; max-width: 1120px; margin: 0 auto; padding-top: 6px; }
+@media (min-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; } .side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 70px); max-height: calc(100vh - 86px); overflow-y: auto; padding-bottom: 8px; } }
+.form { display: grid; gap: 14px; min-width: 0; }
+.sec { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 12px; min-width: 0; }
+.sec > h2 { font-size: 13px; font-weight: 600; color: var(--mute); letter-spacing: 0.04em; text-transform: uppercase; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 420px) { .grid2 { grid-template-columns: 1fr; } }
+label.f { display: grid; gap: 3px; font-size: 12px; color: var(--mute); min-width: 0; }
+label.f input, label.f textarea, .paste {
+  width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 9px 10px; font-size: 16px; color: var(--ink);
+}
+label.f input:focus, label.f textarea:focus, .paste:focus { border-color: var(--acc); outline: none; box-shadow: 0 0 0 3px var(--acc-soft); }
+label.f input.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.need::after { content: " *"; color: var(--bad); }
+.hint { font-size: 12px; color: var(--mute); }
+.paste { min-height: 64px; font-family: var(--f-mono); font-size: 13px; resize: vertical; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  border: 1px solid var(--line); background: var(--chip); border-radius: 999px; padding: 7px 13px; min-height: 38px;
+  font-size: 14px; cursor: pointer; line-height: 1.2;
+}
+.chip[aria-pressed="true"] { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); font-weight: 600; }
+.chip.flag[aria-pressed="true"] { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+.chip.soon { opacity: .75; }
+.chip small { font-size: 11px; opacity: .8; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg .chip { border: 0; border-radius: 0; background: var(--surface); }
+.seg .chip + .chip { border-left: 1px solid var(--line); }
+.seg .chip[aria-pressed="true"] { background: var(--acc); color: var(--acc-ink); }
+.sub { font-size: 13px; font-weight: 600; color: var(--ink); }
+.tri { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding-block: 2px; border-bottom: 1px dashed var(--line); }
+.tri:last-child { border-bottom: 0; }
+.tri .seg .chip { min-height: 34px; padding: 5px 12px; }
+
+.box { border-radius: 10px; padding: 10px 12px; font-size: 14px; display: grid; gap: 4px; }
+.box.info { background: var(--acc-soft); }
+.box.warn { background: var(--warn-soft); color: var(--warn); }
+.box.bad { background: var(--bad-soft); color: var(--bad); }
+.box.ok { background: var(--ok-soft); color: var(--ok); }
+.box b { font-weight: 600; }
+.crit { display: grid; gap: 6px; }
+.crit .line { display: flex; gap: 8px; align-items: baseline; font-size: 14px; }
+.mark { font-family: var(--f-mono); font-weight: 500; width: 1.4em; text-align: center; flex: none; }
+.mark.y { color: var(--ok); } .mark.n { color: var(--bad); } .mark.q { color: var(--warn); }
+.verdict { font-weight: 700; font-size: 15px; }
+
+.check { display: grid; gap: 4px; }
+.check div { display: flex; gap: 8px; font-size: 14px; }
+.check .y { color: var(--ok); } .check .q { color: var(--warn); }
+
+.side { display: grid; gap: 12px; min-width: 0; }
+.call { border-radius: 12px; padding: 12px 14px; background: var(--bad-soft); color: var(--bad); display: grid; gap: 4px; }
+.call b { font-size: 16px; }
+.prog { display: grid; gap: 6px; }
+.bar { height: 8px; border-radius: 99px; background: var(--chip); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--acc); border-radius: 99px; transition: width .25s; }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+.msg {
+  background: var(--msg-bg); color: var(--msg-ink); border-radius: 14px 14px 4px 14px; padding: 12px 14px;
+  font-family: var(--f-ui); font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55;
+}
+.msgcap { font-size: 12px; color: var(--mute); display: flex; justify-content: space-between; gap: 8px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 0; background: var(--acc); color: var(--acc-ink); font-weight: 600; border-radius: 10px; padding: 11px 16px; cursor: pointer; font-size: 15px; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.btn.alt { background: var(--chip); color: var(--ink); border: 1px solid var(--line); }
+.toast { font-size: 13px; color: var(--ok); min-height: 1.2em; }
+.copybox { width: 100%; min-height: 120px; font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--surface); color: var(--ink); }
+
+.chat { background: var(--chat-bg); border-radius: 12px; padding: 12px 10px; display: grid; gap: 14px; }
+.imgs { display: grid; gap: 10px; }
+.imgp { border: 1px solid var(--line); border-left: 3px solid var(--acc); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; min-width: 0; }
+.imgh { font-weight: 600; font-size: 14px; }
+.posts, #draft { display: grid; gap: 14px; }
+#draft { gap: 8px; }
+.post { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; align-items: start; }
+.av { width: 30px; height: 30px; border-radius: 50%; background: var(--card); color: var(--mute); display: grid; place-items: center; font-size: 10px; font-weight: 600; }
+.who { font-size: 11px; color: var(--chat-ink); margin-bottom: 3px; display: flex; gap: 8px; }
+.draftlabel { font-size: 12px; color: var(--chat-ink); text-align: center; }
+.lcard { background: var(--card); color: var(--ink); border-radius: 16px; overflow: hidden; max-width: 330px; box-shadow: 0 1px 2px rgba(0, 0, 0, .16); }
+.lcard.draft { outline: 2px dashed var(--chat-ink); outline-offset: 2px; }
+.lhead { padding: 10px 14px; background: var(--h-new); color: var(--h-ink); display: grid; gap: 1px; }
+.lcard.consult .lhead { background: var(--h-consult); }
+.lcard.notify .lhead { background: var(--h-notify); }
+.lcard.upd .lhead { background: var(--h-upd); }
+.lcard.urgent .lhead { background: var(--h-call); }
+.ltag { font-size: 11px; font-weight: 600; letter-spacing: .03em; opacity: .9; }
+.ltitle { font-size: 16px; font-weight: 700; line-height: 1.3; }
+.lsub { font-size: 12px; font-family: var(--f-mono); opacity: .9; }
+.lbody { padding: 10px 14px 12px; display: grid; gap: 6px; font-size: 13px; line-height: 1.45; }
+.ldx { font-weight: 700; font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+.lbadge { font-size: 11px; font-weight: 600; border-radius: 6px; padding: 1px 8px; background: var(--acc-soft); color: var(--acc); }
+.lbadge.bad { background: var(--bad-soft); color: var(--bad); }
+.lbadge.warn { background: var(--warn-soft); color: var(--warn); }
+.lcall { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 6px 8px; font-size: 12px; font-weight: 600; }
+.lchg { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 5px 8px; font-size: 12px; font-weight: 600; }
+.lrow { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; }
+.lk { color: var(--mute); font-size: 12px; padding-top: 1px; }
+.lv { overflow-wrap: anywhere; }
+.lrow.warn .lv { color: var(--warn); }
+.lrow.acc .lv { color: var(--acc); font-weight: 600; }
+.lrow.gone .lv { color: var(--mute); }
+.lbad { color: var(--bad); font-weight: 600; }
+.lfoot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 14px; border-top: 1px solid var(--line); font-size: 11px; color: var(--mute); }
+.ledit { border: 1px solid var(--acc); color: var(--acc); background: transparent; border-radius: 999px; padding: 3px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.editbar { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 14px; display: flex; gap: 8px 12px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.editbar .spacer { flex: 1; }
+.editbar label { display: flex; gap: 6px; align-items: center; color: var(--ink); font-size: 13px; }
+.toast.warn { color: var(--warn); }
+details > summary { cursor: pointer; font-size: 13px; color: var(--mute); }
+details .msg { margin-top: 8px; }
+
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  display: flex; gap: 10px; align-items: center;
+}
+.dock .info { flex: 1; min-width: 0; font-size: 13px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dock .info b { color: var(--ink); }
+@media (min-width: 980px) { .dock { display: none; } body { padding-block: 0 32px; } }
+.sechead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sechead h2 { font-size: 13px; font-weight: 600; color: var(--mute); letter-spacing: 0.04em; text-transform: uppercase; }
+.linkbtn { border: 0; background: none; color: var(--acc); font-size: 13px; font-weight: 600; cursor: pointer; padding: 4px 2px; }
+select { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 9px 10px; font-size: 16px; color: var(--ink); width: 100%; }
+.abdwrap { display: grid; gap: 8px; }
+.abdmap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; max-width: 340px; padding: 8px; border: 1px solid var(--line); border-radius: 36px 36px 22px 22px; background: var(--chip); }
+.abdmap .chip { border-radius: 8px; min-height: 46px; padding: 4px; font-size: 12px; background: var(--surface); }
+.abdmap .chip[aria-pressed="true"] { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+.thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+.thumb { position: relative; width: 84px; height: 84px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb button { position: absolute; top: 3px; right: 3px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, .62); color: #fff; cursor: pointer; font-size: 15px; line-height: 1; }
+.thumb span { position: absolute; left: 0; right: 0; bottom: 0; font-size: 10px; background: rgba(0, 0, 0, .55); color: #fff; padding: 1px 4px; }
+.attachrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.attachrow .ghost[disabled] { opacity: .45; cursor: not-allowed; }
+.press { display: grid; gap: 8px; border: 1px solid var(--bad); border-radius: 10px; padding: 10px 12px; }
+.prow { display: grid; grid-template-columns: 92px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: end; }
+.prow .drug { font-weight: 600; font-size: 14px; padding-bottom: 10px; }
+.prow .dose { grid-column: 1 / -1; font-family: var(--f-mono); font-size: 12px; color: var(--bad); min-height: 1em; }
+.vs0 { display: grid; gap: 8px; border-left: 3px solid var(--warn); padding-left: 10px; }
+.it { display: grid; gap: 8px; }
+.it.cfg { border: 1px dashed var(--line); border-radius: 10px; padding: 8px 10px; }
+.it.off > :not(.cfgbar) { opacity: .4; }
+.cfgbar { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--mute); }
+.cfgbar label { display: flex; gap: 4px; align-items: center; }
+.cfgbar .tag { font-family: var(--f-mono); }
+.cfgadd { border: 1px dashed var(--acc); border-radius: 10px; padding: 10px; display: grid; gap: 8px; }
+.lphotos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.lphotos figure { margin: 0; display: grid; gap: 1px; }
+.lphotos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; }
+.lphotos figcaption { font-size: 10px; color: var(--mute); }
+.me { font-size: 12px; color: var(--mute); background: var(--chip); border-radius: 999px; padding: 2px 10px; }
+.me:empty { display: none; }
+.mocktag { display: none; font-size: 12px; font-weight: 600; color: var(--warn); background: var(--warn-soft); border-radius: 999px; padding: 2px 10px; }
+body.mock .mocktag { display: inline; }
+body.locked { overflow: hidden; }
+#screen { position: fixed; inset: 0; z-index: 30; background: var(--bg); overflow-y: auto; padding: max(24px, env(safe-area-inset-top, 0px)) 16px 32px; }
+.scard { max-width: 560px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 12px; font-size: 15px; }
+.stitle { font-size: 18px; font-weight: 700; }
+.stitle.ok { color: var(--ok); } .stitle.warn { color: var(--warn); }
+.spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--acc); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.vph { margin: 0; display: grid; gap: 4px; }
+.vph img { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); }
+.vph figcaption { font-size: 12px; color: var(--mute); }
+.fx { width: 100%; max-width: 320px; border-radius: 16px; overflow: hidden; background: #ffffff; box-shadow: 0 1px 2px rgba(0, 0, 0, .18); font-family: var(--f-ui); }
+.fx-btn { display: flex; align-items: center; justify-content: center; min-height: 40px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; padding: 0 8px; }
+.fx-btn:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+#draft .fx { outline: 2px dashed var(--chat-ink); outline-offset: 3px; }
+.btn[disabled] { opacity: .55; cursor: wait; }
+</style>
+<script src="config.js"></script>
+<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <h1>รายงานเคสเวรศัลยกรรม</h1>
+  <span class="mocktag">โหมดจำลอง · ไม่ได้เชื่อม LINE</span>
+  <span class="spacer"></span>
+  <span class="me" id="me"></span>
+  <span class="timer" id="timer" title="เวลาที่ใช้กรอก">⏱ <b>0:00</b></span>
+</header>
+<div class="samples" style="max-width:1120px;margin:0 auto">
+  <span id="samples" class="samples" style="padding:0" hidden>
+    <button type="button" class="ghost" data-ex="hpb">ตัวอย่าง: cholecystitis</button>
+    <button type="button" class="ghost" data-ex="nf">ตัวอย่าง: NF + shock</button>
+    <button type="button" class="ghost" data-ex="sbo">ตัวอย่าง: SBO</button>
+    <button type="button" class="ghost" data-ex="ugib">ตัวอย่าง: UGIB</button>
+  </span>
+  <button type="button" class="ghost" data-ex="">ล้างฟอร์ม · จับเวลาใหม่</button>
+</div>
+
+<div class="layout">
+  <form class="form" id="form" autocomplete="off">
+    <div class="editbar" id="ctxbar" hidden>
+      <span>📍 <span id="ctxmsg"></span></span>
+    </div>
+    <div class="editbar" id="draftbar" hidden>
+      <span>📝 มีรายงานที่กรอกค้างไว้ตอน <b id="drafttime"></b></span>
+      <span class="spacer"></span>
+      <button type="button" class="ghost" id="draftuse">กู้คืน</button>
+      <button type="button" class="ghost" id="draftdrop">ทิ้ง</button>
+    </div>
+    <div class="editbar" id="editbar" hidden>
+      <span>✏️ กำลังแก้ไขรายงาน <b id="editno"></b></span>
+      <label><input type="checkbox" id="notify" checked> ส่งการ์ดอัปเดตเข้ากลุ่ม</label>
+      <span class="spacer"></span>
+      <button type="button" class="ghost" id="canceledit">ยกเลิก</button>
+    </div>
+
+    <section class="sec">
+      <h2>ประเภท · หมวดโรค</h2>
+      <div class="seg" id="g-type"></div>
+      <div class="chips" id="g-cat"></div>
+      <div class="chips" id="g-dx"></div>
+      <div class="hint" id="cat-note"></div>
+    </section>
+
+    <section class="sec">
+      <h2>ผู้ป่วย</h2>
+      <div class="chips" id="g-ward"></div>
+      <label class="f" id="wardxwrap" hidden><span class="need">Ward อื่น</span><input id="wardx" placeholder="e.g. MED 3, ICU-med, LR"></label>
+      <div class="grid2">
+        <label class="f"><span class="need">Name</span><input id="name" placeholder="นาย/นาง/น.ส. …"></label>
+        <label class="f"><span class="need">HN</span><input id="hn" class="num" inputmode="numeric" placeholder="9 หลัก"></label>
+      </div>
+      <div class="grid">
+        <label class="f"><span>Bed</span><input id="bed" class="num" inputmode="numeric"></label>
+        <label class="f"><span class="need">Age (yr)</span><input id="age" class="num" inputmode="numeric"></label>
+        <label class="f"><span>BW (kg)</span><input id="bw" class="num" inputmode="decimal"></label>
+        <div class="f" style="display:grid;gap:3px;font-size:12px;color:var(--mute)"><span class="need">Sex</span><div class="seg" id="g-sex"></div></div>
+      </div>
+      <div class="sub">U/D · Medication</div>
+      <div class="chips" id="g-ud"></div>
+      <label class="f"><span>Other U/D</span><input id="udx" placeholder="e.g. gout, old CVA, SLE"></label>
+      <div class="chips" id="g-med"></div>
+      <label class="f"><span>Drug allergy</span><input id="allergy" placeholder="เว้นว่าง = NKDA"></label>
+    </section>
+
+    <section class="sec">
+      <h2>History · ไม่บังคับ</h2>
+      <label class="f"><span>PI (สั้น ๆ)</span><textarea id="pi" rows="2" maxlength="200" placeholder="e.g. RUQ pain 4 d, fever with chills, nausea"></textarea></label>
+      <div class="sub">Prior Mx</div>
+      <div class="chips" id="g-prev"></div>
+      <label class="f"><span>Details</span><input id="prevtxt" placeholder="e.g. NSS 1 L, ceftriaxone 2 g at รพช. 10:00"></label>
+      <div class="hint">ถ้าเรื่องยาวหรือซับซ้อน โทรเล่าดีกว่าพิมพ์</div>
+    </section>
+
+    <section class="sec">
+      <h2>Vital signs · at ward</h2>
+      <div class="grid">
+        <label class="f"><span class="need">BT (°C)</span><input id="bt" class="num" inputmode="decimal"></label>
+        <label class="f"><span class="need">SBP</span><input id="sbp" class="num" inputmode="numeric"></label>
+        <label class="f"><span>DBP</span><input id="dbp" class="num" inputmode="numeric"></label>
+        <label class="f"><span class="need">HR</span><input id="hr" class="num" inputmode="numeric"></label>
+        <label class="f"><span>RR</span><input id="rr" class="num" inputmode="numeric"></label>
+        <label class="f"><span>SpO₂ %</span><input id="sat" class="num" inputmode="numeric"></label>
+      </div>
+      <div class="chips" id="g-vsx"></div>
+      <div class="press" id="pressor" hidden></div>
+      <div class="sub">V/S เทียบกับแรกรับ (ER / รพช.)</div>
+      <div class="chips" id="g-vschg"></div>
+      <div class="vs0" id="vs0" hidden>
+        <div class="row"><span class="hint">แรกรับที่</span><div class="seg" id="g-vssrc"></div></div>
+        <div class="grid">
+          <label class="f"><span>BT</span><input id="bt0" class="num" inputmode="decimal"></label>
+          <label class="f"><span class="need">SBP</span><input id="sbp0" class="num" inputmode="numeric"></label>
+          <label class="f"><span>DBP</span><input id="dbp0" class="num" inputmode="numeric"></label>
+          <label class="f"><span class="need">HR</span><input id="hr0" class="num" inputmode="numeric"></label>
+          <label class="f"><span>RR</span><input id="rr0" class="num" inputmode="numeric"></label>
+          <label class="f"><span>SpO₂ %</span><input id="sat0" class="num" inputmode="numeric"></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec" id="module"></section>
+
+    <section class="sec">
+      <h2>Lab</h2>
+      <textarea class="paste" id="paste" placeholder="วางผลแลปจาก HIS ที่นี่ แล้วระบบแยกค่าลงช่องให้ e.g. WBC 15200 Hb 11.2 Plt 245k Cr 0.9 PMN 82"></textarea>
+      <div class="grid" id="labs"></div>
+      <div class="chips" id="g-labx"></div>
+      <div class="hint">ไม่ต้องแนบรูปผลแลป กรอกเป็นค่าแทน</div>
+    </section>
+
+    <section class="sec">
+      <h2>Imaging · EKG</h2>
+      <div class="hint">กดสิ่งที่ทำแล้ว จะมีช่องให้เลือก findings ใส่ขนาด พิมพ์รายละเอียด หรือแนบรูป (ยกเว้น CT ส่งแยกในไลน์)</div>
+      <div class="chips" id="g-img"></div>
+      <div class="imgs" id="imgd"></div>
+    </section>
+
+    <section class="sec">
+      <h2>Impression · Plan ที่เสนอ</h2>
+      <label class="f"><span>Impression เพิ่มเติม</span><input id="imp" placeholder="e.g. with localized peritonitis, R/O gangrenous GB"></label>
+      <label class="f"><span class="need">Plan ที่เสนอ (ext)</span><textarea id="plan" rows="2" placeholder="e.g. NPO, IV fluid, ATB …, set OR …"></textarea></label>
+      <div class="hint">ใส่ความเห็นของตัวเองก่อน อาจารย์จะยืนยันหรือแก้ในกลุ่ม</div>
+      <label class="f" style="max-width:180px"><span>NPO since</span><input id="npo" placeholder="e.g. 08:00"></label>
+    </section>
+  </form>
+
+  <aside class="side">
+    <div class="call" id="call" hidden></div>
+    <section class="sec">
+      <h2>การ์ดที่จะส่งเข้ากลุ่ม</h2>
+      <div class="prog"><div class="bar"><i id="barfill" style="width:0%"></i></div><div class="hint" id="missing"></div></div>
+      <div class="chat"><div id="draft"></div></div>
+      <div class="actions">
+        <button type="button" class="btn" id="send">ส่งเข้ากลุ่ม</button>
+        <button type="button" class="btn alt" id="copy">คัดลอกเป็นข้อความ</button>
+      </div>
+      <div class="toast" id="toast" role="status"></div>
+      <textarea class="copybox" id="copybox" hidden readonly></textarea>
+      <details><summary>ดูแบบข้อความธรรมดา (สำรอง)</summary><div class="msg" id="msg"></div></details>
+      <div class="hint">กดส่งแล้วข้อมูลบันทึกลงชีตเวร และการ์ดเข้ากลุ่มในชื่อคุณเอง · แก้ทีหลังได้จากปุ่ม "แก้ไข" บนการ์ด</div>
+    </section>
+    <section class="sec" id="mockchat" hidden>
+      <h2>แชทกลุ่มเวร (จำลอง)</h2>
+      <div class="chat"><div class="posts" id="mockposts"></div></div>
+      <div class="actions"><button type="button" class="ghost" id="clearmock">ล้างแชทจำลอง</button></div>
+      <div class="hint">โหมดจำลอง: ไม่ได้เชื่อม LINE หรือชีตจริง ข้อมูลอยู่ในเบราว์เซอร์นี้เท่านั้น · ปุ่ม "แก้ไข" / "ดูรูป" บนการ์ดกดลองได้</div>
+    </section>
+    <section class="sec">
+      <h2>ตัวช่วยประเมิน</h2>
+      <div id="critbox"></div>
+      <div>
+        <div class="sub" style="margin-bottom:4px">Preop check</div>
+        <div class="check" id="preop"></div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<input type="file" id="file" accept="image/*" multiple hidden>
+<div id="screen" hidden></div>
+
+<div class="dock">
+  <div class="info" id="dockinfo">ครบ <b>0%</b></div>
+  <button type="button" class="btn" id="docksend">ส่งรายงาน</button>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ================= reference lists ================= */
+  var CATS = [
+    { k: 'wound', label: 'Wound / soft tissue', dx: ['Infected wound', 'Cellulitis', 'Abscess', 'NF', 'DM foot', 'Bedsore'] },
+    { k: 'hpb', label: 'HPB', dx: ['Acute cholecystitis', 'Acute cholangitis', 'Symptomatic gallstone', 'Acute pancreatitis'] },
+    { k: 'abd', label: 'Acute abdomen', dx: ['Appendicitis', 'Gut obstruction', 'Perforation/peritonitis', 'Incarcerated hernia'] },
+    { k: 'gib', label: 'GI bleeding', dx: ['UGIB', 'LGIB'] },
+    { k: 'ano', label: 'Anorectal', dx: ['Hemorrhoid', 'Perianal abscess', 'Fistula in ano'] },
+    { k: 'other', label: 'Other / consult', dx: [] }
+  ];
+  var WARDS = ['ศช', 'ศญ', 'URO', 'AE', 'SICU', 'other'];
+  var UD = ['DM', 'HT', 'DLP', 'CKD', 'ESRD', 'CAD', 'AF', 'HF', 'COPD', 'Cirrhosis', 'no U/D'];
+  var MED = ['warfarin', 'DOAC', 'antiplatelet', 'steroid'];
+  var PREV = ['refer from รพช.', 'IV fluid', 'antibiotics', 'analgesics', 'PPI', 'NG tube', 'Foley catheter', 'blood transfusion', 'I&D / wound care'];
+  var VSX = [['o2', 'on O₂'], ['ett', 'on ETT'], ['pressor', 'on vasopressor / inotrope'], ['ams', 'alteration of consciousness']];
+  var DRUGS = ['NE', 'adrenaline', 'dopamine', 'dobutamine', 'vasopressin'];
+  var FIELDS = ['name', 'hn', 'bed', 'age', 'bw', 'wardx', 'udx', 'allergy', 'pi', 'prevtxt', 'bt', 'sbp', 'dbp', 'hr', 'rr', 'sat',
+    'bt0', 'sbp0', 'dbp0', 'hr0', 'rr0', 'sat0', 'imp', 'plan', 'npo'];
+  var LABS = [['wbc', 'WBC'], ['hb', 'Hb'], ['hct', 'Hct'], ['plt', 'Plt'], ['bun', 'BUN'], ['cr', 'Cr'], ['na', 'Na'], ['k', 'K'], ['inr', 'INR'], ['dtx', 'DTX'],
+    ['crp', 'CRP (mg/L)', 'CRP'], ['tb', 'TB'], ['alp', 'ALP'], ['ast', 'AST'], ['alt', 'ALT'], ['alb', 'Alb'], ['lipase', 'Lipase'], ['lactate', 'Lactate'], ['neut', 'PMN %', 'PMN']];
+  var LAB_EXTRA = { wound: ['crp'], 'Acute cholecystitis': ['crp', 'tb'], 'Acute cholangitis': ['tb', 'alp', 'ast', 'alt', 'alb', 'crp'],
+    'Acute pancreatitis': ['lipase', 'tb'], 'Symptomatic gallstone': ['tb', 'alp'], Appendicitis: ['neut', 'crp'], 'Perforation/peritonitis': ['alb', 'crp'],
+    UGIB: ['tb', 'alb'], 'Perianal abscess': ['crp'] };
+  var LAB_ABN = { wbc: function (v) { return v > 15000 || v < 4000; }, hb: function (v) { return v < 10; }, hct: function (v) { return v < 30; },
+    plt: function (v) { return v < 100000; }, cr: function (v) { return v > 2; }, na: function (v) { return v < 130 || v > 150; }, k: function (v) { return v < 3 || v > 5.5; },
+    inr: function (v) { return v > 1.5; }, dtx: function (v) { return v > 250; }, tb: function (v) { return v > 2; }, alb: function (v) { return v < 3; }, lactate: function (v) { return v >= 2; } };
+  var REGIONS = ['RUQ', 'Epigastrium', 'LUQ', 'Rt flank', 'Periumbilical', 'Lt flank', 'RLQ', 'Suprapubic', 'LLQ'];
+  var ASIGNS = ['soft', 'distended', 'generalized tenderness', 'guarding', 'rebound tenderness', 'rigidity'];
+  var BSOUND = ['normal', 'hypoactive', 'hyperactive', 'absent'];
+  var ROWLBL = { head: 'Patient', calls: 'Call', dx: 'Dx', pi: 'PI', prev: 'Prior Mx', ud: 'U/D', vs: 'V/S', abd: 'Abd', pe: 'PE', lab: 'Lab', img: 'Imaging',
+    photos: 'Photos', miss: 'Pending', plan: 'Mx', npo: 'NPO' };
+  var ROWORDER = ['head', 'calls', 'dx', 'pi', 'prev', 'ud', 'vs', 'abd', 'pe', 'lab', 'img', 'photos', 'miss', 'plan', 'npo'];
+  var MAXPHOTO = 3;
+
+  /* ================= imaging: findings & measurements per modality, tuned to the disease group ================= */
+  var IMGMODS = ['EKG', 'CXR', 'film', 'U/S', 'CT', 'UPT'];
+  var IMG = {
+    EKG: { label: 'EKG', all: { f: ['normal', 'sinus tachycardia', 'AF', 'ST-T change', 'LVH', 'BBB'], ph: 'e.g. Q wave II, III, aVF' } },
+    CXR: { label: 'CXR', all: { f: ['normal', 'subdiaphragmatic free air', 'infiltrate', 'pleural effusion', 'cardiomegaly'] } },
+    film: { label: 'Film abdomen', all: { f: ['normal', 'dilated bowel', 'free air'] },
+      obs: { f: ['dilated SB', 'air-fluid levels', 'step-ladder sign', 'paucity of colonic gas', 'dilated colon', 'coffee bean sign', 'free air'], n: ['sbdia', 'coldia'],
+        note: '3-6-9 rule: SB > 3, colon > 6, cecum > 9 cm' },
+      perf: { f: ['free air', 'Rigler sign', 'dilated bowel'] },
+      appy: { f: ['normal', 'appendicolith', 'sentinel loop'] },
+      wound: { f: ['normal', 'soft tissue gas', 'foreign body', 'bone destruction'] } },
+    'U/S': { label: 'U/S', all: { f: ['normal', 'free fluid'] },
+      chole: { f: ['GB wall thickening', 'pericholecystic fluid', 'sonographic Murphy', 'GB distension (> 8×4 cm)', 'gallstone', 'impacted stone at GB neck', 'CBD dilatation'],
+        n: ['gbwall', 'stone', 'cbd'], ph: 'e.g. no IHD dilatation', note: 'GB wall > 4 mm = thickening (Tokyo criteria; ไม่นับถ้ามี cirrhosis, ascites, HF)' },
+      cholangitis: { f: ['CBD/IHD dilatation', 'CBD stone', 'stricture/mass', 'stent', 'gallstone'], n: ['cbd'] },
+      panc: { f: ['gallstone', 'CBD dilatation', 'peripancreatic fluid', 'pancreatic swelling'], n: ['cbd'] },
+      appy: { f: ['non-compressible appendix', 'appendicolith', 'periappendiceal fluid', 'abscess/collection', 'appendix not visualized'], n: ['appdia'],
+        note: 'appendix Ø > 6 mm supports appendicitis' },
+      obs: { f: ['dilated bowel loops', 'to-and-fro peristalsis', 'free fluid'] },
+      perf: { f: ['free fluid', 'free air'] },
+      hernia: { f: ['bowel in sac', 'omentum in sac', 'absent Doppler flow', 'fluid in sac'], n: ['neck'] },
+      wound: { f: ['abscess/collection', 'fascial fluid', 'soft tissue gas', 'cobblestone edema'], n: ['coll'] },
+      ano: { f: ['abscess/collection', 'fistula tract'], n: ['coll'] },
+      gib: { f: ['cirrhotic liver', 'splenomegaly', 'ascites'] } },
+    CT: { label: 'CT', all: { f: ['free fluid'] },
+      chole: { f: ['GB wall thickening', 'pericholecystic stranding', 'gallstone', 'gas in GB wall', 'pericholecystic abscess'], n: ['gbwall'] },
+      cholangitis: { f: ['CBD/IHD dilatation', 'CBD stone', 'stricture/mass', 'liver abscess'], n: ['cbd'] },
+      panc: { f: ['necrosis', 'peripancreatic fluid', 'pseudocyst', 'gallstone'], n: ['necpct'] },
+      appy: { f: ['periappendiceal stranding', 'appendicolith', 'abscess', 'extraluminal air'], n: ['appdia'] },
+      obs: { f: ['transition point', 'closed loop', 'whirl sign', 'decreased wall enhancement', 'mesenteric edema/fluid', 'pneumatosis', 'free fluid', 'small bowel feces sign', 'mass'],
+        n: ['sbdia'], ph: 'e.g. transition point at distal ileum' },
+      perf: { f: ['free air', 'free fluid', 'contrast extravasation'], ph: 'e.g. free air around D1' },
+      hernia: { f: ['bowel in sac', 'proximal obstruction', 'decreased wall enhancement'] },
+      wound: { f: ['soft tissue gas', 'fascial fluid', 'abscess'] },
+      ano: { f: ['abscess', 'supralevator extension', 'soft tissue gas'] },
+      gib: { f: ['active extravasation', 'cirrhosis', 'varices', 'mass'] } },
+    UPT: { label: 'UPT', all: { f: ['negative', 'positive'] } }
+  };
+  var NUMLBL = { gbwall: ['GB wall', 'mm'], stone: ['stone', 'mm'], cbd: ['CBD', 'mm'], appdia: ['appendix Ø', 'mm'], sbdia: ['SB Ø', 'cm'], coldia: ['colon Ø', 'cm'],
+    neck: ['hernia neck', 'cm'], coll: ['collection', 'cm'], necpct: ['necrosis', '%'] };
+  var NUMABN = { gbwall: function (v) { return v > 4; }, cbd: function (v) { return v > 6; }, appdia: function (v) { return v > 6; }, sbdia: function (v) { return v > 3; },
+    coldia: function (v) { return v > 6; }, necpct: function (v) { return v >= 30; } };
+  var DANGER = /free air|Rigler|closed loop|whirl|decreased wall enhancement|pneumatosis|gas in|soft tissue gas|extraluminal|absent Doppler|coffee bean|necrosis|positive|ST-T|extravasation|supralevator/;
+
+  /* ================= disease modules as data =================
+     t: tri (one row of short options) | one (single choice chips) | multi (chips) | field (input) | abd (abdomen map) | photo | hint
+     s: short label for the PE line · f: format for the PE line ({} = value) · req: required by default · hide: hidden by default */
+  var WOUND = [
+    { t: 'field', k: 'site', l: 'Site', ph: 'e.g. Lt leg, Rt foot 2nd toe', req: true, f: '{}' },
+    { t: 'field', k: 'size', l: 'Size (cm)', ph: 'e.g. 10x8', f: '{} cm' },
+    { t: 'field', k: 'days', l: 'Duration (days)', num: true, f: '{} d' },
+    { t: 'multi', k: 'find', l: 'Findings', o: ['fluctuation', 'pus', 'necrotic tissue', 'lymphangitis', 'ascending cellulitis'] },
+    { t: 'multi', k: 'nf', l: 'NF signs', o: ['pain out of proportion', 'bullae', 'skin necrosis/discoloration', 'crepitus', 'rapid progression', 'anesthesia over lesion'], flag: true, f: 'NF signs: {}' },
+    { t: 'photo', tag: 'wound', l: 'Wound photo' }
+  ];
+  var CHOLE = [
+    { t: 'abd' },
+    { t: 'tri', k: 'murphy', l: "Murphy's sign", o: ['+', '−', 'not examined'], s: "Murphy's", req: true },
+    { t: 'tri', k: 'mass', l: 'RUQ mass', o: ['+', '−'], s: 'RUQ mass' },
+    { t: 'tri', k: 'fever', l: 'Fever / chills (history)', o: ['+', '−'], s: 'fever Hx' },
+    { t: 'hint', x: 'TG18 A: Murphy, RUQ tenderness (จาก abdomen map), RUQ mass · B: BT, WBC, CRP · C: Imaging (U/S, CT)' },
+    { t: 'multi', k: 'local', l: 'Marked local inflammation', o: ['gangrenous', 'pericholecystic abscess', 'hepatic abscess', 'emphysematous', 'biliary peritonitis'], flag: true },
+    { t: 'field', k: 'days', l: 'Onset (days)', num: true, f: 'onset {} d' }
+  ];
+  var SPEC = {
+    'Infected wound': { title: 'Infected wound', items: WOUND },
+    'Cellulitis': { title: 'Cellulitis', items: WOUND },
+    'Abscess': { title: 'Abscess', items: WOUND },
+    'NF': { title: 'Necrotizing fasciitis · LRINEC', items: WOUND },
+    'DM foot': { title: 'DM foot', items: WOUND.slice(0, 5).concat([
+      { t: 'tri', k: 'dp', l: 'DP pulse', o: ['palpable', 'absent'], s: 'DP' },
+      { t: 'tri', k: 'pt', l: 'PT pulse', o: ['palpable', 'absent'], s: 'PT' },
+      { t: 'one', k: 'wagner', l: 'Wagner grade', o: ['0', '1', '2', '3', '4', '5'], f: 'Wagner {}' }, WOUND[5]]) },
+    'Bedsore': { title: 'Bedsore', items: WOUND.slice(0, 4).concat([{ t: 'one', k: 'stage', l: 'Stage', o: ['1', '2', '3', '4', 'unstageable'], f: 'stage {}' }, WOUND[5]]) },
+    'Acute cholecystitis': { title: 'Acute cholecystitis · TG18', items: CHOLE },
+    'Symptomatic gallstone': { title: 'Symptomatic gallstone', items: CHOLE },
+    'Acute cholangitis': { title: 'Acute cholangitis · TG18', items: [
+      { t: 'abd' },
+      { t: 'tri', k: 'fever', l: 'Fever / chills', o: ['+', '−'], s: 'fever/chills' },
+      { t: 'tri', k: 'jaundice', l: 'Jaundice', o: ['+', '−'], s: 'jaundice', req: true },
+      { t: 'hint', x: 'TG18 B: TB, ALP, AST, ALT จากแลป · C: Imaging (U/S, CT)' }] },
+    'Acute pancreatitis': { title: 'Acute pancreatitis · Atlanta / BISAP', items: [
+      { t: 'abd' },
+      { t: 'tri', k: 'pain', l: 'Typical epigastric pain radiating to back', o: ['+', '−'], s: 'typical pain' },
+      { t: 'tri', k: 'enz', l: 'Lipase / amylase > 3× ULN', o: ['+', '−'], s: 'enzyme > 3× ULN' },
+      { t: 'tri', k: 'imgp', l: 'Imaging consistent', o: ['+', '−', 'not done'], s: 'imaging' },
+      { t: 'tri', k: 'effusion', l: 'Pleural effusion', o: ['+', '−', 'unknown'], s: 'effusion' },
+      { t: 'multi', k: 'cause', l: 'Etiology', o: ['gallstone', 'alcohol', 'hypertriglyceridemia', 'unknown'], f: 'etiology: {}' }] },
+    'Appendicitis': { title: 'Appendicitis · AIR score', items: [
+      { t: 'abd' },
+      { t: 'tri', k: 'vomit', l: 'Vomiting', o: ['+', '−'], s: 'vomiting', req: true },
+      { t: 'tri', k: 'rifpain', l: 'RLQ pain', o: ['+', '−'], s: 'RLQ pain', req: true },
+      { t: 'one', k: 'defense', l: 'Rebound tenderness / muscular defense', o: ['none', 'light', 'medium', 'strong'], f: 'muscular defense: {}', req: true },
+      { t: 'multi', k: 'signs', l: 'Other signs', o: ['McBurney point tenderness', 'Rovsing sign', 'psoas sign', 'obturator sign'] },
+      { t: 'hint', x: 'AIR: BT ≥ 38.5, WBC, PMN %, CRP ดึงจาก V/S และแลปให้เอง' },
+      { t: 'multi', k: 'find', l: 'Complicated features', o: ['generalized peritonitis', 'RLQ mass'], flag: true },
+      { t: 'field', k: 'hrs', l: 'Pain duration (hr)', num: true, f: 'pain {} hr' }] },
+    'Gut obstruction': { title: 'Gut obstruction', items: [
+      { t: 'one', k: 'level', l: 'Level', o: ['SBO', 'LBO', 'undetermined'] },
+      { t: 'abd' },
+      { t: 'tri', k: 'vomit', l: 'Vomiting', o: ['+', '−'], s: 'vomiting' },
+      { t: 'tri', k: 'noflatus', l: 'Obstipation', o: ['+', '−'], s: 'obstipation' },
+      { t: 'tri', k: 'prevop', l: 'Previous abdominal surgery', o: ['+', '−'], s: 'previous surgery' },
+      { t: 'tri', k: 'hernia', l: 'Hernia (groin, umbilical, incisional)', o: ['present', 'absent'], s: 'hernia' },
+      { t: 'multi', k: 'strang', l: 'Signs of strangulation', o: ['continuous pain', 'localized tenderness', 'peritoneal signs'], flag: true },
+      { t: 'field', k: 'days', l: 'Obstipation (days)', num: true, f: 'obstipation {} d' },
+      { t: 'field', k: 'ng', l: 'NG content', ph: 'e.g. 800 ml bile-stained', f: 'NG {}' }] },
+    'Perforation/peritonitis': { title: 'Perforation / peritonitis', items: [
+      { t: 'abd' },
+      { t: 'one', k: 'extent', l: 'Peritonitis', o: ['localized', 'generalized'], f: '{} peritonitis', req: true },
+      { t: 'multi', k: 'src', l: 'Suspected source', o: ['PU', 'appendix', 'colon/diverticulum', 'unknown'], f: 'suspected {}' },
+      { t: 'tri', k: 'nsaid', l: 'NSAID / steroid use', o: ['+', '−'], s: 'NSAID/steroid' },
+      { t: 'field', k: 'hrs', l: 'Onset (hr)', num: true, f: 'onset {} hr' }] },
+    'Incarcerated hernia': { title: 'Incarcerated hernia', items: [
+      { t: 'one', k: 'hsite', l: 'Site', o: ['inguinal', 'femoral', 'umbilical', 'incisional', 'other'], req: true },
+      { t: 'one', k: 'side', l: 'Side', o: ['Rt', 'Lt', 'midline'] },
+      { t: 'tri', k: 'reduce', l: 'Reducible', o: ['yes', 'no', 'not tried'], s: 'reducible' },
+      { t: 'tri', k: 'tender', l: 'Tenderness', o: ['+', '−'], s: 'tender' },
+      { t: 'tri', k: 'skin', l: 'Skin erythema / discoloration', o: ['+', '−'], s: 'skin change' },
+      { t: 'tri', k: 'obs', l: 'Obstructive symptoms', o: ['+', '−'], s: 'obstructive sx' },
+      { t: 'field', k: 'hrs', l: 'Irreducible for (hr)', num: true, f: 'incarcerated {} hr' }] },
+    'UGIB': { title: 'UGIB · Glasgow-Blatchford', items: [
+      { t: 'multi', k: 'pres', l: 'Presentation', o: ['hematemesis', 'coffee-ground vomitus', 'melena', 'hematochezia'], req: true },
+      { t: 'tri', k: 'syncope', l: 'Syncope', o: ['+', '−'], s: 'syncope' },
+      { t: 'tri', k: 'active', l: 'Ongoing bleeding', o: ['+', '−'], s: 'ongoing bleeding' },
+      { t: 'tri', k: 'liver', l: 'Hepatic disease', o: ['+', '−'], s: 'hepatic disease' },
+      { t: 'tri', k: 'hf', l: 'Cardiac failure', o: ['+', '−'], s: 'cardiac failure' },
+      { t: 'multi', k: 'risk', l: 'Risk factors', o: ['NSAID', 'previous PU/UGIB', 'alcohol', 'known varices'], f: '{}' },
+      { t: 'field', k: 'amount', l: 'Estimated amount', ph: 'e.g. 2 episodes, ~300 ml', f: 'amount {}' },
+      { t: 'hint', x: 'GBS: BUN (แปลงเป็น urea mmol/L), Hb, SBP, HR ใช้ค่าแรกรับถ้ามี' }] },
+    'LGIB': { title: 'LGIB · Oakland score', items: [
+      { t: 'multi', k: 'pres', l: 'Presentation', o: ['hematochezia', 'maroon stool', 'melena', 'blood clots'] },
+      { t: 'tri', k: 'dre', l: 'Blood on DRE', o: ['+', '−', 'not done'], s: 'DRE blood', req: true },
+      { t: 'tri', k: 'prevlgib', l: 'Previous LGIB admission', o: ['+', '−'], s: 'previous LGIB admission' },
+      { t: 'tri', k: 'active', l: 'Ongoing bleeding', o: ['+', '−'], s: 'ongoing bleeding' },
+      { t: 'multi', k: 'risk', l: 'Risk factors', o: ['diverticulosis', 'hemorrhoid', 'recent polypectomy', 'known CA colon'] },
+      { t: 'field', k: 'amount', l: 'Estimated amount', ph: 'e.g. 3 episodes', f: 'amount {}' }] },
+    'Hemorrhoid': { title: 'Hemorrhoid', items: [
+      { t: 'one', k: 'htype', l: 'Type', o: ['internal', 'external', 'mixed'], req: true },
+      { t: 'one', k: 'grade', l: 'Grade (internal)', o: ['I', 'II', 'III', 'IV'], f: 'grade {}' },
+      { t: 'multi', k: 'feat', l: 'Features', o: ['bleeding', 'prolapse', 'thrombosed', 'strangulated', 'necrosis'], f: '{}' },
+      { t: 'field', k: 'pos', l: "Position (o'clock)", ph: 'e.g. 3, 7, 11', f: "at {} o'clock" },
+      { t: 'field', k: 'dre', l: 'DRE / anoscopy', f: 'DRE: {}' }] },
+    'Perianal abscess': { title: 'Perianal abscess', items: [
+      { t: 'multi', k: 'atype', l: 'Type', o: ['perianal', 'ischiorectal', 'intersphincteric', 'supralevator', 'horseshoe'], req: true },
+      { t: 'field', k: 'pos', l: "Position (o'clock)", ph: 'lithotomy', f: "at {} o'clock" },
+      { t: 'field', k: 'size', l: 'Size (cm)', f: '{} cm' },
+      { t: 'tri', k: 'fluct', l: 'Fluctuation', o: ['+', '−'], s: 'fluctuation' },
+      { t: 'multi', k: 'red', l: 'Red flags', o: ['extensive cellulitis', 'perineal necrosis', 'crepitus', 'systemic sepsis'], flag: true },
+      { t: 'field', k: 'dre', l: 'DRE', f: 'DRE: {}' }] },
+    'Fistula in ano': { title: "Fistula in ano · Goodsall's rule", items: [
+      { t: 'field', k: 'pos', l: "External opening (o'clock, lithotomy)", num: true, req: true, f: "external opening {} o'clock" },
+      { t: 'field', k: 'dist', l: 'Distance from anal verge (cm)', num: true, f: '{} cm from AV' },
+      { t: 'multi', k: 'feat', l: 'Features', o: ['discharge', 'recurrent', 'multiple openings', 'previous surgery', 'Crohn disease'], f: '{}' },
+      { t: 'field', k: 'dre', l: 'DRE (internal opening / induration)', f: 'DRE: {}' }] },
+    other: { title: 'Other / consult', items: [
+      { t: 'field', k: 'freedx', l: 'Dx / consult issue', req: true, nope: true },
+      { t: 'abd', hide: true },
+      { t: 'field', k: 'pe', l: 'Key PE findings', f: '{}' },
+      { t: 'photo', tag: 'other', l: 'Photo' }] }
+  };
+
+  /* ================= state ================= */
+  var S, started = 0, timerId = null, frozen = null, editing = null, editVer = 0, editPrev = null, stash = null, armed = 0, cfgMode = false, pendingTag = null, busy = false;
+  var CONF = window.CASEFORM_CONFIG || {}, MOCK = !!CONF.MOCK || /[?&]mock=1\b/.test(location.search);
+  var CFG = {}, ME = { name: '', isStaff: false }, LX = null, LIFF_ID = CONF.LIFF_ID || '';
+
+  function blank() {
+    return { type: 'Admit', cat: '', dx: '', ward: '', sex: '', ud: {}, med: {}, prev: {}, vsx: {}, press: {}, vsChg: '', vsSrc: 'ER',
+      img: {}, imgd: {}, m: {}, abd: { r: {}, s: {}, bs: '' }, labs: {}, photos: [] };
+  }
+  function fill(x) {
+    var b = blank(); Object.keys(b).forEach(function (k) { if (x[k] === undefined || x[k] === null) x[k] = b[k]; });
+    x.abd.r = x.abd.r || {}; x.abd.s = x.abd.s || {}; return x;
+  }
+
+  /* ================= small helpers ================= */
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function chip(group, v, label, on, cls) {
+    return '<button type="button" class="chip' + (cls ? ' ' + cls : '') + '" data-g="' + esc(group) + '" data-v="' + esc(v) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + (label || esc(v)) + '</button>';
+  }
+  function num(v) { if (v === undefined || v === null || v === '') return null; var n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? null : n; }
+  function L(k) { var v = num(S.labs[k]); if (k === 'plt' && v !== null && v < 2000) v = v * 1000; if (k === 'wbc' && v !== null && v < 200) v = v * 1000; return v; }
+  function V(k) { return num($(k).value); }
+  function V0(k) { return S.vsChg === 'changed' ? num($(k + '0').value) : null; }
+  function pres(k) { var a = V0(k); return a !== null ? a : V(k); }
+  function on(group, k) { return !!(S[group] && S[group][k]); }
+  function M(k) { return S.m[k]; }
+  function MM(k, v) { return !!(S.m[k] && S.m[k][v]); }
+  function sel(o) { return Object.keys(o || {}).filter(function (k) { return o[k]; }); }
+  function fmt(n) { return n >= 1000 ? Math.round(n).toLocaleString('en-US') : String(n); }
+  function wardName() { return S.ward === 'other' ? $('wardx').value.trim() : S.ward; }
+
+  /* ================= module spec + per-dx overrides (show / required / added fields) ================= */
+  function dxKey() { return S.cat === 'other' ? 'other' : S.dx; }
+  function spec() {
+    var b = SPEC[dxKey()]; if (!b) return null;
+    var c = CFG[dxKey()] || {};
+    var items = b.items.map(function (it, i) {
+      var x = Object.assign({}, it);
+      x.k = x.k || (x.t === 'abd' ? 'abd' : x.t === 'photo' ? 'ph_' + x.tag : 'h' + i); return x;
+    }).concat((c.add || []).map(function (it) { return Object.assign({ custom: true }, it); }));
+    items.forEach(function (x) {
+      x.hidden = c.hide && c.hide[x.k] !== undefined ? c.hide[x.k] : !!x.hide;
+      if (c.req && c.req[x.k] !== undefined) x.req = c.req[x.k];
+    });
+    return { title: b.title, items: items };
+  }
+  function live() { var sp = spec(); return sp ? sp.items.filter(function (x) { return !x.hidden; }) : []; }
+  function answered(x) {
+    if (x.t === 'tri' || x.t === 'one') return !!S.m[x.k];
+    if (x.t === 'multi') return sel(S.m[x.k]).length > 0;
+    if (x.t === 'field') return !!String(S.m[x.k] || '').trim();
+    if (x.t === 'abd') return !!abdText();
+    if (x.t === 'photo') return S.photos.some(function (p) { return p.tag === x.tag; });
+    return true;
+  }
+
+  /* ================= render: static chips ================= */
+  function renderStatic() {
+    $('g-type').innerHTML = ['Admit', 'Consult', 'Notify'].map(function (t) { return chip('type', t, t, S.type === t); }).join('');
+    $('g-cat').innerHTML = CATS.map(function (c) { return chip('cat', c.k, esc(c.label), S.cat === c.k); }).join('');
+    var cat = CATS.filter(function (c) { return c.k === S.cat; })[0];
+    $('g-dx').innerHTML = cat ? cat.dx.map(function (d) { return chip('dx', d, esc(d), S.dx === d); }).join('') : '';
+    $('cat-note').textContent = !cat ? 'เลือกหมวดก่อน แล้วเลือกโรค ฟอร์มจะถามเฉพาะข้อที่โรคนั้นต้องรู้' : cat.k === 'other' ? 'ใส่ Dx เองในช่องด้านล่าง' : '';
+    $('g-ward').innerHTML = WARDS.map(function (w) { return chip('ward', w, w === 'other' ? 'อื่น…' : w, S.ward === w); }).join('');
+    $('wardxwrap').hidden = S.ward !== 'other';
+    $('g-sex').innerHTML = ['M', 'F'].map(function (x) { return chip('sex', x, x, S.sex === x); }).join('');
+    $('g-ud').innerHTML = UD.map(function (u) { return chip('ud', u, esc(u), !!S.ud[u]); }).join('');
+    $('g-med').innerHTML = MED.map(function (u) { return chip('med', u, 'on ' + u, !!S.med[u]); }).join('');
+    $('g-prev').innerHTML = PREV.map(function (u) { return chip('prev', u, esc(u), !!S.prev[u]); }).join('');
+    $('g-labx').innerHTML = chip('img', 'lab pending', 'lab pending', !!S.img['lab pending']);
+    renderVS(); renderImg();
+  }
+  function renderVS() {
+    $('g-vsx').innerHTML = VSX.map(function (x) { return chip('vsx', x[0], esc(x[1]), !!S.vsx[x[0]], 'flag'); }).join('');
+    var pr = $('pressor'); pr.hidden = !S.vsx.pressor;
+    if (S.vsx.pressor) {
+      pr.innerHTML = '<div class="sub">Vasopressor / inotrope</div><div class="chips">' + DRUGS.map(function (d) { return chip('press', d, d, !!(S.press[d] && S.press[d].on)); }).join('') + '</div>' +
+        DRUGS.filter(function (d) { return S.press[d] && S.press[d].on; }).map(function (d) {
+          var p = S.press[d], u = d === 'vasopressin' ? 'U' : 'mg';
+          return '<div class="prow"><span class="drug">' + d + '</span>' +
+            '<label class="f"><span>conc (' + u + ':ml)</span><input class="num" data-press="' + d + '|conc" placeholder="' + (d === 'NE' ? '4:250' : d === 'vasopressin' ? '20:100' : d === 'adrenaline' ? '1:100' : '250:250') + '" value="' + esc(p.conc || '') + '"></label>' +
+            '<label class="f"><span>rate (ml/hr)</span><input class="num" inputmode="decimal" data-press="' + d + '|rate" value="' + esc(p.rate || '') + '"></label>' +
+            '<span class="dose" data-dose="' + d + '">' + esc(doseText(d)) + '</span></div>';
+        }).join('') + '<div class="hint">ใส่ BW ในส่วนผู้ป่วยเพื่อคำนวณเป็น mcg/kg/min</div>';
+    }
+    $('g-vschg').innerHTML = ['stable', 'changed'].map(function (x) { return chip('vschg', x, x, S.vsChg === x); }).join('');
+    $('vs0').hidden = S.vsChg !== 'changed';
+    $('g-vssrc').innerHTML = ['ER', 'รพช.'].map(function (x) { return chip('vssrc', x, x, S.vsSrc === x); }).join('');
+  }
+  function doseText(d) {
+    var p = S.press[d] || {}, m = String(p.conc || '').match(/(\d+(?:\.\d+)?)\s*[:\/]\s*(\d+(?:\.\d+)?)/), r = num(p.rate);
+    if (!m || r === null || !parseFloat(m[2])) return '';
+    var per = parseFloat(m[1]) / parseFloat(m[2]);
+    if (d === 'vasopressin') return '= ' + (Math.round(per * r / 60 * 1000) / 1000) + ' U/min';
+    var bw = V('bw');
+    if (bw === null || bw <= 0) return '= ' + (Math.round(per * 1000 * r / 60 * 10) / 10) + ' mcg/min';
+    return '= ' + (per * 1000 * r / 60 / bw).toFixed(2) + ' mcg/kg/min';
+  }
+  function refreshDoses() { DRUGS.forEach(function (d) { var el = document.querySelector('[data-dose="' + d + '"]'); if (el) el.textContent = doseText(d); }); }
+  function pressText() {
+    if (!S.vsx.pressor) return [];
+    return DRUGS.filter(function (d) { return S.press[d] && S.press[d].on; }).map(function (d) {
+      var p = S.press[d], x = doseText(d);
+      return d + (p.conc ? ' ' + p.conc : '') + (p.rate ? ' @ ' + p.rate + ' ml/hr' : '') + (x ? ' (' + x.replace('= ', '') + ')' : '');
+    });
+  }
+
+  function renderLabs() {
+    var extra = (LAB_EXTRA[S.dx] || []).concat(S.cat === 'wound' ? LAB_EXTRA.wound : []);
+    var show = LABS.filter(function (l, i) { return i < 10 || extra.indexOf(l[0]) >= 0 || l[0] === 'lactate' || (S.labs[l[0]] !== undefined && S.labs[l[0]] !== ''); });
+    $('labs').innerHTML = show.map(function (l) {
+      return '<label class="f"><span>' + esc(l[1]) + '</span><input class="num" inputmode="decimal" data-lab="' + l[0] + '" value="' + esc(S.labs[l[0]] !== undefined ? S.labs[l[0]] : '') + '"></label>';
+    }).join('');
+  }
+
+  /* ================= photos ================= */
+  function thumbs(tag) {
+    var h = '';
+    S.photos.forEach(function (p, i) {
+      if (p.tag !== tag) return;
+      h += '<div class="thumb"><img src="' + p.src + '" alt="รูปแนบ ' + esc(tag) + '"><span>' + esc(tag) + '</span><button type="button" data-delphoto="' + i + '" aria-label="ลบรูป">×</button></div>';
+    });
+    return h ? '<div class="thumbs">' + h + '</div>' : '';
+  }
+  function attachUI(tag) {
+    var n = S.photos.length;
+    return thumbs(tag) + '<div class="attachrow"><button type="button" class="ghost" data-attach="' + esc(tag) + '"' + (n >= MAXPHOTO ? ' disabled' : '') + '>📷 แนบรูป (' + n + '/' + MAXPHOTO + ')</button>' +
+      '<span class="hint">ห้ามติดหน้า ชื่อ หรือ HN · สูงสุด ' + MAXPHOTO + ' รูปต่อเคส · บนการ์ดขึ้นเป็นปุ่ม "ดูรูป" เปิดได้เฉพาะสมาชิกกลุ่ม</span></div>';
+  }
+  function shrink(file, cb) {
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var k = Math.min(1, 640 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      try { cb(c.toDataURL('image/jpeg', 0.72)); } catch (e) { cb(null); }
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); cb(null); };
+    img.src = url;
+  }
+
+  /* ================= imaging ================= */
+  function dxGroup() {
+    var d = S.dx;
+    if (d === 'Acute cholecystitis' || d === 'Symptomatic gallstone') return 'chole';
+    if (d === 'Acute cholangitis') return 'cholangitis';
+    if (d === 'Acute pancreatitis') return 'panc';
+    if (d === 'Appendicitis') return 'appy';
+    if (d === 'Gut obstruction') return 'obs';
+    if (d === 'Perforation/peritonitis') return 'perf';
+    if (d === 'Incarcerated hernia') return 'hernia';
+    return S.cat === 'wound' || S.cat === 'ano' || S.cat === 'gib' ? (S.cat === 'gib' ? 'gib' : S.cat) : '';
+  }
+  function imgLabel(m) { return m === 'film' && dxGroup() === 'wound' ? 'Film' : IMG[m].label; }
+  function imgSpec(m) { var d = IMG[m]; return d[dxGroup()] || d.all; }
+  function imgD(m) { return S.imgd[m] || (S.imgd[m] = { f: {}, n: {}, t: '' }); }
+  function imgF(m) { var d = S.img[m] && S.imgd[m]; return d ? sel(d.f) : []; }
+  function imgN(m, k) { var d = S.img[m] && S.imgd[m]; return d ? num(d.n[k]) : null; }
+  function findAny(names, mods) {
+    var out = [];
+    (mods || IMGMODS).forEach(function (m) { imgF(m).forEach(function (f) { if (names.indexOf(f) >= 0 && out.indexOf(f) < 0) out.push(f); }); });
+    return out;
+  }
+  function findRe(re) { var out = []; IMGMODS.forEach(function (m) { imgF(m).forEach(function (f) { if (re.test(f) && out.indexOf(f) < 0) out.push(f); }); }); return out; }
+  function imgMods() { var m = ['EKG', 'CXR', 'film', 'U/S', 'CT']; if (S.sex === 'F' && num(S.age) >= 12 && num(S.age) <= 50) m.push('UPT'); return m; }
+  function renderImg() {
+    var mods = imgMods();
+    $('g-img').innerHTML = mods.map(function (m) { return chip('img', m, (S.img[m] ? '✓ ' : '') + esc(imgLabel(m)), !!S.img[m]); }).join('');
+    $('imgd').innerHTML = mods.filter(function (m) { return S.img[m]; }).map(function (m) {
+      var sp = imgSpec(m), d = imgD(m);
+      var fl = sp.f.slice(); sel(d.f).forEach(function (k) { if (fl.indexOf(k) < 0) fl.push(k); });
+      var nl = (sp.n || []).slice(); Object.keys(d.n).forEach(function (k) { if (d.n[k] !== '' && nl.indexOf(k) < 0 && NUMLBL[k]) nl.push(k); });
+      return '<div class="imgp"><div class="imgh">' + esc(imgLabel(m)) + '</div>' +
+        '<div class="chips">' + fl.map(function (f) { return chip('if:' + m, f, esc(f), !!d.f[f], DANGER.test(f) ? 'flag' : ''); }).join('') + '</div>' +
+        (nl.length ? '<div class="grid">' + nl.map(function (k) {
+          return '<label class="f"><span>' + esc(NUMLBL[k][0]) + ' (' + NUMLBL[k][1] + ')</span><input class="num" inputmode="decimal" data-imgn="' + m + '|' + k + '" value="' + esc(d.n[k] || '') + '"></label>';
+        }).join('') + '</div>' : '') +
+        (m === 'UPT' ? '' : '<label class="f"><span>Details</span><input data-imgt="' + m + '" placeholder="' + esc(sp.ph || 'other key findings') + '" value="' + esc(d.t || '') + '"></label>') +
+        (sp.note ? '<div class="hint">' + esc(sp.note) + '</div>' : '') +
+        (m === 'CT' ? '<div class="hint">ภาพ CT ส่งแยกในไลน์ตามปกติ</div>' : m === 'UPT' ? '' : attachUI(m)) + '</div>';
+    }).join('');
+  }
+  function imgItems() {
+    return IMGMODS.filter(function (m) { return S.img[m]; }).map(function (m) {
+      var d = S.imgd[m] || { f: {}, n: {}, t: '' }, sp = imgSpec(m), parts = [];
+      var order = (sp.n || []).slice(); Object.keys(d.n).forEach(function (k) { if (order.indexOf(k) < 0) order.push(k); });
+      order.forEach(function (k) {
+        var v = num(d.n[k]); if (v === null || !NUMLBL[k]) return;
+        parts.push({ t: NUMLBL[k][0] + ' ' + v + (NUMLBL[k][1] === '%' ? '%' : ' ' + NUMLBL[k][1]), s: NUMABN[k] && NUMABN[k](v) ? 'bad' : '' });
+      });
+      sel(d.f).forEach(function (f) { parts.push({ t: f, s: DANGER.test(f) ? 'bad' : '' }); });
+      if ((d.t || '').trim()) parts.push({ t: d.t.trim() });
+      var lbl = imgLabel(m);
+      return { t: lbl + (parts.length ? ': ' + parts.map(function (x) { return x.t; }).join(', ') : ''),
+        segs: [{ t: lbl, s: 'b' }].concat(parts.length ? [{ t: ': ' }].concat(joinSegs(parts.map(function (x) { return [x]; }), ', ')) : []) };
+    });
+  }
+
+  /* ================= abdomen exam ================= */
+  function abdHTML() {
+    var A = S.abd, gen = !!A.s['generalized tenderness'];
+    return '<div class="abdwrap"><div class="sub">Abdomen · กดบริเวณที่ tender</div><div class="abdmap">' + REGIONS.map(function (r) {
+      return chip('abdr', r, esc(r), gen || !!A.r[r]);
+    }).join('') + '</div><div class="chips">' + ASIGNS.map(function (x) { return chip('abds', x, esc(x), !!A.s[x], /guarding|rebound|rigidity|generalized/.test(x) ? 'flag' : ''); }).join('') +
+      '</div><div class="sub">Bowel sounds</div><div class="chips">' + BSOUND.map(function (x) { return chip('abdbs', x, x, A.bs === x); }).join('') + '</div></div>';
+  }
+  function abdParts() {
+    var A = S.abd, p = [];
+    ['soft', 'distended'].forEach(function (x) { if (A.s[x]) p.push({ t: x }); });
+    if (A.s['generalized tenderness']) p.push({ t: 'generalized tenderness', bad: true });
+    else { var r = REGIONS.filter(function (x) { return A.r[x]; }); if (r.length) p.push({ t: 'tender ' + r.join(', ') }); }
+    ['guarding', 'rebound tenderness', 'rigidity'].forEach(function (x) { if (A.s[x]) p.push({ t: x, bad: true }); });
+    if (A.bs) p.push({ t: 'BS ' + A.bs, bad: A.bs === 'absent' });
+    return p;
+  }
+  function abdText() { return abdParts().map(function (x) { return x.t; }).join(', '); }
+  function tenderAt(r) { return !!(S.abd.s['generalized tenderness'] || S.abd.r[r]); }
+  function abdPeri() { return !!(S.abd.s['rebound tenderness'] || S.abd.s.rigidity); }
+
+  /* ================= render: disease module (+ config mode) ================= */
+  function tri(x) {
+    return '<div class="tri"><span' + (x.req ? ' class="need"' : '') + '>' + esc(x.l) + '</span><div class="seg">' + x.o.map(function (o) {
+      return chip('m:' + x.k, o, esc(o), S.m[x.k] === o);
+    }).join('') + '</div></div>';
+  }
+  function itemHTML(x) {
+    var req = x.req ? ' class="need"' : '';
+    if (x.t === 'tri') return tri(x);
+    if (x.t === 'one') return '<div class="sub"><span' + req + '>' + esc(x.l) + '</span></div><div class="chips">' + x.o.map(function (o) { return chip('m:' + x.k, o, esc(o), S.m[x.k] === o); }).join('') + '</div>';
+    if (x.t === 'multi') { S.m[x.k] = S.m[x.k] || {}; return '<div class="sub"><span' + req + '>' + esc(x.l) + '</span></div><div class="chips">' + x.o.map(function (o) { return chip('mm:' + x.k, o, esc(o), !!S.m[x.k][o], x.flag ? 'flag' : ''); }).join('') + '</div>'; }
+    if (x.t === 'field') return '<label class="f"><span' + req + '>' + esc(x.l) + '</span><input data-m="' + x.k + '" ' + (x.num ? 'class="num" inputmode="decimal" ' : '') + 'placeholder="' + esc(x.ph || '') + '" value="' + esc(S.m[x.k] || '') + '"></label>';
+    if (x.t === 'hint') return '<div class="hint">' + esc(x.x) + '</div>';
+    if (x.t === 'abd') return abdHTML();
+    if (x.t === 'photo') return '<div class="sub"><span' + req + '>' + esc(x.l) + '</span></div>' + attachUI(x.tag);
+    return '';
+  }
+  var TYPENAME = { tri: '+/−', one: 'choices', multi: 'multi', field: 'text', abd: 'abdomen map', photo: 'photo', hint: 'hint' };
+  function renderModule() {
+    var sp = spec(), el = $('module');
+    if (!sp) { el.innerHTML = '<h2>PE ตามโรค</h2><div class="hint">เลือกโรคด้านบน แล้วช่องที่โรคนั้นต้องรู้จะขึ้นตรงนี้</div>'; return; }
+    var h = '<div class="sechead"><h2>' + esc(sp.title) + '</h2>' + (ME.isStaff ? '<button type="button" class="linkbtn" id="cfgtoggle">' + (cfgMode ? '✓ เสร็จ' : '⚙ ปรับช่อง') + '</button>' : '') + '</div>';
+    if (cfgMode) {
+      h += '<div class="box info">เลือกว่าช่องไหนแสดง ช่องไหนบังคับกรอก หรือเพิ่มช่องใหม่ของโรคนี้ · บันทึกลงชีต Form_Config ทันที ทุกคนที่เปิดฟอร์มเห็นเหมือนกัน</div>';
+      sp.items.forEach(function (x) {
+        h += '<div class="it cfg' + (x.hidden ? ' off' : '') + '"><div class="cfgbar"><span class="tag">' + TYPENAME[x.t] + '</span>' +
+          '<label><input type="checkbox" data-cfg="show" data-k="' + x.k + '"' + (x.hidden ? '' : ' checked') + '> แสดง</label>' +
+          (x.t !== 'hint' ? '<label><input type="checkbox" data-cfg="req" data-k="' + x.k + '"' + (x.req ? ' checked' : '') + '> บังคับกรอก</label>' : '') +
+          (x.custom ? '<button type="button" class="linkbtn" data-cfgdel="' + x.k + '">ลบช่องนี้</button>' : '') + '</div>' + itemHTML(x) + '</div>';
+      });
+      h += '<div class="cfgadd"><div class="sub">เพิ่มช่องใหม่</div><div class="grid2">' +
+        '<label class="f"><span>ชื่อช่อง</span><input id="cfg-l" placeholder="e.g. Rovsing sign, pain score"></label>' +
+        '<label class="f"><span>ชนิด</span><select id="cfg-t"><option value="tri">+ / −</option><option value="one">choices</option><option value="field">text</option><option value="photo">photo</option></select></label></div>' +
+        '<label class="f"><span>ตัวเลือก (คั่นด้วย , ใช้กับ choices)</span><input id="cfg-o" placeholder="e.g. mild, moderate, severe"></label>' +
+        '<div class="actions"><button type="button" class="btn alt" id="cfg-add">เพิ่มช่อง</button><button type="button" class="ghost" id="cfg-reset">คืนค่าเริ่มต้นของโรคนี้</button></div></div>';
+      el.innerHTML = h; return;
+    }
+    var buf = [];
+    var flush = function () { if (buf.length) { h += buf.length > 1 ? '<div class="grid2">' + buf.join('') + '</div>' : buf[0]; buf = []; } };
+    sp.items.forEach(function (x) {
+      if (x.hidden) return;
+      if (x.t === 'field') { buf.push(itemHTML(x)); return; }
+      flush(); h += itemHTML(x);
+    });
+    flush();
+    el.innerHTML = h;
+  }
+  function addCfgItem() {
+    var lbl = $('cfg-l').value.trim(), ty = $('cfg-t').value;
+    var opts = $('cfg-o').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!lbl) { toast('ใส่ชื่อช่องก่อน', true); return; }
+    if (ty === 'one' && opts.length < 2) { toast('choices ต้องมีตัวเลือกอย่างน้อย 2 ตัว', true); return; }
+    var it = { t: ty, k: 'x' + Date.now().toString(36), l: lbl };
+    if (ty === 'tri') { it.o = ['+', '−']; it.s = lbl; }
+    if (ty === 'one') { it.o = opts; it.f = lbl + ': {}'; }
+    if (ty === 'field') it.f = lbl + ': {}';
+    if (ty === 'photo') it.tag = 'other';
+    var c = CFG[dxKey()] = CFG[dxKey()] || {}; c.add = c.add || []; c.add.push(it);
+    saveCfg(); renderModule(); update(); toast('เพิ่มช่อง "' + lbl + '" แล้ว');
+  }
+
+  /* ================= clinical calculations ================= */
+  function fever() {
+    var bt = Math.max(V('bt') || 0, V0('bt') || 0) || null;
+    if (bt !== null && bt >= 38) return { s: true, why: 'BT ' + bt };
+    if (M('fever') === '+') return { s: true, why: 'fever Hx' };
+    if (bt !== null || M('fever') === '−') return { s: false, why: bt !== null ? 'BT ' + bt : 'no fever' };
+    return { s: null, why: 'fever ?' };
+  }
+  function organ() {
+    var hit = [], miss = [];
+    if (on('vsx', 'pressor')) hit.push('vasopressor');
+    if (on('vsx', 'ams')) hit.push('alteration of consciousness');
+    if (on('vsx', 'ett')) hit.push('on ETT');
+    var cr = L('cr'), inr = L('inr'), plt = L('plt');
+    if (cr === null) miss.push('Cr'); else if (cr > 2) hit.push('Cr ' + cr);
+    if (inr === null) miss.push('INR'); else if (inr > 1.5) hit.push('INR ' + inr);
+    if (plt === null) miss.push('Plt'); else if (plt < 100000) hit.push('Plt ' + Math.round(plt / 1000) + 'k');
+    return { hit: hit, miss: miss };
+  }
+  function mk(k, t) { return [k, t]; }
+  function tg18chole() {
+    var A = M('murphy') === '+' || tenderAt('RUQ') || M('mass') === '+';
+    var Aknown = !!(M('murphy') || M('mass') || abdText());
+    var fv = fever(), wbc = L('wbc'), crp = L('crp');
+    var B = fv.s === true || (wbc !== null && wbc > 10000) || (crp !== null && crp >= 30) ? true : (fv.s === false && wbc !== null ? false : null);
+    var cList = findAny(['GB wall thickening', 'pericholecystic fluid', 'sonographic Murphy', 'GB distension (> 8×4 cm)', 'impacted stone at GB neck', 'pericholecystic stranding', 'gas in GB wall'], ['U/S', 'CT']);
+    var gw = Math.max(imgN('U/S', 'gbwall') || 0, imgN('CT', 'gbwall') || 0);
+    if (gw > 4 && !S.ud.Cirrhosis) { cList = cList.filter(function (x) { return x !== 'GB wall thickening'; }); cList.unshift('GB wall ' + gw + ' mm'); }
+    var anyImg = S.img['U/S'] || S.img.CT;
+    var C = cList.length ? true : anyImg ? false : null;
+    var dx = A && B === true ? (C === true ? 'Definite' : 'Suspected') : 'Not meeting suspected';
+    var o = organ(), g2 = [];
+    if (wbc !== null && wbc > 18000) g2.push('WBC > 18k');
+    if (M('mass') === '+') g2.push('palpable RUQ mass');
+    if (num(M('days')) !== null && num(M('days')) > 3) g2.push('> 72 hr');
+    sel(S.m.local).concat(findAny(['gas in GB wall', 'pericholecystic abscess'], ['CT'])).forEach(function (x) { if (g2.indexOf(x) < 0) g2.push(x); });
+    var grade = o.hit.length ? 'Grade III' : g2.length ? 'Grade II' : 'Grade I', ok = A && B === true;
+    return {
+      title: 'TG18 acute cholecystitis',
+      lines: [
+        mk(A ? 'y' : Aknown ? 'n' : 'q', 'A ' + (A ? [M('murphy') === '+' && "Murphy's +", tenderAt('RUQ') && 'RUQ tenderness', M('mass') === '+' && 'RUQ mass'].filter(Boolean).join(', ') : Aknown ? 'negative' : "Murphy's / RUQ not recorded")),
+        mk(B === true ? 'y' : B === false ? 'n' : 'q', 'B ' + [fv.why, wbc !== null ? 'WBC ' + fmt(wbc) : 'WBC ?', crp !== null ? 'CRP ' + crp : ''].filter(Boolean).join(', ')),
+        mk(C === true ? 'y' : C === false ? 'n' : 'q', 'C ' + (C === true ? cList.join(', ') : C === false ? 'imaging not diagnostic' : 'no imaging yet'))
+      ],
+      verdict: dx + (ok ? ' · ' + grade + (o.hit.length ? ' (' + o.hit.join(', ') + ')' : g2.length ? ' (' + g2.join(', ') + ')' : '') : ''),
+      ok: ok, note: !o.hit.length && o.miss.length ? 'ยังไม่มี ' + o.miss.join(', ') + ' — ประเมิน Grade III ไม่ได้' : '',
+      short: 'TG18 ' + dx.toLowerCase() + (ok ? ', ' + grade : '')
+    };
+  }
+  function tg18cholangitis() {
+    var fv = fever(), wbc = L('wbc'), crp = L('crp');
+    var A = fv.s === true || (wbc !== null && (wbc < 4000 || wbc > 10000)) || (crp !== null && crp >= 10) ? true : (fv.s === false && wbc !== null ? false : null);
+    var tb = L('tb'), lft = ['alp', 'ast', 'alt'].some(function (k) { var v = L(k); return v !== null && (k === 'alp' ? v > 180 : v > 60); });
+    var B = M('jaundice') === '+' || (tb !== null && tb >= 2) || lft ? true : (M('jaundice') === '−' && tb !== null ? false : null);
+    var cl = findAny(['CBD/IHD dilatation', 'CBD stone', 'stricture/mass', 'stent'], ['U/S', 'CT']);
+    var cbd = Math.max(imgN('U/S', 'cbd') || 0, imgN('CT', 'cbd') || 0);
+    if (cbd > 6 && cl.indexOf('CBD/IHD dilatation') < 0) cl.unshift('CBD ' + cbd + ' mm');
+    var C = cl.length ? true : (S.img['U/S'] || S.img.CT) ? false : null;
+    var dx = A === true && B === true && C === true ? 'Definite' : A === true && (B === true || C === true) ? 'Suspected' : 'Not meeting suspected';
+    var o = organ(), g = [], age = num(S.age), bt = Math.max(V('bt') || 0, V0('bt') || 0);
+    if (wbc !== null && (wbc > 12000 || wbc < 4000)) g.push('WBC ' + fmt(wbc));
+    if (bt >= 39) g.push('BT ≥ 39');
+    if (age !== null && age >= 75) g.push('age ≥ 75');
+    if (tb !== null && tb >= 5) g.push('TB ≥ 5');
+    if (L('alb') !== null && L('alb') < 2.5) g.push('hypoalbuminemia');
+    var grade = o.hit.length ? 'Grade III' : g.length >= 2 ? 'Grade II' : 'Grade I', ok = A === true && (B === true || C === true);
+    return {
+      title: 'TG18 acute cholangitis',
+      lines: [
+        mk(A === true ? 'y' : A === false ? 'n' : 'q', 'A ' + [fv.why, wbc !== null ? 'WBC ' + fmt(wbc) : 'WBC ?', crp !== null ? 'CRP ' + crp : ''].filter(Boolean).join(', ')),
+        mk(B === true ? 'y' : B === false ? 'n' : 'q', 'B ' + [M('jaundice') === '+' ? 'jaundice' : '', tb !== null ? 'TB ' + tb : 'TB ?', lft ? 'abnormal LFT' : ''].filter(Boolean).join(', ')),
+        mk(C === true ? 'y' : C === false ? 'n' : 'q', 'C ' + (cl.length ? cl.join(', ') : C === false ? 'no biliary dilatation/etiology' : 'no imaging yet'))
+      ],
+      verdict: dx + (ok ? ' · ' + grade + (o.hit.length ? ' (' + o.hit.join(', ') + ')' : g.length >= 2 ? ' (' + g.join(', ') + ')' : '') : ''),
+      ok: ok, note: !o.hit.length && o.miss.length ? 'ยังไม่มี ' + o.miss.join(', ') + ' — ประเมิน Grade III ไม่ได้' : '',
+      short: 'TG18 ' + dx.toLowerCase() + (ok ? ', ' + grade : '')
+    };
+  }
+  function sirsCount() {
+    var n = 0, bt = V('bt'), hr = V('hr'), rr = V('rr'), w = L('wbc');
+    if (bt !== null && (bt > 38 || bt < 36)) n++; if (hr !== null && hr > 90) n++; if (rr !== null && rr > 20) n++;
+    if (w !== null && (w > 12000 || w < 4000)) n++;
+    return n;
+  }
+  function bisap() {
+    var items = [], miss = [];
+    var bun = L('bun'); if (bun === null) miss.push('BUN'); else if (bun > 25) items.push('BUN > 25');
+    if (on('vsx', 'ams')) items.push('impaired mental status');
+    if (sirsCount() >= 2) items.push('SIRS ≥ 2');
+    var age = num(S.age); if (age !== null && age > 60) items.push('age > 60');
+    if (M('effusion') === '+') items.push('pleural effusion'); else if (!M('effusion') || M('effusion') === 'unknown') miss.push('effusion');
+    var crit = [M('pain') === '+', M('enz') === '+' || (L('lipase') !== null && L('lipase') > 180), M('imgp') === '+'].filter(Boolean).length;
+    return {
+      title: 'Acute pancreatitis',
+      lines: [mk(crit >= 2 ? 'y' : 'q', 'Atlanta ' + crit + '/3 (≥ 2 for diagnosis)'), mk(items.length >= 3 ? 'n' : 'y', 'BISAP ' + items.length + (items.length ? ' — ' + items.join(', ') : ''))],
+      verdict: (crit >= 2 ? 'Meets Atlanta criteria' : 'Not yet meeting Atlanta') + ' · BISAP ' + items.length + (items.length >= 3 ? ' (high risk)' : ''),
+      ok: crit >= 2, note: miss.length ? 'ยังไม่มี ' + miss.join(', ') : '',
+      short: 'BISAP ' + items.length + (items.length >= 3 ? ' (high risk)' : ''), level: items.length >= 3 ? 'bad' : crit >= 2 ? '' : 'warn'
+    };
+  }
+  function lrinec() {
+    var s = 0, miss = [], crp = L('crp'), w = L('wbc'), hb = L('hb'), na = L('na'), cr = L('cr'), g = L('dtx');
+    if (crp === null) miss.push('CRP'); else if (crp >= 150) s += 4;
+    if (w === null) miss.push('WBC'); else if (w > 25000) s += 2; else if (w >= 15000) s += 1;
+    if (hb === null) miss.push('Hb'); else if (hb < 11) s += 2; else if (hb <= 13.5) s += 1;
+    if (na === null) miss.push('Na'); else if (na < 135) s += 2;
+    if (cr === null) miss.push('Cr'); else if (cr > 1.6) s += 2;
+    if (g === null) miss.push('glucose'); else if (g > 180) s += 1;
+    var flags = sel(S.m.nf).concat(findRe(/soft tissue gas/).length ? ['soft tissue gas (imaging)'] : []);
+    var bad = s >= 6 || flags.length > 0;
+    return {
+      title: 'NF screening',
+      lines: [
+        mk(s >= 6 ? 'n' : miss.length ? 'q' : 'y', 'LRINEC ' + s + (miss.length ? ' (missing ' + miss.join(', ') + ')' : '') + (s >= 8 ? ' — high risk' : s >= 6 ? ' — intermediate' : '')),
+        mk(flags.length ? 'n' : 'y', flags.length ? 'Clinical: ' + flags.join(', ') : 'no clinical NF signs')
+      ],
+      verdict: bad ? 'Suspected NF — ควรรายงานด่วน' : 'No NF features yet',
+      ok: !bad, note: 'LRINEC ใช้คัดกรอง อาการทางคลินิกสำคัญกว่าคะแนน', level: bad ? 'bad' : '',
+      short: 'LRINEC ' + s + (miss.length ? ' (incomplete)' : '') + (flags.length ? ', ' + flags.join('/') : ''), urgent: bad ? 'suspected NF' : ''
+    };
+  }
+  function airScore() {
+    var s = 0, miss = [], pts = [];
+    var vo = M('vomit'); if (!vo) miss.push('vomiting'); else if (vo === '+') { s++; pts.push('vomiting'); }
+    var rp = M('rifpain'); if (!rp) miss.push('RLQ pain'); else if (rp === '+') { s++; pts.push('RLQ pain'); }
+    var df = M('defense'), dp = { none: 0, light: 1, medium: 2, strong: 3 }[df];
+    if (dp === undefined) miss.push('defense'); else if (dp) { s += dp; pts.push(df + ' defense'); }
+    var bt = Math.max(V('bt') || 0, V0('bt') || 0); if (!bt) miss.push('BT'); else if (bt >= 38.5) { s++; pts.push('BT ' + bt); }
+    var n = L('neut'); if (n === null) miss.push('PMN %'); else if (n >= 85) { s += 2; pts.push('PMN ' + n + '%'); } else if (n >= 70) { s++; pts.push('PMN ' + n + '%'); }
+    var w = L('wbc'); if (w === null) miss.push('WBC'); else if (w >= 15000) { s += 2; pts.push('WBC ' + fmt(w)); } else if (w >= 10000) { s++; pts.push('WBC ' + fmt(w)); }
+    var c = L('crp'); if (c === null) miss.push('CRP'); else if (c >= 50) { s += 2; pts.push('CRP ' + c); } else if (c >= 10) { s++; pts.push('CRP ' + c); }
+    var lvl = s >= 9 ? 'high probability' : s >= 5 ? 'indeterminate' : 'low probability';
+    var img = findAny(['non-compressible appendix', 'appendicolith', 'periappendiceal fluid', 'abscess/collection', 'periappendiceal stranding', 'abscess', 'extraluminal air'], ['U/S', 'CT', 'film']);
+    var ad = Math.max(imgN('U/S', 'appdia') || 0, imgN('CT', 'appdia') || 0);
+    if (ad > 6) img.unshift('appendix Ø ' + ad + ' mm');
+    var imgDone = S.img['U/S'] || S.img.CT;
+    var comp = sel(S.m.find).concat(findAny(['abscess/collection', 'abscess', 'extraluminal air'], ['U/S', 'CT']));
+    if (abdPeri() && S.abd.s['generalized tenderness'] && comp.indexOf('generalized peritonitis') < 0) comp.push('generalized peritonitis');
+    var genP = comp.indexOf('generalized peritonitis') >= 0;
+    return {
+      title: 'Appendicitis · AIR score',
+      lines: [
+        mk(s >= 9 ? 'y' : s >= 5 ? 'q' : 'n', 'AIR ' + s + '/12' + (pts.length ? ' — ' + pts.join(', ') : '')),
+        mk(img.length ? 'y' : imgDone ? 'n' : 'q', img.length ? 'Imaging: ' + img.join(', ') : imgDone ? 'imaging not suggestive' : 'no U/S or CT yet'),
+        mk(comp.length ? 'n' : 'y', comp.length ? 'Complicated: ' + comp.join(', ') : 'no complicated features')
+      ],
+      verdict: 'AIR ' + s + ' · ' + lvl + (comp.length ? ' · complicated' : ''),
+      ok: s >= 5, note: (miss.length ? 'ยังไม่ได้ใส่: ' + miss.join(', ') + ' — คะแนนอาจสูงกว่านี้ · ' : '') + 'AIR 0–4 low, 5–8 indeterminate, 9–12 high',
+      short: 'AIR ' + s + (miss.length ? ' (incomplete)' : '') + ', ' + lvl + (comp.length ? ', complicated' : ''),
+      level: comp.length ? 'bad' : s >= 9 ? '' : 'warn', urgent: genP ? 'appendicitis with generalized peritonitis' : ''
+    };
+  }
+  function obstruction() {
+    var lv = M('level'), fFilm = imgF('film'), fCT = imgF('CT');
+    if (!lv || lv === 'undetermined') {
+      if (fFilm.indexOf('dilated colon') >= 0 || fFilm.indexOf('coffee bean sign') >= 0) lv = 'LBO?';
+      else if (fFilm.indexOf('dilated SB') >= 0 || (imgN('film', 'sbdia') || 0) > 3 || fCT.indexOf('transition point') >= 0) lv = 'SBO?';
+      else lv = '';
+    }
+    var cause = [];
+    if (M('hernia') === 'present') cause.push('hernia');
+    if (M('prevop') === '+') cause.push('adhesion?');
+    if (fFilm.indexOf('coffee bean sign') >= 0) cause.push('sigmoid volvulus?');
+    if (fCT.indexOf('mass') >= 0) cause.push('mass');
+    else if (/LBO/.test(lv) && num(S.age) >= 50) cause.push('R/O CA colon');
+    var isch = findAny(['closed loop', 'whirl sign', 'decreased wall enhancement', 'pneumatosis'], ['CT']);
+    if (MM('strang', 'peritoneal signs') || abdPeri()) isch.push('peritoneal signs');
+    var soft = [];
+    if (MM('strang', 'continuous pain')) soft.push('continuous pain');
+    if (MM('strang', 'localized tenderness')) soft.push('localized tenderness');
+    var bt = Math.max(V('bt') || 0, V0('bt') || 0), hr = V('hr'), w = L('wbc'), la = L('lactate');
+    if (bt >= 38) soft.push('fever');
+    if (hr !== null && hr > 100) soft.push('HR ' + hr);
+    if (w !== null && w > 15000) soft.push('WBC ' + fmt(w));
+    if (la !== null && la >= 2) soft.push('lactate ' + la);
+    findAny(['mesenteric edema/fluid'], ['CT']).forEach(function (x) { soft.push(x); });
+    var sb = imgN('film', 'sbdia') || imgN('CT', 'sbdia'), col = imgN('film', 'coldia');
+    var seen = fFilm.concat(sb ? ['SB Ø ' + sb + ' cm'] : [], col ? ['colon Ø ' + col + ' cm'] : [], fCT);
+    var st = isch.length ? 'isch' : soft.length >= 3 ? 'concern' : 'none';
+    var stTxt = st === 'isch' ? 'suspected strangulation' : st === 'concern' ? 'possible strangulation' : 'no sign of strangulation';
+    return {
+      title: 'Gut obstruction',
+      lines: [
+        mk(lv ? 'y' : 'q', (lv || 'level not specified') + (cause.length ? ' — ' + cause.join(', ') : '')),
+        mk(seen.length ? 'y' : 'q', seen.length ? 'Imaging: ' + seen.join(', ') : 'no film / CT yet'),
+        mk(isch.length ? 'n' : 'y', isch.length ? 'Ischemia: ' + isch.join(', ') : 'no ischemic signs'),
+        mk(soft.length >= 3 ? 'n' : soft.length ? 'q' : 'y', soft.length ? 'Warning signs (' + soft.length + '): ' + soft.join(', ') : 'no warning signs')
+      ],
+      verdict: st === 'isch' ? 'Suspected strangulation — ควรโทรรายงาน' : st === 'concern' ? 'Possible strangulation (' + soft.length + ' warning signs) — ควรโทรรายงาน' : 'No sign of strangulation',
+      ok: st === 'none', note: la === null ? 'ยังไม่มี lactate' : '',
+      short: (lv || 'obstruction') + (cause.length ? ', ' + cause.join('/') : '') + ' · ' + stTxt,
+      level: st === 'none' ? '' : 'bad', urgent: st === 'none' ? '' : stTxt
+    };
+  }
+  function perforation() {
+    var fa = findRe(/free air|Rigler|extraluminal/), imgDone = S.img.film || S.img.CXR || S.img.CT;
+    var ext = M('extent') || (S.abd.s['generalized tenderness'] && (S.abd.s.rigidity || S.abd.s.guarding) ? 'generalized' : '');
+    var src = sel(S.m.src);
+    var lines = [
+      mk(fa.length ? 'n' : imgDone ? 'y' : 'q', fa.length ? 'Free air: ' + fa.join(', ') : imgDone ? 'no free air seen' : 'no upright CXR / film / CT yet'),
+      mk(ext === 'generalized' ? 'n' : 'q', ext ? ext + ' peritonitis' + (abdText() ? ' — ' + abdText() : '') : 'extent not specified')
+    ];
+    var boey = null;
+    if (src.indexOf('PU') >= 0) {
+      var bi = []; boey = 0;
+      if (on('vsx', 'pressor') || (pres('sbp') !== null && pres('sbp') < 100)) { boey++; bi.push('BP < 100'); }
+      if (['CAD', 'AF', 'HF', 'CKD', 'ESRD', 'COPD', 'Cirrhosis', 'DM'].some(function (k) { return S.ud[k]; })) { boey++; bi.push('major medical illness'); }
+      if (num(M('hrs')) !== null && num(M('hrs')) > 24) { boey++; bi.push('> 24 hr'); }
+      lines.push(mk(boey >= 2 ? 'n' : boey ? 'q' : 'y', 'Boey ' + boey + '/3' + (bi.length ? ' — ' + bi.join(', ') : '') + (num(M('hrs')) === null ? ' (onset hr not entered)' : '')));
+    }
+    var urgent = fa.length ? 'free air' : ext === 'generalized' ? 'generalized peritonitis' : '';
+    return {
+      title: 'Perforation / peritonitis', lines: lines,
+      verdict: (fa.length ? 'Perforation (free air +)' : ext === 'generalized' ? 'Generalized peritonitis' : 'Peritonitis') + (src.length ? ' · suspected ' + src.join('/') : '') + (boey !== null ? ' · Boey ' + boey : ''),
+      ok: !urgent, note: src.indexOf('PU') >= 0 ? 'Boey: BP < 100, major medical illness, onset > 24 hr (1 point each)' : '',
+      short: [fa.length ? 'free air +' : '', ext ? ext + ' peritonitis' : '', boey !== null ? 'Boey ' + boey : ''].filter(Boolean).join(', '),
+      level: urgent ? 'bad' : 'warn', urgent: urgent
+    };
+  }
+  function herniaC() {
+    var site = [M('side'), M('hsite')].filter(Boolean).join(' '), red = M('reduce'), hrs = num(M('hrs'));
+    var loc = [];
+    if (M('skin') === '+') loc.push('skin change');
+    if (M('tender') === '+' && red === 'no') loc.push('tender + irreducible');
+    var sys = [], bt = Math.max(V('bt') || 0, V0('bt') || 0), hr = V('hr'), w = L('wbc'), la = L('lactate');
+    if (bt >= 38) sys.push('fever'); if (hr !== null && hr > 100) sys.push('HR ' + hr);
+    if (w !== null && w > 12000) sys.push('WBC ' + fmt(w)); if (la !== null && la >= 2) sys.push('lactate ' + la);
+    var img = findAny(['absent Doppler flow', 'decreased wall enhancement'], ['U/S', 'CT']);
+    var strang = M('skin') === '+' || img.length > 0 || (loc.length > 0 && sys.length > 0);
+    var obsx = M('obs') === '+' || findAny(['proximal obstruction'], ['CT']).length > 0;
+    var notes = [];
+    if (M('hsite') === 'femoral') notes.push('femoral hernia: high risk of strangulation');
+    if (hrs !== null && hrs > 6) notes.push('incarcerated > 6 hr');
+    var redTxt = red ? (red === 'not tried' ? 'reduction not tried' : red === 'yes' ? 'reducible' : 'irreducible') : '';
+    return {
+      title: 'Incarcerated hernia',
+      lines: [
+        mk(site ? 'y' : 'q', (site || 'site not specified') + (redTxt ? ' · ' + redTxt : '') + (hrs !== null ? ' · ' + hrs + ' hr' : '')),
+        mk(obsx ? 'n' : 'y', obsx ? 'obstruction present' : 'no obstruction'),
+        mk(strang ? 'n' : loc.length || sys.length ? 'q' : 'y', strang ? 'Strangulation signs: ' + loc.concat(sys, img).join(', ') : loc.concat(sys).length ? 'Watch: ' + loc.concat(sys).join(', ') : 'no sign of strangulation')
+      ],
+      verdict: strang ? 'Suspected strangulated hernia — ควรโทรรายงาน' : red === 'yes' ? 'Reduced' : 'Incarcerated · no sign of strangulation',
+      ok: !strang, note: notes.join(' · '),
+      short: (site ? site + ', ' : '') + (strang ? 'suspected strangulation' : redTxt || 'incarcerated'),
+      level: strang ? 'bad' : red === 'yes' ? '' : 'warn', urgent: strang ? 'suspected strangulated hernia' : ''
+    };
+  }
+  function gbs() {
+    var s = 0, pts = [], miss = [], p;
+    var bun = L('bun');
+    if (bun === null) miss.push('BUN');
+    else { var u = bun * 0.357; p = u >= 25 ? 6 : u >= 10 ? 4 : u >= 8 ? 3 : u >= 6.5 ? 2 : 0; if (p) { s += p; pts.push('urea ' + u.toFixed(1) + ' mmol/L +' + p); } }
+    var hb = L('hb');
+    if (hb === null) miss.push('Hb'); else if (!S.sex) miss.push('sex');
+    else { p = S.sex === 'M' ? (hb < 10 ? 6 : hb < 12 ? 3 : hb < 13 ? 1 : 0) : (hb < 10 ? 6 : hb < 12 ? 1 : 0); if (p) { s += p; pts.push('Hb ' + hb + ' +' + p); } }
+    var sbp = pres('sbp');
+    if (sbp === null) miss.push('SBP'); else { p = sbp < 90 ? 3 : sbp < 100 ? 2 : sbp < 110 ? 1 : 0; if (p) { s += p; pts.push('SBP ' + sbp + ' +' + p); } }
+    var hr = pres('hr'); if (hr !== null && hr >= 100) { s++; pts.push('HR ' + hr + ' +1'); }
+    if (MM('pres', 'melena')) { s++; pts.push('melena +1'); }
+    if (M('syncope') === '+') { s += 2; pts.push('syncope +2'); }
+    if (M('liver') === '+' || S.ud.Cirrhosis) { s += 2; pts.push('hepatic disease +2'); }
+    if (M('hf') === '+' || S.ud.HF) { s += 2; pts.push('cardiac failure +2'); }
+    var urgent = M('active') === '+' ? 'ongoing bleeding' : hb !== null && hb < 7 ? 'Hb < 7' : '';
+    var varix = S.ud.Cirrhosis || MM('risk', 'known varices') || findAny(['varices', 'cirrhosis', 'cirrhotic liver']).length > 0;
+    return {
+      title: 'UGIB · Glasgow-Blatchford',
+      lines: [mk(s <= 1 ? 'y' : s >= 6 ? 'n' : 'q', 'GBS ' + s + (pts.length ? ' — ' + pts.join(', ') : '')),
+        mk(sel(S.m.pres).length ? 'y' : 'q', sel(S.m.pres).length ? 'Presentation: ' + sel(S.m.pres).join(', ') : 'presentation not specified')]
+        .concat(varix ? [mk('n', 'cirrhosis / varices — suspected variceal bleeding')] : []),
+      verdict: 'GBS ' + s + (s <= 1 ? ' · low risk' : ' · needs admission + endoscopy') + (s >= 6 ? ' (≥ 6: > 50% need intervention)' : ''),
+      ok: s <= 1, note: (miss.length ? 'ยังไม่มี ' + miss.join(', ') + ' · ' : '') + 'ใช้ SBP/HR แรกรับถ้ามี',
+      short: 'GBS ' + s + (miss.length ? ' (incomplete)' : '') + (varix ? ', suspected variceal' : ''),
+      level: urgent || s >= 6 ? 'bad' : s <= 1 ? '' : 'warn', urgent: urgent
+    };
+  }
+  function oakland() {
+    var s = 0, pts = [], miss = [], p, age = num(S.age);
+    if (age === null) miss.push('age'); else { p = age >= 70 ? 2 : age >= 40 ? 1 : 0; if (p) { s += p; pts.push('age +' + p); } }
+    if (!S.sex) miss.push('sex'); else if (S.sex === 'M') { s++; pts.push('male +1'); }
+    if (M('prevlgib') === '+') { s++; pts.push('previous LGIB +1'); }
+    if (M('dre') === '+') { s++; pts.push('DRE blood +1'); } else if (!M('dre')) miss.push('DRE');
+    var hr = pres('hr'); if (hr === null) miss.push('HR'); else { p = hr >= 110 ? 3 : hr >= 90 ? 2 : hr >= 70 ? 1 : 0; if (p) { s += p; pts.push('HR ' + hr + ' +' + p); } }
+    var sbp = pres('sbp'); if (sbp === null) miss.push('SBP'); else { p = sbp < 90 ? 5 : sbp < 120 ? 4 : sbp < 130 ? 3 : sbp < 160 ? 2 : 0; if (p) { s += p; pts.push('SBP ' + sbp + ' +' + p); } }
+    var hb = L('hb'); if (hb === null) miss.push('Hb'); else { p = hb < 7 ? 22 : hb < 9 ? 17 : hb < 11 ? 13 : hb < 13 ? 8 : hb < 16 ? 4 : 0; if (p) { s += p; pts.push('Hb ' + hb + ' +' + p); } }
+    var urgent = M('active') === '+' ? 'ongoing bleeding' : hb !== null && hb < 7 ? 'Hb < 7' : '';
+    return {
+      title: 'LGIB · Oakland score',
+      lines: [mk(s <= 8 ? 'y' : 'n', 'Oakland ' + s + (pts.length ? ' — ' + pts.join(', ') : ''))],
+      verdict: 'Oakland ' + s + (s <= 8 ? ' · ≤ 8 low risk (safe discharge ~95%)' : ' · > 8 admit'),
+      ok: s <= 8, note: miss.length ? 'ยังไม่มี ' + miss.join(', ') : '',
+      short: 'Oakland ' + s + (miss.length ? ' (incomplete)' : '') + (s <= 8 ? ', low risk' : ''), level: urgent ? 'bad' : s <= 8 ? '' : 'warn', urgent: urgent
+    };
+  }
+  function hemorrhoidC() {
+    var f = sel(S.m.feat), bad = f.indexOf('necrosis') >= 0 || f.indexOf('strangulated') >= 0;
+    var desc = [M('htype'), M('grade') && M('htype') !== 'external' ? 'grade ' + M('grade') : ''].filter(Boolean).join(' ');
+    return {
+      title: 'Hemorrhoid', lines: [mk(desc ? 'y' : 'q', desc || 'type not specified'), mk(bad ? 'n' : f.length ? 'q' : 'y', f.length ? f.join(', ') : 'no complication')],
+      verdict: (desc || 'Hemorrhoid') + (f.length ? ' · ' + f.join(', ') : ''), ok: !bad, short: [desc, f.join(', ')].filter(Boolean).join(', '),
+      level: bad ? 'bad' : '', urgent: bad ? 'strangulated / necrotic hemorrhoid' : ''
+    };
+  }
+  function abscessC() {
+    var t = sel(S.m.atype), red = sel(S.m.red);
+    var fournier = red.indexOf('perineal necrosis') >= 0 || red.indexOf('crepitus') >= 0 || findRe(/soft tissue gas/).length > 0;
+    var complex = t.indexOf('supralevator') >= 0 || t.indexOf('horseshoe') >= 0 || findAny(['supralevator extension']).length > 0;
+    var urgent = fournier ? 'suspected Fournier gangrene' : red.indexOf('systemic sepsis') >= 0 ? 'perianal sepsis' : '';
+    return {
+      title: 'Perianal abscess',
+      lines: [mk(t.length ? 'y' : 'q', t.length ? t.join(', ') + (M('pos') ? " at " + M('pos') + " o'clock" : '') : 'type not specified'),
+        mk(complex ? 'n' : 'y', complex ? 'complex abscess (supralevator / horseshoe)' : 'no complex extension'),
+        mk(red.length || fournier ? 'n' : 'y', red.length || fournier ? 'Red flags: ' + red.concat(fournier && !red.length ? ['soft tissue gas'] : []).join(', ') : 'no red flags')],
+      verdict: fournier ? 'Suspected Fournier gangrene — ควรโทรรายงาน' : complex ? 'Complex perianal abscess' : 'Perianal abscess',
+      ok: !urgent, short: [t.join('/'), complex ? 'complex' : '', fournier ? 'suspected Fournier' : ''].filter(Boolean).join(', '),
+      level: urgent ? 'bad' : complex ? 'warn' : '', urgent: urgent
+    };
+  }
+  function fistulaC() {
+    var pos = num(M('pos')), dist = num(M('dist')), lines = [], v = '', sh = '';
+    if (pos === null || pos < 1 || pos > 12) { lines.push(mk('q', "external opening position not entered (o'clock, lithotomy)")); v = 'Fistula in ano'; }
+    else {
+      var ant = pos > 9 || pos < 3, post = pos > 3 && pos < 9;
+      if (ant) {
+        var far = dist !== null && dist > 3;
+        lines.push(mk('y', "External opening " + pos + " o'clock (anterior)" + (dist !== null ? ', ' + dist + ' cm from AV' : '')));
+        lines.push(mk(far ? 'q' : 'y', far ? 'Anterior but > 3 cm — exception: may curve to posterior midline' : 'Goodsall: straight radial tract → internal opening ~' + pos + " o'clock"));
+        sh = far ? 'anterior > 3 cm (Goodsall exception)' : 'Goodsall: radial tract, IO ~' + pos + " o'clock";
+      } else if (post) {
+        lines.push(mk('y', "External opening " + pos + " o'clock (posterior)" + (dist !== null ? ', ' + dist + ' cm from AV' : '')));
+        lines.push(mk('y', "Goodsall: curved tract → internal opening at posterior midline (6 o'clock)"));
+        sh = "Goodsall: IO at 6 o'clock";
+      } else { lines.push(mk('q', "External opening " + pos + " o'clock (on transverse anal line) — Goodsall ใช้ไม่ได้ชัด")); sh = "EO " + pos + " o'clock"; }
+      v = 'Fistula in ano · ' + sh;
+    }
+    var f = sel(S.m.feat); if (f.length) lines.push(mk(f.indexOf('Crohn disease') >= 0 || f.indexOf('multiple openings') >= 0 ? 'q' : 'y', f.join(', ')));
+    return { title: "Fistula in ano · Goodsall's rule", lines: lines, verdict: v, ok: true, note: "lithotomy position: 12 o'clock = anterior", short: sh, level: '' };
+  }
+  function criteria() {
+    switch (S.dx) {
+      case 'Acute cholecystitis': return tg18chole();
+      case 'Acute cholangitis': return tg18cholangitis();
+      case 'Acute pancreatitis': return bisap();
+      case 'Appendicitis': return airScore();
+      case 'Gut obstruction': return obstruction();
+      case 'Perforation/peritonitis': return perforation();
+      case 'Incarcerated hernia': return herniaC();
+      case 'UGIB': return gbs();
+      case 'LGIB': return oakland();
+      case 'Hemorrhoid': return hemorrhoidC();
+      case 'Perianal abscess': return abscessC();
+      case 'Fistula in ano': return fistulaC();
+    }
+    if (S.cat === 'wound' && S.dx) return lrinec();
+    return null;
+  }
+  function qsofa() {
+    var n = 0; if (V('rr') !== null && V('rr') >= 22) n++; if (V('sbp') !== null && V('sbp') <= 100) n++; if (on('vsx', 'ams')) n++;
+    return n;
+  }
+
+  function preop() {
+    var age = num(S.age), u = S.ud, out = [];
+    var has = {
+      CBC: ['wbc', 'hb', 'hct', 'plt'].some(function (k) { return L(k) !== null; }),
+      'BUN/Cr': L('bun') !== null || L('cr') !== null, Elyte: L('na') !== null || L('k') !== null, INR: L('inr') !== null,
+      LFT: ['tb', 'alp', 'ast', 'alt', 'alb'].some(function (k) { return L(k) !== null; }), DTX: L('dtx') !== null,
+      EKG: !!S.img.EKG, CXR: !!S.img.CXR, UPT: !!S.img.UPT
+    };
+    var cardiac = u.CAD || u.AF || u.HF, renal = u.CKD || u.ESRD, biliary = S.cat === 'hpb', anticoag = S.med.warfarin || S.med.DOAC || u.AF || u.Cirrhosis;
+    var major = S.dx === 'NF' || S.dx === 'Acute cholangitis' || S.dx === 'Perforation/peritonitis' || on('vsx', 'pressor');
+    var obs = S.dx === 'Gut obstruction', gib = S.cat === 'gib';
+    var rules = [
+      ['CBC', [true, '']],
+      ['BUN/Cr', [age >= 60, 'age ' + age], [u.DM, 'DM'], [u.HT, 'HT'], [renal, 'CKD'], [major, 'major'], [obs, 'obstruction'], [gib, 'GI bleeding']],
+      ['Elyte', [age >= 60, 'age ' + age], [renal, 'CKD'], [u.DM, 'DM'], [major, 'major'], [obs, 'vomiting/obstruction']],
+      ['INR', [anticoag, u.Cirrhosis ? 'cirrhosis' : 'anticoagulant/AF'], [biliary, 'biliary'], [major, 'major'], [gib, 'GI bleeding']],
+      ['LFT', [biliary, 'biliary'], [u.Cirrhosis, 'cirrhosis']],
+      ['EKG', [age >= 40, 'age ' + age], [cardiac, 'cardiac'], [u.HT, 'HT'], [u.DM, 'DM'], [renal, 'CKD']],
+      ['CXR', [age >= 60, 'age ' + age], [u.COPD, 'COPD'], [major, 'major']],
+      ['DTX', [u.DM, 'DM']],
+      ['UPT', [S.sex === 'F' && age >= 12 && age <= 50, 'F ' + age]]
+    ];
+    rules.forEach(function (r) {
+      var item = r[0], why = null;
+      for (var i = 1; i < r.length; i++) if (r[i][0]) { why = r[i][1]; break; }
+      if (why === null) return;
+      out.push({ item: item, ok: has[item], why: why, pending: !has[item] && !!S.img['lab pending'] && !/EKG|CXR|UPT/.test(item) });
+    });
+    if (age !== null && age < 18) out.push({ item: 'guardian consent', ok: false, why: 'age ' + age });
+    return out;
+  }
+
+  function required() {
+    var hasUD = sel(S.ud).length > 0 || !!$('udx').value.trim();
+    var r = [
+      ['Dx', !!S.dx || (S.cat === 'other' && !!String(S.m.freedx || '').trim())], ['ward', !!wardName()], ['name', !!$('name').value.trim()],
+      ['HN', /^\d{5,9}$/.test($('hn').value.trim())], ['age', num(S.age) !== null], ['sex', !!S.sex],
+      ['BT', V('bt') !== null], ['BP', V('sbp') !== null], ['HR', V('hr') !== null], ['U/D', hasUD]
+    ];
+    if (S.type === 'Admit') r.push(['plan', !!$('plan').value.trim()]);
+    if (S.vsChg === 'changed') r.push(['initial V/S', V0('sbp') !== null || V0('hr') !== null]);
+    if (!S.vsChg) r.push(['V/S vs initial', false]);
+    live().forEach(function (x) { if (x.req && x.t !== 'hint' && !(x.k === 'freedx')) r.push([x.t === 'abd' ? 'abdomen exam' : x.l, answered(x)]); });
+    return r;
+  }
+
+  function callReasons(c) {
+    var r = [], sbp = V('sbp'), sbp0 = V0('sbp');
+    if (on('vsx', 'pressor') || (sbp !== null && sbp < 90)) r.push('shock / SBP < 90');
+    else if (sbp0 !== null && sbp0 < 90) r.push('SBP < 90 at ' + S.vsSrc);
+    if (qsofa() >= 2) r.push('qSOFA ' + qsofa());
+    if (on('vsx', 'ett')) r.push('on ETT');
+    if (V('sat') !== null && V('sat') < 92) r.push('SpO₂ ' + V('sat') + '%');
+    if (L('lactate') !== null && L('lactate') >= 4) r.push('lactate ' + L('lactate'));
+    if (c && /Grade III/.test(c.verdict)) r.push(c.title.replace('TG18 ', '') + ' Grade III');
+    if (c && c.urgent && r.indexOf(c.urgent) < 0) r.push(c.urgent);
+    return r;
+  }
+
+  /* ================= report model: one source for the Flex card, plain text and the edit diff ================= */
+  function vsParts(sfx) {
+    var g = function (k) { return num($(k + sfx).value); };
+    var bt = g('bt'), sbp = g('sbp'), dbp = g('dbp'), hr = g('hr'), rr = g('rr'), sat = g('sat');
+    return [['BT', bt, bt !== null && (bt >= 38 || bt < 36)], ['BP', sbp !== null ? sbp + (dbp !== null ? '/' + dbp : '') : null, sbp !== null && sbp < 90],
+      ['HR', hr, hr !== null && hr > 100], ['RR', rr, rr !== null && rr >= 22], ['SpO₂', sat !== null ? sat + '%' : null, sat !== null && sat < 92]]
+      .filter(function (x) { return x[1] !== null; });
+  }
+  function vsT(p) { return p.map(function (x) { return x[0] + ' ' + x[1]; }).join(' · '); }
+  function segsVS(p) { var o = []; p.forEach(function (x, i) { if (i) o.push({ t: ' · ' }); o.push({ t: x[0] + ' ' }, { t: String(x[1]), s: x[2] ? 'bad' : '' }); }); return o; }
+  function joinSegs(list, sep) { var o = []; list.forEach(function (x, i) { if (i && sep) o.push({ t: sep }); o = o.concat(x); }); return o; }
+  function segText(sg) { return sg.map(function (x) { return x.t; }).join(''); }
+
+  function buildModel(c, pre, calls) {
+    var name = $('name').value.trim(), hn = $('hn').value.trim(), age = S.age, bed = $('bed').value.trim(), bw = $('bw').value.trim();
+    var dx = S.cat === 'other' ? (S.m.freedx || '') : S.dx, imp = $('imp').value.trim();
+    var md = { type: S.type, calls: calls.slice(), rows: [], nphotos: S.photos.length };
+    md.title = [wardName() + (bed ? ' ' + bed : ''), name].filter(Boolean).join(' · ') || 'ยังไม่ระบุผู้ป่วย';
+    md.sub = [hn ? 'HN ' + hn : 'no HN', (S.sex || '') + (age || ''), bw ? bw + ' kg' : ''].filter(Boolean).join(' · ');
+    md.dx = (dx || 'Dx not selected') + (imp ? ' ' + imp : '');
+    md.badge = c && c.short ? c.short : '';
+    md.badgeCls = !c ? '' : c.level !== undefined ? c.level : /Grade III|high risk/.test(c.verdict) ? 'bad' : c.ok ? '' : 'warn';
+    function row(k, text, segs, cls) {
+      if (!text) return;
+      segs = (segs || [{ t: text }]).filter(function (s) { return s.t; });
+      md.rows.push({ k: k, label: k === 'plan' ? 'Mx (ext)' : ROWLBL[k], text: text, segs: segs, cls: cls || '' });
+    }
+    row('pi', $('pi').value.trim().replace(/\s*\n\s*/g, ' '));
+    var prev = PREV.filter(function (k) { return S.prev[k]; }), ptx = $('prevtxt').value.trim();
+    row('prev', prev.join(', ') + (ptx ? (prev.length ? ' — ' : '') + ptx : ''));
+    var ud = sel(S.ud).filter(function (x) { return x !== 'no U/D'; }).concat($('udx').value.trim() ? [$('udx').value.trim()] : []);
+    var med = sel(S.med).map(function (m) { return 'on ' + m; }), al = $('allergy').value.trim();
+    var udt = [ud.join(', ') || (S.ud['no U/D'] ? 'no U/D' : '')].concat(med).filter(Boolean).join(' · ');
+    row('ud', udt + (al ? (udt ? ' · ' : '') + 'allergy: ' + al : ''), [{ t: udt }].concat(al ? [{ t: udt ? ' · ' : '' }, { t: 'allergy: ' + al, s: 'bad' }] : []));
+
+    var pt = pressText(), cur = vsParts('');
+    var vsx = VSX.filter(function (x) { return S.vsx[x[0]] && x[0] !== 'pressor'; }).map(function (x) { return x[1]; }).concat(pt.length ? pt : S.vsx.pressor ? ['on vasopressor'] : []);
+    var curT = [vsT(cur)].concat(vsx).filter(Boolean).join(' · ');
+    var curS = segsVS(cur).concat(vsx.length && cur.length ? [{ t: ' · ' }] : [], joinSegs(vsx.map(function (x) { return [{ t: x, s: 'bad' }]; }), ' · '));
+    var ini = S.vsChg === 'changed' ? vsParts('0') : [];
+    if (ini.length) row('vs', S.vsSrc + ': ' + vsT(ini) + ' → ward: ' + curT, [{ t: S.vsSrc + ' ', s: 'b' }].concat(segsVS(ini), [{ t: '\n' }, { t: 'Ward ', s: 'b' }], curS));
+    else row('vs', curT + (S.vsChg === 'stable' && curT ? ' · stable since ER/รพช.' : ''), curS.concat(S.vsChg === 'stable' && curT ? [{ t: ' · stable since ER/รพช.', s: 'i' }] : []));
+
+    row('abd', abdText(), joinSegs(abdParts().map(function (x) { return [{ t: x.t, s: x.bad ? 'bad' : '' }]; }), ', '));
+    row('pe', peText());
+    var labs = LABS.filter(function (l) { return L(l[0]) !== null; }).map(function (l) {
+      var v = L(l[0]), t = l[0] === 'plt' ? Math.round(v / 1000) + 'k' : l[0] === 'wbc' ? fmt(v) : l[0] === 'neut' ? v + '%' : String(v), lb = l[2] || l[1];
+      return { t: lb + ' ' + t, s: [{ t: lb + ' ' }, { t: t, s: LAB_ABN[l[0]] && LAB_ABN[l[0]](v) ? 'bad' : '' }] };
+    });
+    var pend = S.img['lab pending'] ? 'lab pending' : '';
+    row('lab', labs.map(function (x) { return x.t; }).concat(pend ? [pend] : []).join(' · '),
+      joinSegs(labs.map(function (x) { return x.s; }).concat(pend ? [[{ t: pend, s: 'i' }]] : []), ' · '));
+    var im = imgItems();
+    row('img', im.map(function (x) { return x.t; }).join(' · '), joinSegs(im.map(function (x) { return x.segs; }), '\n'));
+    if (S.photos.length) {
+      var tags = S.photos.map(function (p) { return p.tag; }).join(', ');
+      row('photos', S.photos.length + ' (' + tags + ')#' + S.photos.map(function (p) { return String(p.src || '').length; }).join('.'),
+        [{ t: '📷 ' + S.photos.length + ' รูป (' + tags + ') · กด "ดูรูป"' }]);
+    }
+    var miss = pre.filter(function (p) { return !p.ok; }).map(function (p) { return p.item + (p.pending ? ' (pending)' : ''); });
+    row('miss', miss.join(', '), null, 'warn');
+    row('plan', $('plan').value.trim().replace(/\s*\n\s*/g, '; '), null, 'acc');
+    row('npo', $('npo').value.trim() ? 'since ' + $('npo').value.trim() : '');
+    return md;
+  }
+  function peText() {
+    var p = [];
+    live().forEach(function (x) {
+      var v = S.m[x.k];
+      if (x.nope) return;
+      if (x.t === 'tri' && v) p.push((x.s || x.l) + ' ' + v);
+      else if (x.t === 'one' && v) p.push(x.f ? x.f.replace('{}', v) : v);
+      else if (x.t === 'multi') { var l = sel(v); if (l.length) p.push(x.f ? x.f.replace('{}', l.join(', ')) : l.join(', ')); }
+      else if (x.t === 'field' && v && String(v).trim()) p.push(x.f ? x.f.replace('{}', String(v).trim()) : String(v).trim());
+    });
+    return p.join(', ');
+  }
+  function sig(md) {
+    var o = { head: md.type + '|' + md.title + '|' + md.sub, dx: md.dx + '|' + md.badge, calls: (md.calls || []).join(', ') };
+    (md.rows || []).forEach(function (r) { o[r.k] = r.text; });
+    return o;
+  }
+  function diff(a, b) { var x = sig(a), y = sig(b); return ROWORDER.filter(function (k) { return (x[k] || '') !== (y[k] || ''); }); }
+  function plain(md) {
+    var out = [];
+    if (md.calls.length) out.push('⚠ Call: ' + md.calls.join(', '));
+    out.push('[' + md.type + '] ' + md.title + ' · ' + md.sub);
+    out.push('Dx: ' + md.dx + (md.badge ? ' (' + md.badge + ')' : ''));
+    md.rows.forEach(function (r) { out.push(r.label + ': ' + (r.k === 'photos' ? r.text.split('#')[0] + ' — ดูรูปจากปุ่มบนการ์ด' : r.text)); });
+    return out.join('\n');
+  }
+
+  /* ================= LINE Flex card (what actually goes into the group) ================= */
+  var COL = { Admit: '#0f6b78', Consult: '#44579e', Notify: '#55666d', upd: '#9a5b00', urgent: '#b3261e', ink: '#142228', mute: '#5b6d74',
+    bad: '#b3261e', warn: '#8a5300', acc: '#0f6b78', ok: '#1d6f46', badSoft: '#fde6e4', warnSoft: '#fff1d6', accSoft: '#dcf0f2', line: '#d3dfe1' };
+  function ftext(text, extra) { return Object.assign({ type: 'text', text: String(text), wrap: true }, extra || {}); }
+  function fspan(sg) {
+    var x = { type: 'span', text: sg.t };
+    if (sg.s === 'bad') { x.color = COL.bad; x.weight = 'bold'; } else if (sg.s === 'b') x.weight = 'bold'; else if (sg.s === 'i') x.style = 'italic';
+    return x;
+  }
+  function ftint(text, bg, color, size) {
+    return { type: 'box', layout: 'vertical', backgroundColor: bg, cornerRadius: 'md', paddingAll: '6px', contents: [ftext(text, { size: size || 'xs', color: color, weight: 'bold' })] };
+  }
+  function frow(label, segs, cls) {
+    var color = cls === 'warn' ? COL.warn : cls === 'acc' ? COL.acc : cls === 'ok' ? COL.ok : cls === 'gone' ? COL.mute : COL.ink;
+    var v = ftext(segText(segs) || '-', { size: 'sm', color: color, flex: 7 });
+    if (cls === 'acc' || cls === 'ok') v.weight = 'bold';
+    if (segs.some(function (s) { return s.s; })) v.contents = segs.map(fspan);
+    return { type: 'box', layout: 'baseline', spacing: 'md', contents: [ftext(label, { size: 'xs', color: COL.mute, flex: 2 }), v] };
+  }
+  function liffUrl(k, id) { return 'https://liff.line.me/' + (LIFF_ID || 'LIFF_ID') + '?' + k + '=' + id; }
+  function buildFlex(md, o) {
+    var upd = o.kind === 'upd', only = upd ? o.changes : null;
+    var want = function (k) { return !only || only.indexOf(k) >= 0; };
+    var head = upd ? COL.upd : md.calls.length ? COL.urgent : COL[md.type] || COL.Admit;
+    var tag = (upd ? 'Update' : md.type) + (o.id ? ' #' + o.id : '') + (upd && o.ver ? ' · v' + o.ver : '') + (!upd && md.calls.length ? ' · urgent' : '');
+    var body = [];
+    if (upd) body.push(ftint(only.length ? 'แก้: ' + only.map(function (k) { return ROWLBL[k]; }).join(', ') : 'ยังไม่มีช่องที่เปลี่ยน', COL.warnSoft, COL.warn));
+    if (want('calls')) {
+      if (md.calls.length) body.push(ftint('📞 ' + md.calls.join(' · '), COL.badSoft, COL.bad, 'sm'));
+      else if (upd) body.push(frow('Call', [{ t: 'no longer meets call criteria' }], 'gone'));
+    }
+    if (want('dx')) {
+      body.push(ftext(md.dx, { weight: 'bold', size: 'md', color: COL.ink }));
+      if (md.badge) body.push(ftint(md.badge, md.badgeCls === 'bad' ? COL.badSoft : md.badgeCls === 'warn' ? COL.warnSoft : COL.accSoft,
+        md.badgeCls === 'bad' ? COL.bad : md.badgeCls === 'warn' ? COL.warn : COL.acc));
+    }
+    var byK = {}; md.rows.forEach(function (r) { byK[r.k] = r; });
+    ROWORDER.forEach(function (k) {
+      if (k === 'head' || k === 'calls' || k === 'dx' || !want(k)) return;
+      var r = byK[k];
+      if (r) body.push(frow(r.label, r.segs, r.cls));
+      else if (only) body.push(k === 'miss' ? frow(ROWLBL[k], [{ t: '✓ complete' }], 'ok') : frow(ROWLBL[k], [{ t: 'removed' }], 'gone'));
+    });
+    body.push({ type: 'separator', margin: 'md', color: COL.line });
+    body.push(ftext((upd ? 'แก้ไขโดย ' : 'รายงานโดย ') + (o.by || 'ext') + (o.time ? ' · ' + o.time : ''), { size: 'xxs', color: COL.mute, margin: 'sm' }));
+    var btns = [];
+    if (md.nphotos && o.id) btns.push({ type: 'button', style: 'secondary', height: 'sm', action: { type: 'uri', label: '📷 ดูรูป (' + md.nphotos + ')', uri: liffUrl('view', o.id) } });
+    if (o.id) btns.push({ type: 'button', style: 'link', height: 'sm', color: COL.acc, action: { type: 'uri', label: 'แก้ไข', uri: liffUrl('edit', o.id) } });
+    var bubble = { type: 'bubble', size: 'mega',
+      header: { type: 'box', layout: 'vertical', backgroundColor: head, paddingAll: '12px', spacing: 'xs',
+        contents: [ftext(tag, { size: 'xxs', color: '#ffffff', weight: 'bold' }), ftext(md.title, { size: 'lg', color: '#ffffff', weight: 'bold' }), ftext(md.sub, { size: 'xs', color: '#ffffff' })] },
+      body: { type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: '12px', backgroundColor: '#ffffff', contents: body } };
+    if (btns.length) bubble.footer = { type: 'box', layout: 'horizontal', spacing: 'sm', paddingAll: '8px', backgroundColor: '#ffffff', contents: btns };
+    var alt = upd ? 'Update #' + o.id + ' · ' + md.title + (only.length ? ' · แก้: ' + only.map(function (k) { return ROWLBL[k]; }).join(', ') : '')
+      : md.type + ' #' + o.id + ' · ' + md.title + ' · ' + md.dx + (md.badge ? ' (' + md.badge + ')' : '') + (md.calls.length ? ' · 📞 ' + md.calls.join(', ') : '');
+    return { type: 'flex', altText: alt.slice(0, 390), contents: bubble };
+  }
+
+  /* preview renderer for the subset of Flex we generate (same JSON that is sent) */
+  var FX_FS = { xxs: 11, xs: 12.5, sm: 14, md: 15.5, lg: 18, xl: 21 }, FX_SP = { none: 0, xs: 2, sm: 4, md: 8, lg: 12, xl: 16, xxl: 20 };
+  function fxPx(v) { return v === undefined ? '' : /px$/.test(v) ? v : (FX_SP[v] !== undefined ? FX_SP[v] + 'px' : v); }
+  function fxNode(n, parent) {
+    var st = [];
+    if (n.flex !== undefined) st.push(n.flex ? 'flex:' + n.flex + ' 1 0' : 'flex:0 0 auto');
+    else if (parent && parent !== 'vertical') st.push('flex:1 1 0');
+    if (n.margin) st.push('margin-top:' + fxPx(n.margin));
+    if (n.type === 'box') {
+      st.push('display:flex', 'flex-direction:' + (n.layout === 'vertical' ? 'column' : 'row'), 'min-width:0');
+      if (n.layout === 'baseline') st.push('align-items:baseline');
+      if (n.spacing) st.push('gap:' + fxPx(n.spacing));
+      if (n.paddingAll) st.push('padding:' + fxPx(n.paddingAll));
+      if (n.backgroundColor) st.push('background:' + n.backgroundColor);
+      if (n.cornerRadius) st.push('border-radius:' + ({ xs: 2, sm: 4, md: 8, lg: 12, xl: 16 }[n.cornerRadius] || 0) + 'px');
+      return '<div style="' + st.join(';') + '">' + n.contents.map(function (c) { return fxNode(c, n.layout); }).join('') + '</div>';
+    }
+    if (n.type === 'text') {
+      st.push('font-size:' + (FX_FS[n.size] || 14) + 'px', 'color:' + (n.color || COL.ink), 'min-width:0', 'line-height:1.45', 'white-space:pre-wrap', 'overflow-wrap:anywhere');
+      if (n.weight === 'bold') st.push('font-weight:700');
+      var inner = n.contents ? n.contents.map(function (s) {
+        return '<span style="' + [s.color ? 'color:' + s.color : '', s.weight === 'bold' ? 'font-weight:700' : '', s.style === 'italic' ? 'font-style:italic' : ''].filter(Boolean).join(';') + '">' + esc(s.text) + '</span>';
+      }).join('') : esc(n.text);
+      return '<div style="' + st.join(';') + '">' + inner + '</div>';
+    }
+    if (n.type === 'separator') return '<div style="border-top:1px solid ' + (n.color || COL.line) + (n.margin ? ';margin-top:' + fxPx(n.margin) : '') + '"></div>';
+    if (n.type === 'button') {
+      var look = n.style === 'secondary' ? 'background:#eef1f3;color:#142228' : n.style === 'primary' ? 'background:' + (n.color || COL.acc) + ';color:#fff' : 'color:' + (n.color || COL.acc);
+      return '<a class="fx-btn" role="button" tabindex="0" data-uri="' + esc(n.action.uri) + '" style="' + st.join(';') + ';' + look + '">' + esc(n.action.label) + '</a>';
+    }
+    if (n.type === 'filler') return '<div style="flex:1"></div>';
+    return '';
+  }
+  function renderFlex(msg) {
+    var b = msg.contents;
+    return '<div class="fx">' + ['header', 'body', 'footer'].filter(function (k) { return b[k]; }).map(function (k) { return fxNode(b[k], null); }).join('') + '</div>';
+  }
+
+  /* ================= update outputs ================= */
+  function update() {
+    var c = criteria(), pre = preop(), req = required(), calls = callReasons(c);
+    var done = req.filter(function (r) { return r[1]; }).length, pct = Math.round(done / req.length * 100);
+    $('barfill').style.width = pct + '%';
+    var need = req.filter(function (r) { return !r[1]; }).map(function (r) { return r[0]; });
+    $('missing').textContent = need.length ? 'ครบ ' + pct + '% · ยังขาด: ' + need.join(', ') : 'ครบ 100% · ส่งได้';
+    $('dockinfo').innerHTML = 'ครบ <b>' + pct + '%</b>' + (need.length ? ' · ขาด ' + esc(need.slice(0, 3).join(', ')) + (need.length > 3 ? ' …' : '') : ' · ส่งได้');
+
+    $('critbox').innerHTML = c ? '<div class="box ' + (c.level !== undefined ? (c.level === 'bad' ? 'bad' : c.level === 'warn' ? 'warn' : 'info') : c.ok ? (/Grade III|high risk/.test(c.verdict) ? 'bad' : 'info') : 'warn') + '">' +
+      '<div class="sub">' + esc(c.title) + '</div><div class="crit">' + c.lines.map(function (l) {
+        return '<div class="line"><span class="mark ' + l[0] + '">' + (l[0] === 'y' ? '✓' : l[0] === 'n' ? '✗' : '?') + '</span><span>' + esc(l[1]) + '</span></div>';
+      }).join('') + '</div><div class="verdict">' + esc(c.verdict) + '</div>' + (c.note ? '<div class="hint">' + esc(c.note) + '</div>' : '') + '</div>' : '';
+    $('preop').innerHTML = pre.length ? pre.map(function (p) {
+      return '<div><span class="' + (p.ok ? 'y' : 'q') + '">' + (p.ok ? '✓' : '❔') + '</span><span>' + esc(p.item) + (p.why ? ' <span class="hint">(' + esc(p.why) + ')</span>' : '') +
+        (p.pending ? ' <span class="hint">· pending</span>' : '') + '</span></div>';
+    }).join('') : '<div class="hint">ใส่อายุ / U/D แล้วจะขึ้นรายการที่ต้องมี</div>';
+
+    var call = $('call');
+    call.hidden = !calls.length;
+    if (calls.length) call.innerHTML = '<b>📞 เคสนี้ควรโทรรายงานอาจารย์ก่อน</b><span>' + esc(calls.join(' · ')) + '</span><span class="hint" style="color:inherit">โทรเล่าก่อน แล้วค่อยส่งฟอร์มเป็นบันทึก</span>';
+
+    var md = buildModel(c, pre, calls);
+    $('msg').textContent = plain(md);
+    var d = $('draft');
+    if (editing) {
+      var ch = diff(editPrev || { rows: [], calls: [] }, md);
+      d.innerHTML = $('notify').checked
+        ? '<div class="draftlabel">การ์ดอัปเดตที่จะส่ง · ยังไม่ส่ง</div>' + renderFlex(buildFlex(md, { kind: 'upd', id: editing, ver: editVer + 1, changes: ch, by: ME.name, time: hhmm() }))
+        : '<div class="draftlabel">บันทึกลงชีตอย่างเดียว ไม่มีการ์ดเข้ากลุ่ม' + (ch.length ? ' · แก้: ' + esc(ch.map(function (k) { return ROWLBL[k]; }).join(', ')) : '') + '</div>';
+    } else if (hasContent()) {
+      d.innerHTML = '<div class="draftlabel">การ์ดที่จะส่งเข้ากลุ่ม · ยังไม่ส่ง</div>' + renderFlex(buildFlex(md, { kind: 'new', id: 0, by: ME.name || 'ext', time: hhmm() }));
+    } else d.innerHTML = '<div class="draftlabel">กรอกฟอร์มแล้วตัวอย่างการ์ดจะขึ้นตรงนี้</div>';
+    saveDraft();
+    return { md: md, need: need };
+  }
+  function hasContent() { return !!($('name').value.trim() || $('hn').value.trim() || S.dx || S.cat || S.ward); }
+
+  /* ================= lab paste ================= */
+  function parsePaste(t) {
+    var s = String(t).replace(/,(?=\d{3}\b)/g, ''), got = 0;
+    var pats = { wbc: /\bwbc\s*[:=]?\s*(\d+(?:\.\d+)?)\s*(k)?/i, hb: /\bhb\s*[:=]?\s*(\d+(?:\.\d+)?)/i, hct: /\bhct\s*[:=]?\s*(?:\d+(?:\.\d+)?\s*>\s*)?(\d+(?:\.\d+)?)/i,
+      plt: /\bpl(?:t|atelet)s?\s*[:=]?\s*(\d+(?:\.\d+)?)\s*(k)?/i, bun: /\bbun\s*[:=]?\s*(\d+(?:\.\d+)?)/i, cr: /\bcr(?:eatinine)?\s*[:=]?\s*(\d+(?:\.\d+)?)/i,
+      na: /\bna\s*[:=]?\s*(\d+(?:\.\d+)?)/i, k: /(?:^|[^a-z])k\s*[:=]?\s*(\d(?:\.\d+)?)(?!\d)/i, inr: /\binr\s*[:=]?\s*(\d+(?:\.\d+)?)/i,
+      dtx: /\b(?:dtx|fbs|glucose|bs)\s*[:=]?\s*(\d+)/i, crp: /\bcrp\s*[:=]?\s*(\d+(?:\.\d+)?)/i, tb: /\b(?:tb|t\.?\s*bil\w*)\s*[:=]?\s*(\d+(?:\.\d+)?)/i,
+      alp: /\balp\s*[:=]?\s*(\d+)/i, ast: /\b(?:ast|sgot)\s*[:=]?\s*(\d+)/i, alt: /\b(?:alt|sgpt)\s*[:=]?\s*(\d+)/i, alb: /\balb\w*\s*[:=]?\s*(\d(?:\.\d+)?)/i,
+      lipase: /\blipase\s*[:=]?\s*(\d+)/i, lactate: /\blactate\s*[:=]?\s*(\d+(?:\.\d+)?)/i, neut: /\b(?:pmn|neut\w*)\s*[:=]?\s*(\d+(?:\.\d+)?)/i };
+    Object.keys(pats).forEach(function (k) {
+      var m = s.match(pats[k]); if (!m) return;
+      var v = parseFloat(m[1]); if (m[2]) v = v * 1000;
+      S.labs[k] = String(v); got++;
+    });
+    if (/pending|รอผล/i.test(s)) S.img['lab pending'] = true;
+    return got;
+  }
+
+  /* ================= timer ================= */
+  function startTimer() { if (started || frozen !== null) return; started = Date.now(); timerId = setInterval(tick, 1000); tick(); }
+  function tick() {
+    var sec = frozen !== null ? frozen : started ? Math.floor((Date.now() - started) / 1000) : 0;
+    $('timer').innerHTML = '⏱ <b>' + Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0') + '</b>';
+  }
+
+  /* ================= events ================= */
+  function rerenderAll() { renderStatic(); renderModule(); renderLabs(); update(); }
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    var fb = t.closest('.fx-btn'); if (fb) { flexButton(fb.dataset.uri); return; }
+    var ex = t.closest('[data-ex]'); if (ex) { fresh(ex.dataset.ex); if (!ex.dataset.ex) { clearDraft(); window.scrollTo({ top: 0 }); } return; }
+    var act = t.closest('[data-act]'); if (act) { screenAction(act.dataset.act); return; }
+    var at = t.closest('[data-attach]'); if (at) { if (S.photos.length >= MAXPHOTO) return; pendingTag = at.dataset.attach; $('file').click(); return; }
+    var dp = t.closest('[data-delphoto]'); if (dp) { S.photos.splice(Number(dp.dataset.delphoto), 1); renderModule(); renderImg(); update(); return; }
+    if (t.id === 'cfgtoggle') { cfgMode = !cfgMode; renderModule(); return; }
+    if (t.id === 'cfg-add') { addCfgItem(); return; }
+    if (t.id === 'cfg-reset') { delete CFG[dxKey()]; saveCfg(); renderModule(); update(); toast('คืนค่าเริ่มต้นแล้ว'); return; }
+    var cd = t.closest('[data-cfgdel]');
+    if (cd) { var c = CFG[dxKey()] || {}; c.add = (c.add || []).filter(function (x) { return x.k !== cd.dataset.cfgdel; }); saveCfg(); renderModule(); update(); return; }
+
+    var b = t.closest('.chip'); if (!b || !b.dataset.g) return;
+    startTimer();
+    var g = b.dataset.g, v = b.dataset.v;
+    if (g === 'type' || g === 'ward' || g === 'sex') { S[g] = v; renderStatic(); if (g === 'ward' && v === 'other') $('wardx').focus(); }
+    else if (g === 'cat') { if (S.cat !== v) { S.cat = v; S.dx = ''; S.m = {}; } cfgMode = false; renderStatic(); renderModule(); renderLabs(); }
+    else if (g === 'dx') { S.dx = S.dx === v ? '' : v; S.m = {}; cfgMode = false; renderStatic(); renderModule(); renderLabs(); }
+    else if (g === 'ud') {
+      S.ud[v] = !S.ud[v];
+      if (v === 'no U/D' && S.ud[v]) Object.keys(S.ud).forEach(function (k) { if (k !== v) S.ud[k] = false; });
+      if (v !== 'no U/D' && S.ud[v]) S.ud['no U/D'] = false;
+      renderStatic();
+    }
+    else if (g === 'med' || g === 'img' || g === 'prev') { S[g][v] = !S[g][v]; renderStatic(); }
+    else if (g === 'vsx') {
+      S.vsx[v] = !S.vsx[v];
+      if (v === 'pressor' && S.vsx[v] && !DRUGS.some(function (d) { return S.press[d] && S.press[d].on; })) S.press.NE = Object.assign(S.press.NE || {}, { on: true });
+      renderVS();
+    }
+    else if (g === 'press') { S.press[v] = S.press[v] || {}; S.press[v].on = !S.press[v].on; renderVS(); }
+    else if (g === 'vschg') { S.vsChg = S.vsChg === v ? '' : v; renderVS(); }
+    else if (g === 'vssrc') { S.vsSrc = v; renderVS(); }
+    else if (g === 'abdr') {
+      if (S.abd.s['generalized tenderness']) { S.abd.s['generalized tenderness'] = false; REGIONS.forEach(function (r) { S.abd.r[r] = true; }); }
+      S.abd.r[v] = !S.abd.r[v]; renderModule();
+    }
+    else if (g === 'abds') {
+      S.abd.s[v] = !S.abd.s[v];
+      if (v === 'soft' && S.abd.s[v]) S.abd.s.rigidity = false;
+      if (v === 'rigidity' && S.abd.s[v]) S.abd.s.soft = false;
+      renderModule();
+    }
+    else if (g === 'abdbs') { S.abd.bs = S.abd.bs === v ? '' : v; renderModule(); }
+    else if (g.indexOf('if:') === 0) {
+      var mod = g.slice(3), d = imgD(mod), excl = /^(normal|negative|positive)$/;
+      d.f[v] = !d.f[v];
+      if (d.f[v]) Object.keys(d.f).forEach(function (k) { if (k !== v && (excl.test(v) || excl.test(k))) d.f[k] = false; });
+      renderImg();
+    }
+    else if (g.indexOf('mm:') === 0) { var k = g.slice(3); S.m[k] = S.m[k] || {}; S.m[k][v] = !S.m[k][v]; b.setAttribute('aria-pressed', S.m[k][v] ? 'true' : 'false'); }
+    else if (g.indexOf('m:') === 0) {
+      var key = g.slice(2); S.m[key] = S.m[key] === v ? '' : v;
+      b.parentNode.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.v === S.m[key] ? 'true' : 'false'); });
+    }
+    update();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('fx-btn')) flexButton(e.target.dataset.uri); });
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if ((t.dataset && t.dataset.cfg) || /^cfg-/.test(t.id || '') || (t.id === 'notify' && !editing)) return;
+    if (t.id !== 'notify') startTimer();
+    if (t.dataset.lab) S.labs[t.dataset.lab] = t.value;
+    else if (t.dataset.m) S.m[t.dataset.m] = t.value;
+    else if (t.dataset.imgn) { var pr = t.dataset.imgn.split('|'); imgD(pr[0]).n[pr[1]] = t.value; }
+    else if (t.dataset.imgt) imgD(t.dataset.imgt).t = t.value;
+    else if (t.dataset.press) { var pp = t.dataset.press.split('|'); S.press[pp[0]] = S.press[pp[0]] || { on: true }; S.press[pp[0]][pp[1]] = t.value; refreshDoses(); }
+    else if (t.id === 'bw') refreshDoses();
+    else if (t.id === 'age') { S.age = t.value; renderStatic(); }
+    else if (t.id === 'paste') { var n = parsePaste(t.value); if (n) { renderLabs(); renderStatic(); toast('แยกแลปได้ ' + n + ' ค่า'); } }
+    update();
+  });
+  document.addEventListener('change', function (e) {
+    var t = e.target; if (!t.dataset || !t.dataset.cfg) return;
+    var c = CFG[dxKey()] = CFG[dxKey()] || {}; c.hide = c.hide || {}; c.req = c.req || {};
+    if (t.dataset.cfg === 'show') c.hide[t.dataset.k] = !t.checked; else c.req[t.dataset.k] = t.checked;
+    saveCfg(); renderModule(); update();
+  });
+  $('form').addEventListener('submit', function (e) { e.preventDefault(); });
+  $('file').addEventListener('change', function () {
+    var files = Array.prototype.slice.call(this.files || [], 0, Math.max(0, MAXPHOTO - S.photos.length)), tag = pendingTag || 'other';
+    this.value = '';
+    var left = files.length; if (!left) return;
+    files.forEach(function (f) {
+      shrink(f, function (src) {
+        if (src && S.photos.length < MAXPHOTO) S.photos.push({ tag: tag, src: src });
+        if (--left === 0) { renderModule(); renderImg(); update(); toast('แนบรูปแล้ว ' + S.photos.length + '/' + MAXPHOTO); }
+      });
+    });
+  });
+
+  /* ================= server + LINE ================= */
+  function errText(e) {
+    var m = String(e && e.message || e);
+    if (/not-member/.test(m)) return 'บัญชี LINE นี้ไม่ได้อยู่ในกลุ่มเวร (หรือบอทยังไม่ได้อยู่ในกลุ่ม)';
+    if (/^auth|expired|IdToken/i.test(m)) return 'เซสชัน LINE หมดอายุหรือไม่ถูกต้อง — ปิดแล้วเปิดฟอร์มใหม่';
+    if (/not-configured/.test(m)) return 'ระบบยังตั้งค่าไม่ครบ: ' + m.replace(/^not-configured:\s*/, '');
+    if (/Failed to fetch|NetworkError|network/i.test(m)) return 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ (เน็ตหลุด?) ลองอีกครั้ง';
+    return m;
+  }
+  function api(action, data) {
+    if (MOCK) return mockApi(action, data || {});
+    var body = JSON.stringify(Object.assign({ formApi: action, idToken: LX.getIDToken() }, data || {}));
+    return fetch(CONF.API_URL, { method: 'POST', body: body, redirect: 'follow' })
+      .then(function (r) { return r.text(); })
+      .then(function (txt) {
+        var j; try { j = JSON.parse(txt); } catch (e) { throw new Error('เซิร์ฟเวอร์ตอบไม่ถูกต้อง (Deploy เวอร์ชันล่าสุดแล้วหรือยัง?)'); }
+        if (!j.ok) throw new Error(j.error || 'error');
+        return j;
+      });
+  }
+  var cfgTimer = null;
+  function saveCfg() {
+    var dx = dxKey(), val = CFG[dx] || null;
+    clearTimeout(cfgTimer);
+    cfgTimer = setTimeout(function () {
+      api('saveCfg', { dx: dx, cfg: val }).then(function () { toast('บันทึกการตั้งค่าแล้ว · ใช้ทั้งทีม'); }, function (e) { toast('บันทึกการตั้งค่าไม่ได้: ' + errText(e), true); });
+    }, 500);
+  }
+  /* ส่งการ์ด: liff.sendMessages ส่งได้เฉพาะห้องแชทที่เปิดฟอร์มขึ้นมา (ต้องเปิดในแอป LINE จากในกลุ่ม)
+     เปิดจากแชท 1:1 / Keep / เบราว์เซอร์ / เมนูใช้ล่าสุด → ใช้ shareTargetPicker ให้เลือกกลุ่มเอง */
+  function ctxType() { try { var c = LX.getContext && LX.getContext(); return (c && c.type) || ''; } catch (e) { return ''; } }
+  function inGroup() { return /^(group|room|square_chat)$/.test(ctxType()); }
+  function inClient() { try { return !!(LX.isInClient && LX.isInClient()); } catch (e) { return false; } }
+  function errWhy(e) { return String(e && (e.message || e.code) || e); }
+  function pick(flex) {
+    return LX.shareTargetPicker([flex]).then(function (res) {
+      return res && res.status === 'success' ? { ok: true, picked: true } : { ok: false, why: 'cancel' };
+    }, function (e) { return { ok: false, why: errWhy(e) }; });
+  }
+  function deliver(flex) {
+    if (inGroup()) return LX.sendMessages([flex]).then(function () { return { ok: true }; }, function (e) {
+      var why = errWhy(e);
+      if (!(inClient() && canPick())) return { ok: false, why: why };
+      return pick(flex).then(function (r) { return r.ok ? r : { ok: false, why: r.why === 'cancel' ? why : r.why }; });
+    });
+    if (inClient() && canPick()) return pick(flex); // ในแอป LINE แต่ไม่ใช่กลุ่ม → เปิดหน้าเลือกกลุ่มทันที
+    return Promise.resolve({ ok: false, why: 'not-in-chat' }); // เบราว์เซอร์ภายนอก: ต้องกดปุ่มเลือกกลุ่มเอง (popup ต้องมาจากการแตะ)
+  }
+  function canPick() { try { return !!(LX.isApiAvailable && LX.isApiAvailable('shareTargetPicker')); } catch (e) { return false; } }
+  function whyText(w) {
+    var pk = canPick();
+    if (w === 'not-in-chat') return (inClient() ? 'ฟอร์มนี้ไม่ได้เปิดจากในกลุ่มเวร' : 'ฟอร์มนี้เปิดในเบราว์เซอร์ ไม่ได้เปิดในแอป LINE') +
+      (pk ? ' — กด "เลือกกลุ่มส่งการ์ด" แล้วเลือกกลุ่มเวร' : ' — ครั้งหน้าแตะลิงก์ฟอร์มจากในกลุ่มเวรบนมือถือ');
+    if (w === 'cancel') return 'ยังไม่ได้เลือกกลุ่ม' + (pk ? ' — กด "เลือกกลุ่มส่งการ์ด" อีกครั้ง' : '');
+    if (/permission|403|grant/i.test(w)) return 'LINE ไม่อนุญาตให้ฟอร์มส่งข้อความในห้องนี้ (เช่น เปิดจากเมนู "ใช้ล่าสุด" หรือ Keep)' +
+      (pk ? ' — กด "เลือกกลุ่มส่งการ์ด"' : ' — ปิดฟอร์มแล้วแตะลิงก์ใหม่จากในกลุ่มเวร');
+    return 'ส่งไม่สำเร็จ: ' + esc(w);
+  }
+  function ctxNote() {
+    var bar = $('ctxbar'); if (!bar) return;
+    if (MOCK || inGroup()) { bar.hidden = true; return; }
+    bar.hidden = false;
+    $('ctxmsg').textContent = (inClient() ? 'เปิดจากนอกกลุ่มเวร' : 'เปิดในเบราว์เซอร์ ไม่ใช่ในแอป LINE') +
+      (canPick() ? ' — กดส่งแล้วเลือกกลุ่มเวรที่จะส่งการ์ด' : ' — บันทึกลงระบบได้ แต่ส่งการ์ดเข้ากลุ่มไม่ได้ ให้แตะลิงก์ฟอร์มจากในกลุ่มเวร');
+  }
+
+  /* ================= full-page screens: loading / error / done / photo viewer ================= */
+  var lastDone = null;
+  function screen(kind, html) {
+    var el = $('screen');
+    if (!kind) { el.hidden = true; document.body.classList.remove('locked'); return; }
+    el.hidden = false; document.body.classList.add('locked');
+    el.innerHTML = kind === 'loading' ? '<div class="scard"><div class="spin" aria-hidden="true"></div><div>' + esc(html || 'กำลังโหลด…') + '</div></div>' : '<div class="scard">' + html + '</div>';
+    el.scrollTop = 0;
+  }
+  function showError(e) {
+    var m = errText(e), auth = /หมดอายุ/.test(m);
+    screen('error', '<div class="stitle">เปิดฟอร์มไม่ได้</div><div>' + esc(m) + '</div><div class="actions">' +
+      (auth && !MOCK ? '<button type="button" class="btn" data-act="relogin">เข้าสู่ระบบใหม่</button>' : '<button type="button" class="btn" data-act="reload">ลองอีกครั้ง</button>') +
+      (LX && LX.isInClient && LX.isInClient() ? '<button type="button" class="btn alt" data-act="close">ปิด</button>' : '') + '</div>');
+  }
+  function done(r) {
+    lastDone = r;
+    var h, sentOk = r.sent && r.sent.ok;
+    if (r.edit && !r.notify) h = '<div class="stitle ok">✓ บันทึกการแก้ไข #' + r.id + ' แล้ว</div><div>ไม่ได้ส่งการ์ดเข้ากลุ่ม (เลือกไม่แจ้ง)</div>';
+    else if (sentOk) h = '<div class="stitle ok">✓ ส่ง' + (r.edit ? 'การ์ดอัปเดต' : 'รายงาน') + ' #' + r.id + ' เข้ากลุ่มแล้ว</div>' +
+      (r.secs ? '<div class="hint">ใช้เวลากรอก ' + mmss(r.secs) + '</div>' : '') + (LX.isInClient && LX.isInClient() ? '<div class="hint">กำลังปิดหน้าต่าง…</div>' : '');
+    else h = '<div class="stitle warn">บันทึก #' + r.id + ' ลงระบบแล้ว แต่ยังไม่ได้ส่งการ์ดเข้ากลุ่ม</div><div>' +
+      whyText(r.sent && r.sent.why || '') + '</div>' +
+      '<div class="hint">ข้อมูลเคสอยู่ในชีตแล้ว ส่งการ์ดทีหลังก็ไม่ซ้ำ</div>';
+    h += '<div class="actions">' + (!sentOk && r.flex && canPick() ? '<button type="button" class="btn" data-act="pick">เลือกกลุ่มส่งการ์ด</button>' : '') +
+      (!sentOk && r.flex ? '<button type="button" class="btn alt" data-act="copydone">คัดลอกเป็นข้อความ</button>' : '') +
+      '<button type="button" class="btn alt" data-act="new">รายงานเคสใหม่</button>' +
+      (LX.isInClient && LX.isInClient() ? '<button type="button" class="btn alt" data-act="close">ปิด</button>' : '') +
+      (MOCK ? '<button type="button" class="ghost" data-act="seechat">ดูการ์ดในแชทจำลอง</button>' : '') + '</div>';
+    screen('done', h);
+    if (sentOk && LX.isInClient && LX.isInClient()) setTimeout(function () { LX.closeWindow(); }, 1400);
+  }
+  function screenAction(a) {
+    if (a === 'reload') location.reload();
+    else if (a === 'relogin') { try { LX.logout(); } catch (e) { } LX.login({ redirectUri: location.href }); }
+    else if (a === 'close') { if (LX.closeWindow) LX.closeWindow(); }
+    else if (a === 'new') { screen(null); fresh(''); window.scrollTo({ top: 0 }); }
+    else if (a === 'seechat') { screen(null); fresh(''); var mc = $('mockchat'); if (mc) mc.scrollIntoView({ behavior: 'smooth' }); }
+    else if (a === 'pick' && lastDone && lastDone.flex) {
+      LX.shareTargetPicker([lastDone.flex]).then(function (res) {
+        if (res && res.status === 'success') { lastDone.sent = { ok: true }; done(lastDone); }
+      }, function (e) { toast('ส่งไม่สำเร็จ: ' + errText(e), true); });
+    }
+    else if (a === 'copydone' && lastDone) copyText(lastDone.plain);
+    else if (a === 'vclose') { if (LX.isInClient && LX.isInClient()) LX.closeWindow(); else if (MOCK) screen(null); else history.back(); }
+  }
+  function viewer(id) {
+    screen('loading', 'กำลังโหลดรูป…');
+    return api('photos', { caseId: id }).then(function (r) {
+      var ph = r.photos || [];
+      var h = '<div class="stitle">รูปเคส #' + r.caseId + '</div><div><b>' + esc(r.title || '') + '</b></div><div class="hint">' + esc([r.sub, r.dx].filter(Boolean).join(' · ')) + '</div>';
+      h += ph.length ? ph.map(function (p) {
+        return p.src ? '<figure class="vph"><img src="' + p.src + '" alt="รูป ' + esc(p.tag) + '"><figcaption>' + esc(p.tag) + '</figcaption></figure>' : '<div class="hint">รูป ' + esc(p.tag) + ' ถูกลบแล้ว (ครบกำหนดเก็บ)</div>';
+      }).join('') : '<div class="hint">ไม่มีรูป หรือรูปถูกลบตามกำหนดแล้ว</div>';
+      h += '<div class="box warn">ภาพผู้ป่วย — เปิดดูได้เฉพาะสมาชิกกลุ่มเวร ห้ามบันทึกหรือส่งต่อ · ระบบบันทึกชื่อคนที่เปิดดูไว้</div>' +
+        '<div class="actions"><button type="button" class="btn" data-act="vclose">ปิด</button></div>';
+      screen('viewer', h);
+    }, showError);
+  }
+  function flexButton(uri) {
+    var q = String(uri || '').split('?')[1] || '', m;
+    if (!MOCK) { toast('ปุ่มนี้ใช้ได้บนการ์ดในไลน์'); return; }
+    if ((m = q.match(/(?:^|&)edit=(\d+)/))) openEdit(+m[1]);
+    else if ((m = q.match(/(?:^|&)view=(\d+)/))) viewer(+m[1]);
+  }
+
+  /* ================= send / edit ================= */
+  function hhmm() { var d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  function mmss(sec) { sec = sec || 0; return Math.floor(sec / 60) + ' นาที ' + (sec % 60) + ' วินาที'; }
+  function toast(t, warn) { var el = $('toast'); el.textContent = t; el.className = 'toast' + (warn ? ' warn' : ''); }
+  function freeze() { if (started && frozen === null) { frozen = Math.floor((Date.now() - started) / 1000); clearInterval(timerId); tick(); } return frozen || 0; }
+  function snapshot() { var v = {}; FIELDS.forEach(function (k) { v[k] = $(k).value; }); return { S: JSON.parse(JSON.stringify(S)), v: v }; }
+  function restore(sn) {
+    S = fill(JSON.parse(JSON.stringify(sn.S)));
+    FIELDS.forEach(function (k) { $(k).value = sn.v[k] || ''; });
+    $('paste').value = ''; started = 0; frozen = null; clearInterval(timerId); tick();
+    rerenderAll();
+  }
+  function stateForSave() { var x = JSON.parse(JSON.stringify(S)); delete x.photos; return x; }
+  function fieldVals() { var v = {}; FIELDS.forEach(function (k) { v[k] = $(k).value; }); return v; }
+  function sendLabels() {
+    var t = busy ? 'กำลังส่ง…' : editing ? 'บันทึกการแก้ไข' : armed ? 'ส่งทั้งที่ยังขาด' : (!MOCK && LX && !inGroup() && canPick()) ? 'ส่ง · เลือกกลุ่ม' : 'ส่งเข้ากลุ่ม';
+    $('send').textContent = t; $('docksend').textContent = t;
+    $('send').disabled = busy; $('docksend').disabled = busy;
+  }
+  function send() {
+    if (busy) return;
+    var r = update();
+    if (!editing && !hasContent()) { toast('ยังไม่มีข้อมูลให้ส่ง', true); return; }
+    if (!editing && r.need.length && Date.now() - armed > 6000) {
+      armed = Date.now(); sendLabels();
+      toast('ยังขาด: ' + r.need.join(', ') + ' — กดส่งอีกครั้งภายใน 6 วินาทีถ้าจะส่งเลย', true);
+      setTimeout(function () { if (armed && Date.now() - armed >= 6000) { armed = 0; sendLabels(); } }, 6100);
+      return;
+    }
+    var changes = editing ? diff(editPrev || { rows: [], calls: [] }, r.md) : [];
+    if (editing && !changes.length) { toast('ยังไม่มีช่องไหนเปลี่ยน', true); return; }
+    var notify = !editing || $('notify').checked, wasEdit = !!editing, secs = freeze();
+    armed = 0; busy = true; sendLabels(); toast('กำลังบันทึก…');
+    api('save', { caseId: editing || null, state: stateForSave(), fields: fieldVals(), model: r.md, plain: plain(r.md), notify: notify,
+      changes: changes.map(function (k) { return ROWLBL[k]; }),
+      photos: S.photos.map(function (p) { return p.id ? { id: p.id, tag: p.tag } : { src: p.src, tag: p.tag }; }) })
+      .then(function (res) {
+        (res.photos || []).forEach(function (p, i) { if (S.photos[i]) S.photos[i].id = p.id; });
+        var flex = notify ? buildFlex(r.md, { kind: wasEdit ? 'upd' : 'new', id: res.caseId, ver: res.ver, changes: changes, by: ME.name, time: hhmm() }) : null;
+        return (flex ? deliver(flex) : Promise.resolve(null)).then(function (sent) {
+          clearDraft(); busy = false; sendLabels(); toast('');
+          if (editing) { editing = null; editPrev = null; $('editbar').hidden = true; }
+          done({ id: res.caseId, ver: res.ver, edit: wasEdit, notify: notify, sent: sent, flex: flex, secs: secs, plain: plain(r.md) });
+        });
+      })
+      .catch(function (e) {
+        busy = false; sendLabels();
+        toast('ส่งไม่สำเร็จ: ' + errText(e) + ' — ข้อมูลยังอยู่ในฟอร์ม', true);
+        if (/หมดอายุ|ไม่ได้อยู่ในกลุ่ม/.test(errText(e))) showError(e);
+      });
+  }
+  function openEdit(id) {
+    screen('loading', 'กำลังเปิดรายงาน #' + id + '…');
+    return api('get', { caseId: id }).then(function (r) {
+      if (!editing) stash = hasContent() ? snapshot() : null;
+      editing = r.caseId; editVer = r.ver; editPrev = r.model; armed = 0; cfgMode = false;
+      var st = r.state || {}; st.photos = (r.photos || []).filter(function (p) { return p.src; });
+      restore({ S: st, v: r.fields || {} });
+      $('editbar').hidden = false; $('editno').textContent = '#' + r.caseId + ' (v' + r.ver + ')' + (r.reporter ? ' · รายงานโดย ' + r.reporter : '');
+      $('notify').checked = true; sendLabels(); update(); screen(null);
+      toast('เปิดรายงาน #' + r.caseId + ' ฉบับล่าสุดแล้ว แก้ช่องที่ต้องการแล้วกด "บันทึกการแก้ไข"');
+      window.scrollTo({ top: 0 });
+    }, showError);
+  }
+  function exitEdit() {
+    editing = null; editPrev = null; $('editbar').hidden = true;
+    if (stash) { restore(stash); stash = null; } else load('');
+    sendLabels();
+  }
+  function copyText(text) {
+    var fallback = function () { var cb = $('copybox'); cb.hidden = false; cb.value = text; cb.focus(); cb.select(); toast('คัดลอกอัตโนมัติไม่ได้ — ข้อความถูกเลือกไว้ให้กดคัดลอกเอง', true); };
+    try { navigator.clipboard.writeText(text).then(function () { toast('คัดลอกข้อความแล้ว'); }, fallback); } catch (err) { fallback(); }
+  }
+  $('send').addEventListener('click', send);
+  $('docksend').addEventListener('click', send);
+  $('copy').addEventListener('click', function () { copyText($('msg').textContent); });
+  $('canceledit').addEventListener('click', function () { exitEdit(); toast('ยกเลิกการแก้ไข'); });
+
+  /* ================= draft autosave (this phone only, 6 h) ================= */
+  var DKEY = 'caseform.draft.v1', draftTimer = null;
+  function saveDraft() {
+    if (editing || booting) return;
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(function () {
+      try { if (!editing && hasContent()) localStorage.setItem(DKEY, JSON.stringify({ t: Date.now(), snap: snapshot() })); } catch (e) { }
+    }, 800);
+  }
+  function clearDraft() { clearTimeout(draftTimer); try { localStorage.removeItem(DKEY); } catch (e) { } $('draftbar').hidden = true; }
+  function offerDraft() {
+    var d = null; try { d = JSON.parse(localStorage.getItem(DKEY) || 'null'); } catch (e) { }
+    if (!d || !d.snap || Date.now() - d.t > 6 * 3600e3) { clearDraft(); return; }
+    var t = new Date(d.t);
+    $('drafttime').textContent = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+    $('draftbar').hidden = false;
+    $('draftuse').onclick = function () { restore(d.snap); $('draftbar').hidden = true; toast('กู้คืนรายงานที่กรอกค้างไว้แล้ว'); };
+    $('draftdrop').onclick = function () { clearDraft(); };
+  }
+
+  /* ================= examples (mock / training only, fictional) ================= */
+  function setVals(o) { Object.keys(o).forEach(function (k) { $(k).value = o[k]; }); }
+  function load(ex) {
+    S = blank(); started = 0; frozen = null; clearInterval(timerId); tick();
+    FIELDS.concat(['paste']).forEach(function (k) { $(k).value = ''; });
+    toast(''); $('copybox').hidden = true; armed = 0;
+    if (EXAMPLES[ex]) EXAMPLES[ex]();
+    S = fill(S);
+    rerenderAll();
+  }
+  function fresh(ex) { if (editing) { editing = null; editPrev = null; stash = null; $('editbar').hidden = true; } cfgMode = false; load(ex); sendLabels(); }
+  var EXAMPLES = {
+    hpb: function () {
+      Object.assign(S, { cat: 'hpb', dx: 'Acute cholecystitis', ward: 'ศญ', sex: 'F', age: '68', vsChg: 'changed', vsSrc: 'ER' });
+      S.ud = { DM: true, HT: true };
+      S.m = { murphy: '+', mass: '−', fever: '+', days: '4', local: {} };
+      S.abd = { r: { RUQ: true }, s: { guarding: true }, bs: 'normal' };
+      S.labs = { wbc: '15200', hb: '11.2', hct: '34', plt: '245000', bun: '18', cr: '0.9', na: '136', k: '3.8', inr: '1.1', dtx: '182', tb: '1.2', crp: '86' };
+      S.img = { 'U/S': true };
+      S.imgd = { 'U/S': { f: { 'pericholecystic fluid': true, 'sonographic Murphy': true, gallstone: true, 'impacted stone at GB neck': true }, n: { gbwall: '6', stone: '15', cbd: '5' }, t: 'no IHD dilatation' } };
+      S.prev = { 'IV fluid': true, analgesics: true };
+      setVals({ pi: 'RUQ pain 4 d, fever with chills, nausea, poor intake', prevtxt: 'NSS 1,000 ml + tramadol at ER', name: 'นางสมมติ ทดสอบ', hn: '123456', bed: '12', age: '68', bw: '58',
+        bt: '38.4', sbp: '132', dbp: '80', hr: '104', rr: '20', sat: '97', bt0: '38.9', sbp0: '124', dbp0: '76', hr0: '112', rr0: '22', sat0: '96',
+        plan: 'NPO, IV fluid, ceftriaxone + metronidazole, plan LC', npo: '08:00' });
+    },
+    nf: function () {
+      Object.assign(S, { cat: 'wound', dx: 'NF', ward: 'ศช', sex: 'M', age: '58', vsChg: 'changed', vsSrc: 'รพช.' });
+      S.ud = { DM: true };
+      S.m = { site: 'Lt leg', size: '15x10', days: '2', find: { 'ascending cellulitis': true }, nf: { 'pain out of proportion': true, bullae: true } };
+      S.labs = { wbc: '26400', hb: '10.5', plt: '180000', bun: '38', cr: '1.9', na: '131', k: '4.1', dtx: '264', crp: '212', lactate: '3.1' };
+      S.vsx = { pressor: true }; S.press = { NE: { on: true, conc: '4:250', rate: '8' } };
+      S.prev = { 'refer from รพช.': true, 'IV fluid': true, antibiotics: true };
+      setVals({ pi: 'Abrasion Lt leg 3 d, rapidly spreading erythema and swelling, severe pain, bullae today', prevtxt: 'NSS 2 L, ceftriaxone 2 g at รพช. 18:00', name: 'นายตัวอย่าง ใจดี',
+        hn: '654321', bed: '21', age: '58', bw: '60', bt: '38.9', sbp: '88', dbp: '56', hr: '124', rr: '24', sat: '95', bt0: '38.5', sbp0: '102', dbp0: '64', hr0: '110', rr0: '22', sat0: '96',
+        plan: 'NPO, load IV fluid, NE titrate MAP ≥ 65, meropenem + clindamycin, set OR debridement ด่วน', npo: '22:00' });
+    },
+    sbo: function () {
+      Object.assign(S, { cat: 'abd', dx: 'Gut obstruction', ward: 'ศช', sex: 'M', age: '72', vsChg: 'stable' });
+      S.ud = { HT: true };
+      S.m = { level: 'SBO', vomit: '+', noflatus: '+', prevop: '+', hernia: 'absent', strang: {}, days: '2', ng: '800 ml bile-stained' };
+      S.abd = { r: { Periumbilical: true }, s: { soft: true, distended: true }, bs: 'hyperactive' };
+      S.labs = { wbc: '11800', hb: '13.1', hct: '40', plt: '310000', bun: '42', cr: '1.6', na: '132', k: '2.9', lactate: '1.4' };
+      S.img = { film: true, CT: true };
+      S.imgd = { film: { f: { 'dilated SB': true, 'air-fluid levels': true, 'step-ladder sign': true, 'paucity of colonic gas': true }, n: { sbdia: '4.5' }, t: '' },
+        CT: { f: { 'transition point': true, 'free fluid': true }, n: {}, t: 'transition point at distal ileum, no closed loop' } };
+      S.prev = { 'IV fluid': true, 'NG tube': true, 'Foley catheter': true };
+      setVals({ pi: 'Colicky abdominal pain, distension, vomiting 2 d, obstipation; Hx open appendectomy 20 yr', prevtxt: 'NSS 1.5 L at ER', name: 'นายสมมุติ ลำไส้ดี',
+        hn: '246810', bed: '8', age: '72', bw: '65', bt: '37.6', sbp: '118', dbp: '72', hr: '98', rr: '20', sat: '97',
+        plan: 'NPO, NG decompression, IV fluid, KCl correction, observe 24–48 hr; if no improvement or signs of strangulation → ex-lap', npo: '06:00' });
+    },
+    ugib: function () {
+      Object.assign(S, { cat: 'gib', dx: 'UGIB', ward: 'ศช', sex: 'M', age: '64', vsChg: 'changed', vsSrc: 'ER' });
+      S.ud = { Cirrhosis: true, HT: true };
+      S.m = { pres: { hematemesis: true, melena: true }, syncope: '+', active: '−', liver: '+', hf: '−', risk: { alcohol: true }, amount: '2 episodes, ~300 ml' };
+      S.labs = { wbc: '9800', hb: '8.1', hct: '24', plt: '92000', bun: '38', cr: '1.1', na: '134', k: '3.9', inr: '1.6', tb: '2.4', alb: '2.8' };
+      S.prev = { 'IV fluid': true, PPI: true, 'blood transfusion': true };
+      setVals({ pi: 'Hematemesis 2 episodes + melena since this morning, syncope 1 episode; alcohol use', prevtxt: 'PRC 1 U, omeprazole 80 mg IV, ceftriaxone 1 g at ER',
+        name: 'นายสมมติ เลือดออก', hn: '135790', bed: '15', age: '64', bw: '62', bt: '37.2', sbp: '108', dbp: '66', hr: '102', rr: '20', sat: '98',
+        bt0: '37.0', sbp0: '86', dbp0: '50', hr0: '118', rr0: '22', sat0: '97',
+        plan: 'NPO, PRC 2 U, IV PPI, octreotide, ceftriaxone, urgent EGD', npo: '12:00' });
+    }
+  };
+
+  /* ================= mock backend + LIFF (preview / training without LINE) ================= */
+  var MKEY = 'caseform.mock.v1', memDb = null;
+  function mockDb() {
+    if (memDb) return memDb;
+    try { memDb = JSON.parse(localStorage.getItem(MKEY) || 'null'); } catch (e) { }
+    return (memDb = memDb && memDb.cases ? memDb : { seq: 0, cases: {}, cfg: {}, chat: [] });
+  }
+  function mockSave() { try { localStorage.setItem(MKEY, JSON.stringify(memDb)); } catch (e) { } }
+  function mockApi(action, d) {
+    return new Promise(function (resolve, reject) {
+      setTimeout(function () {
+        try {
+          var db = mockDb(), c;
+          if (action === 'hello') return resolve({ ok: true, user: { name: 'ext ทดสอบ', isStaff: true }, cfg: JSON.parse(JSON.stringify(db.cfg)), maxPhoto: 3, liffId: 'MOCK' });
+          if (action === 'save') {
+            var id = d.caseId || ++db.seq, cur = db.cases[id] || { ver: 0, photos: [] };
+            var ph = (d.photos || []).map(function (p, i) {
+              return p.id ? cur.photos.filter(function (x) { return x.id === p.id; })[0] : { id: 'p' + id + '_' + Date.now() + '_' + i, tag: p.tag, src: p.src };
+            }).filter(Boolean);
+            db.cases[id] = { ver: cur.ver + 1, state: d.state, fields: d.fields, model: d.model, photos: ph, reporter: cur.reporter || 'ext ทดสอบ' };
+            mockSave();
+            return resolve({ ok: true, caseId: +id, ver: cur.ver + 1, photos: ph.map(function (p) { return { id: p.id, tag: p.tag }; }) });
+          }
+          if (action === 'get' || action === 'photos') {
+            c = db.cases[d.caseId]; if (!c) throw new Error('ไม่พบรายงาน #' + d.caseId);
+            if (action === 'get') return resolve({ ok: true, caseId: +d.caseId, ver: c.ver, state: JSON.parse(JSON.stringify(c.state)), fields: c.fields, model: c.model, photos: c.photos, reporter: c.reporter });
+            return resolve({ ok: true, caseId: +d.caseId, title: c.model.title, sub: c.model.sub, dx: c.model.dx, photos: c.photos });
+          }
+          if (action === 'saveCfg') { if (d.cfg) db.cfg[d.dx] = d.cfg; else delete db.cfg[d.dx]; mockSave(); return resolve({ ok: true, cfg: db.cfg }); }
+          reject(new Error('unknown action'));
+        } catch (e) { reject(e); }
+      }, 120);
+    });
+  }
+  function mockLiff() {
+    return {
+      isInClient: function () { return false; }, getContext: function () { return { type: 'group' }; }, getIDToken: function () { return 'mock'; },
+      isApiAvailable: function () { return true; }, closeWindow: function () { toast('(จำลอง) ปิดหน้าต่าง LIFF'); },
+      sendMessages: function (msgs) { var db = mockDb(); db.chat = (db.chat || []).concat(msgs.map(function (m) { return { t: hhmm(), m: m }; })).slice(-20); mockSave(); renderMockChat(); window.__sent = (window.__sent || []).concat(msgs); return Promise.resolve(); },
+      shareTargetPicker: function (msgs) { return this.sendMessages(msgs).then(function () { return { status: 'success' }; }); },
+      login: function () { }, logout: function () { }
+    };
+  }
+  function renderMockChat() {
+    var el = $('mockchat'); if (!el) return;
+    var chat = mockDb().chat || [];
+    $('mockposts').innerHTML = chat.length ? chat.map(function (x) {
+      return '<div class="post"><div class="av" aria-hidden="true">ext</div><div><div class="who"><span>ext ทดสอบ</span><span>' + esc(x.t) + '</span></div>' + renderFlex(x.m) + '</div></div>';
+    }).join('') : '<div class="draftlabel">ยังไม่มีการ์ดในแชทจำลอง</div>';
+  }
+
+  /* ================= boot ================= */
+  var booting = true;
+  function boot() {
+    if (MOCK) {
+      LX = mockLiff(); LIFF_ID = 'MOCK';
+      document.body.classList.add('mock'); $('samples').hidden = false; $('mockchat').hidden = false;
+      $('clearmock').onclick = function () { var db = mockDb(); db.chat = []; mockSave(); renderMockChat(); };
+      renderMockChat();
+      return start();
+    }
+    if (!window.liff) { showError(new Error('โหลด LINE LIFF SDK ไม่ได้ — ตรวจเน็ต แล้วลองใหม่')); return; }
+    if (!CONF.LIFF_ID || !CONF.API_URL) { showError(new Error('not-configured: ใส่ LIFF_ID และ API_URL ในไฟล์ config.js')); return; }
+    liff.init({ liffId: CONF.LIFF_ID }).then(function () {
+      if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+      LX = liff; start();
+    }, function (e) { showError(new Error('LIFF init ไม่ผ่าน: ' + (e && e.message || e))); });
+  }
+  function start() {
+    var q = new URLSearchParams(location.search);
+    screen('loading', 'กำลังตรวจสิทธิ์…');
+    api('hello').then(function (h) {
+      ME = h.user || ME; CFG = h.cfg || {}; MAXPHOTO = h.maxPhoto || MAXPHOTO; LIFF_ID = CONF.LIFF_ID || h.liffId || LIFF_ID;
+      $('me').textContent = ME.name ? '👤 ' + ME.name : '';
+      if (q.get('view')) { booting = false; return viewer(q.get('view')); }
+      load(MOCK && !q.get('edit') ? 'hpb' : '');
+      booting = false; sendLabels(); ctxNote(); screen(null);
+      if (q.get('edit')) return openEdit(q.get('edit'));
+      if (!MOCK) offerDraft();
+    }, showError);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
