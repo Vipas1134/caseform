@@ -58,6 +58,11 @@
     --chat-bg: #111c22; --chat-ink: #9fb3c2; --card: #1c292e; --h-new: #4db3bf; --h-consult: #93a3ec; --h-notify: #a9b8be; --h-upd: #f2b765; --h-call: #ff8b82; --h-ink: #0b1a1d;
 }
 * { box-sizing: border-box; }
+/* กดค้าง/ลากบนปุ่มแล้วไม่ไฮไลต์ข้อความหรือขึ้นเมนูคัดลอก (เหลือเลือกข้อความได้เฉพาะช่องกรอก) · ไม่ดึงหน้าเกินขอบ */
+html, body { overscroll-behavior-y: none; }
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+input, textarea, select, [contenteditable], #msg, .selectable { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
+button, .chip, label { touch-action: manipulation; }
 [hidden] { display: none !important; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5;
@@ -286,10 +291,10 @@ body.locked { overflow: hidden; }
       <span>📍 <span id="ctxmsg"></span></span>
     </div>
     <div class="editbar" id="draftbar" hidden>
-      <span>📝 มีรายงานที่กรอกค้างไว้ตอน <b id="drafttime"></b></span>
+      <span>↺ กู้คืนรายงานที่กรอกค้างไว้ตอน <b id="drafttime"></b> ให้แล้ว</span>
       <span class="spacer"></span>
-      <button type="button" class="ghost" id="draftuse">กู้คืน</button>
-      <button type="button" class="ghost" id="draftdrop">ทิ้ง</button>
+      <button type="button" class="ghost" id="draftuse" hidden>กู้คืน</button>
+      <button type="button" class="ghost" id="draftdrop">เริ่มใหม่</button>
     </div>
     <div class="editbar" id="editbar" hidden>
       <span>✏️ กำลังแก้ไขรายงาน <b id="editno"></b></span>
@@ -1715,9 +1720,9 @@ body.locked { overflow: hidden; }
     if (inGroup()) return LX.sendMessages([flex]).then(function () { return { ok: true }; }, function (e) {
       var why = errWhy(e);
       if (!(inClient() && canPick())) return { ok: false, why: why };
-      return pick(flex).then(function (r) { return r.ok ? r : { ok: false, why: r.why === 'cancel' ? why : r.why }; });
+      return pick(flex).then(function (r) { return r.ok ? { ok: true, picked: true, fb: why } : { ok: false, why: r.why === 'cancel' ? why : r.why }; });
     });
-    if (inClient() && canPick()) return pick(flex); // ในแอป LINE แต่ไม่ใช่กลุ่ม → เปิดหน้าเลือกกลุ่มทันที
+    if (inClient() && canPick()) return pick(flex).then(function (r) { if (r.ok) r.ctx = ctxType() || '?'; return r; }); // ในแอป LINE แต่ไม่ใช่กลุ่ม → เปิดหน้าเลือกกลุ่มทันที
     return Promise.resolve({ ok: false, why: 'not-in-chat' }); // เบราว์เซอร์ภายนอก: ต้องกดปุ่มเลือกกลุ่มเอง (popup ต้องมาจากการแตะ)
   }
   function canPick() { try { return !!(LX.isApiAvailable && LX.isApiAvailable('shareTargetPicker')); } catch (e) { return false; } }
@@ -1729,6 +1734,15 @@ body.locked { overflow: hidden; }
     if (/permission|403|grant/i.test(w)) return 'LINE ไม่อนุญาตให้ฟอร์มส่งข้อความในห้องนี้ (เช่น เปิดจากเมนู "ใช้ล่าสุด" หรือ Keep)' +
       (pk ? ' — กด "เลือกกลุ่มส่งการ์ด"' : ' — ปิดฟอร์มแล้วแตะลิงก์ใหม่จากในกลุ่มเวร');
     return 'ส่งไม่สำเร็จ: ' + esc(w);
+  }
+  /* บอกเหตุผลที่ต้องเลือกกลุ่ม (ไว้แก้ปัญหา) */
+  var CTXNAME = { utou: 'แชท 1:1', none: 'นอกห้องแชท (เช่น Keep / เมนูใช้ล่าสุด)', external: 'เบราว์เซอร์', group: 'กลุ่ม', room: 'ห้องแชท' };
+  function diagHTML(s) {
+    if (!s) return '';
+    if (s.fb) return '<div class="box warn">ส่งผ่านหน้าเลือกกลุ่ม เพราะ LINE ไม่ให้ฟอร์มส่งเข้ากลุ่มตรง ๆ ถ้าเป็นทุกครั้ง ให้เปิด Scope <b>chat_message.write</b> ของ LIFF app ' +
+      '(LINE Developers &gt; LINE Login channel &gt; แท็บ LIFF)<div class="hint">ข้อความจาก LINE: ' + esc(s.fb) + '</div></div>';
+    if (s.picked && s.ctx) return '<div class="hint">ฟอร์มนี้ไม่ได้เปิดจากในกลุ่ม (LINE แจ้งว่าเปิดจาก: ' + esc(CTXNAME[s.ctx] || s.ctx) + ') ครั้งหน้าแตะลิงก์จากในกลุ่มเวร การ์ดจะส่งทันที</div>';
+    return '';
   }
   function ctxNote() {
     var bar = $('ctxbar'); if (!bar) return;
@@ -1758,7 +1772,8 @@ body.locked { overflow: hidden; }
     var h, sentOk = r.sent && r.sent.ok;
     if (r.edit && !r.notify) h = '<div class="stitle ok">✓ บันทึกการแก้ไข #' + r.id + ' แล้ว</div><div>ไม่ได้ส่งการ์ดเข้ากลุ่ม (เลือกไม่แจ้ง)</div>';
     else if (sentOk) h = '<div class="stitle ok">✓ ส่ง' + (r.edit ? 'การ์ดอัปเดต' : 'รายงาน') + ' #' + r.id + ' เข้ากลุ่มแล้ว</div>' +
-      (r.secs ? '<div class="hint">ใช้เวลากรอก ' + mmss(r.secs) + '</div>' : '') + (LX.isInClient && LX.isInClient() ? '<div class="hint">กำลังปิดหน้าต่าง…</div>' : '');
+      (r.secs ? '<div class="hint">ใช้เวลากรอก ' + mmss(r.secs) + '</div>' : '') + diagHTML(r.sent) +
+      (inClient() && !r.sent.picked ? '<div class="hint">กำลังปิดหน้าต่าง…</div>' : '');
     else h = '<div class="stitle warn">บันทึก #' + r.id + ' ลงระบบแล้ว แต่ยังไม่ได้ส่งการ์ดเข้ากลุ่ม</div><div>' +
       whyText(r.sent && r.sent.why || '') + '</div>' +
       '<div class="hint">ข้อมูลเคสอยู่ในชีตแล้ว ส่งการ์ดทีหลังก็ไม่ซ้ำ</div>';
@@ -1768,7 +1783,7 @@ body.locked { overflow: hidden; }
       (LX.isInClient && LX.isInClient() ? '<button type="button" class="btn alt" data-act="close">ปิด</button>' : '') +
       (MOCK ? '<button type="button" class="ghost" data-act="seechat">ดูการ์ดในแชทจำลอง</button>' : '') + '</div>';
     screen('done', h);
-    if (sentOk && LX.isInClient && LX.isInClient()) setTimeout(function () { LX.closeWindow(); }, 1400);
+    if (sentOk && !r.sent.picked && inClient()) setTimeout(function () { LX.closeWindow(); }, 1400); // ส่งผ่านหน้าเลือกกลุ่ม → ค้างไว้ให้อ่านเหตุผล
   }
   function screenAction(a) {
     if (a === 'reload') location.reload();
@@ -1882,24 +1897,43 @@ body.locked { overflow: hidden; }
   $('copy').addEventListener('click', function () { copyText($('msg').textContent); });
   $('canceledit').addEventListener('click', function () { exitEdit(); toast('ยกเลิกการแก้ไข'); });
 
-  /* ================= draft autosave (this phone only, 6 h) ================= */
+  /* ================= draft autosave (this phone only, 6 h) =================
+     ฟอร์มอาจถูกปิดกลางคัน (ปัดย้อนกลับ/ปัดลง/สลับแอปแล้วเครื่องคืนหน่วยความจำ) → บันทึกแทบทันที + ตอนแอปถูกพับ
+     และเปิดใหม่ = กู้คืนให้อัตโนมัติ */
   var DKEY = 'caseform.draft.v1', draftTimer = null;
+  function flushDraft() {
+    clearTimeout(draftTimer);
+    try { if (!editing && !booting && hasContent()) localStorage.setItem(DKEY, JSON.stringify({ t: Date.now(), snap: snapshot() })); } catch (e) { }
+  }
   function saveDraft() {
     if (editing || booting) return;
-    clearTimeout(draftTimer);
-    draftTimer = setTimeout(function () {
-      try { if (!editing && hasContent()) localStorage.setItem(DKEY, JSON.stringify({ t: Date.now(), snap: snapshot() })); } catch (e) { }
-    }, 800);
+    clearTimeout(draftTimer); draftTimer = setTimeout(flushDraft, 250);
   }
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushDraft(); });
+  window.addEventListener('pagehide', flushDraft);
   function clearDraft() { clearTimeout(draftTimer); try { localStorage.removeItem(DKEY); } catch (e) { } $('draftbar').hidden = true; }
   function offerDraft() {
     var d = null; try { d = JSON.parse(localStorage.getItem(DKEY) || 'null'); } catch (e) { }
     if (!d || !d.snap || Date.now() - d.t > 6 * 3600e3) { clearDraft(); return; }
     var t = new Date(d.t);
     $('drafttime').textContent = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+    restore(d.snap); // กู้คืนเลย ไม่ต้องกด
     $('draftbar').hidden = false;
-    $('draftuse').onclick = function () { restore(d.snap); $('draftbar').hidden = true; toast('กู้คืนรายงานที่กรอกค้างไว้แล้ว'); };
-    $('draftdrop').onclick = function () { clearDraft(); };
+    $('draftdrop').onclick = function () { clearDraft(); fresh(''); window.scrollTo({ top: 0 }); toast('เริ่มรายงานใหม่'); };
+  }
+  /* ปัดย้อนกลับ (Android ปัดขอบจอ / iPhone ปัดจากขอบซ้าย) ในหน้าแรกของ LIFF = ปิดฟอร์มทันที
+     → ใส่หน้ากันไว้ 1 ชั้น ถ้ามีข้อมูลค้าง ไม่ให้ปิด และบอกวิธีปิดจริง */
+  var backGuard = false;
+  function guardBack() {
+    if (MOCK || backGuard || !history.pushState) return;
+    try { history.pushState({ cfGuard: 1 }, ''); backGuard = true; } catch (e) { return; }
+    window.addEventListener('popstate', function () {
+      flushDraft();
+      if (hasContent() || editing) {
+        try { history.pushState({ cfGuard: 1 }, ''); } catch (e) { }
+        toast('ข้อมูลที่กรอกยังอยู่ — ถ้าจะปิดฟอร์มจริง กด ✕ มุมบนของ LINE');
+      }
+    });
   }
 
   /* ================= examples (mock / training only, fictional) ================= */
@@ -2042,6 +2076,7 @@ body.locked { overflow: hidden; }
       if (q.get('view')) { booting = false; return viewer(q.get('view')); }
       load(MOCK && !q.get('edit') ? 'hpb' : '');
       booting = false; sendLabels(); ctxNote(); screen(null);
+      guardBack();
       if (q.get('edit')) return openEdit(q.get('edit'));
       if (!MOCK) offerDraft();
     }, showError);
