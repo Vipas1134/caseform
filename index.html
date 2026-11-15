@@ -262,6 +262,51 @@ body.locked { overflow: hidden; }
 .fx-btn:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
 #draft .fx { outline: 2px dashed var(--chat-ink); outline-offset: 3px; }
 .btn[disabled] { opacity: .55; cursor: wait; }
+
+/* ---------- เคส: หมวด (การ์ดสี่เหลี่ยม) แยกจาก Diagnosis (ปุ่มกลม) ---------- */
+.steplbl { font-size: 12px; font-weight: 700; color: var(--mute); letter-spacing: .04em; text-transform: uppercase; margin-bottom: -4px; }
+.cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 380px) { .cats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cat { display: grid; gap: 2px; text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 10px; cursor: pointer; min-height: 52px; color: var(--ink); }
+.cat b { font-size: 14px; font-weight: 700; line-height: 1.2; }
+.cat small { font-size: 11px; color: var(--mute); line-height: 1.3; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat[aria-pressed="true"] { border-color: var(--acc); background: var(--acc-soft); box-shadow: inset 0 0 0 1px var(--acc); }
+.cat[aria-pressed="true"] b::before { content: "✓ "; color: var(--acc); }
+.dxchips .chip { font-weight: 600; }
+.chip.refer { border-style: dashed; border-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+.chip.refer[aria-pressed="true"] { border-style: solid; background: var(--warn); border-color: var(--warn); color: var(--surface); }
+.themebtn { padding: 4px 10px; font-size: 12px; color: var(--mute); }
+
+/* ---------- Lab เป็นชุด ---------- */
+.labp { display: grid; }
+.lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 8px; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+.lrow:last-of-type { border-bottom: 0; }
+.lrow .ln { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }
+.lrow .ln b { font-size: 14px; }
+.lrow .ln i { font-style: normal; font-size: 11px; font-weight: 600; color: var(--acc); background: var(--acc-soft); border-radius: 99px; padding: 0 7px; }
+.lrow .ln small { font-size: 11px; color: var(--mute); }
+.lrow .seg .chip { min-height: 34px; padding: 4px 12px; font-size: 13px; }
+.lrow .lvals { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 6px; padding-top: 4px; }
+label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 600; }
+.pastebox summary { font-size: 13px; color: var(--acc); cursor: pointer; font-weight: 600; }
+.pastebox .paste { margin-top: 6px; }
+
+/* ---------- Plan checklist ---------- */
+#planbox { display: grid; }
+.plrow { display: grid; gap: 6px; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+#planbox .plrow:first-child { padding-top: 0; }
+.pll { font-size: 14px; font-weight: 700; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.pll .why { font-size: 12px; font-weight: 600; color: var(--bad); background: var(--bad-soft); border-radius: 99px; padding: 0 8px; }
+.plrow .chip { min-height: 34px; padding: 5px 11px; font-size: 13px; }
+.plin { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; font-size: 16px; color: var(--ink); }
+.plin:focus { border-color: var(--acc); outline: none; box-shadow: 0 0 0 3px var(--acc-soft); }
+.bgrid { display: grid; grid-template-columns: minmax(64px, .8fr) 1fr 1fr; gap: 6px; align-items: center; }
+.bgrid .bh { font-size: 11px; color: var(--mute); }
+.bgrid .bc { font-size: 13px; font-weight: 600; }
+.bgrid input { width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 8px; font-size: 16px; font-family: var(--f-mono); color: var(--ink); }
+.sub2 { font-size: 12px; color: var(--mute); }
+.refertxt { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.55; }
+.seg .chip.flag[aria-pressed="true"] { background: var(--bad); color: var(--surface); }
 </style>
 <script src="config.js"></script>
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -274,6 +319,7 @@ body.locked { overflow: hidden; }
   <span class="spacer"></span>
   <span class="me" id="me"></span>
   <span class="timer" id="timer" title="เวลาที่ใช้กรอก">⏱ <b>0:00</b></span>
+  <button type="button" class="ghost themebtn" id="theme" title="โหมดสี">🌓 <span id="themelbl">อัตโนมัติ</span></button>
 </header>
 <div class="samples" style="max-width:1120px;margin:0 auto">
   <span id="samples" class="samples" style="padding:0" hidden>
@@ -304,11 +350,25 @@ body.locked { overflow: hidden; }
     </div>
 
     <section class="sec">
-      <h2>ประเภท · หมวดโรค</h2>
-      <div class="seg" id="g-type"></div>
-      <div class="chips" id="g-cat"></div>
-      <div class="chips" id="g-dx"></div>
+      <h2>เคส · Diagnosis</h2>
+      <div class="row"><div class="seg" id="g-type"></div><span id="g-refer"></span></div>
+      <div class="steplbl">หมวด</div>
+      <div class="cats" id="g-cat"></div>
+      <div id="dxwrap" hidden>
+        <div class="steplbl">Diagnosis</div>
+        <div class="chips dxchips" id="g-dx"></div>
+      </div>
+      <label class="f" id="freedxwrap" hidden><span class="need">Dx / consult issue</span><input id="freedx" placeholder="e.g. breast abscess, R/O ovarian torsion"></label>
       <div class="hint" id="cat-note"></div>
+      <label class="f"><span>Impression เพิ่มเติม</span><input id="imp" placeholder="e.g. with localized peritonitis, R/O gangrenous GB"></label>
+    </section>
+
+    <section class="sec" id="refersec" hidden>
+      <h2>รับ refer</h2>
+      <label class="f"><span>จาก รพ.</span><input id="refrom" placeholder="e.g. รพ.ยางตลาด"></label>
+      <label class="f"><span>ข้อความใบ refer · วางทั้งก้อนได้</span><textarea id="refertxt" rows="4" placeholder="คัดลอกข้อความส่งต่อจาก LINE / ระบบ refer มาวางที่นี่"></textarea></label>
+      <div class="sub">รูปใบ refer / เอกสาร</div>
+      <div id="referph"></div>
     </section>
 
     <section class="sec">
@@ -322,7 +382,7 @@ body.locked { overflow: hidden; }
       <div class="grid">
         <label class="f"><span>Bed</span><input id="bed" class="num" inputmode="numeric"></label>
         <label class="f"><span class="need">Age (yr)</span><input id="age" class="num" inputmode="numeric"></label>
-        <label class="f"><span>BW (kg)</span><input id="bw" class="num" inputmode="decimal"></label>
+        <label class="f" id="bwwrap" hidden><span id="bwlbl">BW (kg)</span><input id="bw" class="num" inputmode="decimal"></label>
         <div class="f" style="display:grid;gap:3px;font-size:12px;color:var(--mute)"><span class="need">Sex</span><div class="seg" id="g-sex"></div></div>
       </div>
       <div class="sub">U/D · Medication</div>
@@ -337,7 +397,7 @@ body.locked { overflow: hidden; }
       <label class="f"><span>PI (สั้น ๆ)</span><textarea id="pi" rows="2" maxlength="200" placeholder="e.g. RUQ pain 4 d, fever with chills, nausea"></textarea></label>
       <div class="sub">Prior Mx</div>
       <div class="chips" id="g-prev"></div>
-      <label class="f"><span>Details</span><input id="prevtxt" placeholder="e.g. NSS 1 L, ceftriaxone 2 g at รพช. 10:00"></label>
+      <label class="f"><span>Details</span><input id="prevtxt" placeholder="e.g. NSS 1 L, ceftriaxone 2 g ที่ รพ.ต้นทาง 10:00"></label>
       <div class="hint">ถ้าเรื่องยาวหรือซับซ้อน โทรเล่าดีกว่าพิมพ์</div>
     </section>
 
@@ -345,22 +405,20 @@ body.locked { overflow: hidden; }
       <h2>Vital signs · at ward</h2>
       <div class="grid">
         <label class="f"><span class="need">BT (°C)</span><input id="bt" class="num" inputmode="decimal"></label>
-        <label class="f"><span class="need">SBP</span><input id="sbp" class="num" inputmode="numeric"></label>
-        <label class="f"><span>DBP</span><input id="dbp" class="num" inputmode="numeric"></label>
+        <label class="f"><span class="need">BP</span><input id="bp" class="num" inputmode="decimal" placeholder="120/80"></label>
         <label class="f"><span class="need">HR</span><input id="hr" class="num" inputmode="numeric"></label>
         <label class="f"><span>RR</span><input id="rr" class="num" inputmode="numeric"></label>
         <label class="f"><span>SpO₂ %</span><input id="sat" class="num" inputmode="numeric"></label>
       </div>
       <div class="chips" id="g-vsx"></div>
       <div class="press" id="pressor" hidden></div>
-      <div class="sub">V/S เทียบกับแรกรับ (ER / รพช.)</div>
+      <div class="sub">V/S เทียบกับแรกรับ (ER / รพ.ต้นทาง)</div>
       <div class="chips" id="g-vschg"></div>
       <div class="vs0" id="vs0" hidden>
         <div class="row"><span class="hint">แรกรับที่</span><div class="seg" id="g-vssrc"></div></div>
         <div class="grid">
           <label class="f"><span>BT</span><input id="bt0" class="num" inputmode="decimal"></label>
-          <label class="f"><span class="need">SBP</span><input id="sbp0" class="num" inputmode="numeric"></label>
-          <label class="f"><span>DBP</span><input id="dbp0" class="num" inputmode="numeric"></label>
+          <label class="f"><span class="need">BP</span><input id="bp0" class="num" inputmode="decimal" placeholder="120/80"></label>
           <label class="f"><span class="need">HR</span><input id="hr0" class="num" inputmode="numeric"></label>
           <label class="f"><span>RR</span><input id="rr0" class="num" inputmode="numeric"></label>
           <label class="f"><span>SpO₂ %</span><input id="sat0" class="num" inputmode="numeric"></label>
@@ -371,11 +429,13 @@ body.locked { overflow: hidden; }
     <section class="sec" id="module"></section>
 
     <section class="sec">
-      <h2>Lab</h2>
-      <textarea class="paste" id="paste" placeholder="วางผลแลปจาก HIS ที่นี่ แล้วระบบแยกค่าลงช่องให้ e.g. WBC 15200 Hb 11.2 Plt 245k Cr 0.9 PMN 82"></textarea>
-      <div class="grid" id="labs"></div>
-      <div class="chips" id="g-labx"></div>
-      <div class="hint">ไม่ต้องแนบรูปผลแลป กรอกเป็นค่าแทน</div>
+      <div class="sechead"><h2>Lab</h2><button type="button" class="linkbtn" id="lab-allnormal">ที่แนะนำ = normal ทั้งหมด</button></div>
+      <div class="hint">แต่ละรายการแตะ <b>N</b> = ปกติ · <b>Abn</b> = ผิดปกติ (กรอกเฉพาะค่าที่ผิดปกติ ช่องที่เว้นไว้ถือว่าปกติ) · <b>P</b> = รอผล · ไม่แตะ = ไม่ได้ส่ง</div>
+      <div class="labp" id="labs"></div>
+      <label class="f"><span>Lab อื่น</span><input id="labx" placeholder="e.g. UA WBC 20-30, H/C × 2 pending"></label>
+      <details class="pastebox"><summary>วางผลแลปจาก HIS ให้ระบบแยกค่าเอง</summary>
+        <textarea class="paste" id="paste" placeholder="e.g. WBC 15200 Hb 11.2 Plt 245k Cr 0.9 PMN 82"></textarea></details>
+      <div class="hint">ไม่ต้องแนบรูปผลแลป</div>
     </section>
 
     <section class="sec">
@@ -386,11 +446,19 @@ body.locked { overflow: hidden; }
     </section>
 
     <section class="sec">
-      <h2>Impression · Plan ที่เสนอ</h2>
-      <label class="f"><span>Impression เพิ่มเติม</span><input id="imp" placeholder="e.g. with localized peritonitis, R/O gangrenous GB"></label>
-      <label class="f"><span class="need">Plan ที่เสนอ (ext)</span><textarea id="plan" rows="2" placeholder="e.g. NPO, IV fluid, ATB …, set OR …"></textarea></label>
+      <h2>Plan ที่เสนอ</h2>
       <div class="hint">ใส่ความเห็นของตัวเองก่อน อาจารย์จะยืนยันหรือแก้ในกลุ่ม</div>
-      <label class="f" style="max-width:180px"><span>NPO since</span><input id="npo" placeholder="e.g. 08:00"></label>
+      <div id="planbox"></div>
+      <label class="f"><span>อื่น ๆ</span><textarea id="plan" rows="2" placeholder="e.g. NG decompression, Foley, repeat CBC 6 h"></textarea></label>
+      <div class="plrow">
+        <div class="pll">NPO</div>
+        <div class="row"><label class="f" style="width:110px"><span>since</span><input id="npo" class="num" inputmode="decimal" placeholder="08:00"></label>
+          <button type="button" class="ghost" id="npo-now">ตอนนี้</button></div>
+        <div class="sub2">มื้อสุดท้าย</div>
+        <div class="chips" id="g-npox"></div>
+        <label class="f" id="npoxwrap" hidden><span>อาหาร / เครื่องดื่มที่กิน</span><input id="npox" placeholder="e.g. นมกล่อง 1 กล่อง, ข้าวต้ม"></label>
+        <div class="hint" id="npohint"></div>
+      </div>
     </section>
   </form>
 
@@ -450,11 +518,11 @@ body.locked { overflow: hidden; }
   var WARDS = ['ศช', 'ศญ', 'URO', 'AE', 'SICU', 'other'];
   var UD = ['DM', 'HT', 'DLP', 'CKD', 'ESRD', 'CAD', 'AF', 'HF', 'COPD', 'Cirrhosis', 'no U/D'];
   var MED = ['warfarin', 'DOAC', 'antiplatelet', 'steroid'];
-  var PREV = ['refer from รพช.', 'IV fluid', 'antibiotics', 'analgesics', 'PPI', 'NG tube', 'Foley catheter', 'blood transfusion', 'I&D / wound care'];
+  var PREV = ['IV fluid', 'antibiotics', 'analgesics', 'PPI', 'NG tube', 'Foley catheter', 'blood transfusion', 'I&D / wound care'];
   var VSX = [['o2', 'on O₂'], ['ett', 'on ETT'], ['pressor', 'on vasopressor / inotrope'], ['ams', 'alteration of consciousness']];
   var DRUGS = ['NE', 'adrenaline', 'dopamine', 'dobutamine', 'vasopressin'];
-  var FIELDS = ['name', 'hn', 'bed', 'age', 'bw', 'wardx', 'udx', 'allergy', 'pi', 'prevtxt', 'bt', 'sbp', 'dbp', 'hr', 'rr', 'sat',
-    'bt0', 'sbp0', 'dbp0', 'hr0', 'rr0', 'sat0', 'imp', 'plan', 'npo'];
+  var FIELDS = ['name', 'hn', 'bed', 'age', 'bw', 'wardx', 'udx', 'allergy', 'pi', 'prevtxt', 'bt', 'bp', 'hr', 'rr', 'sat',
+    'bt0', 'bp0', 'hr0', 'rr0', 'sat0', 'imp', 'plan', 'npo', 'npox', 'refrom', 'refertxt', 'labx', 'freedx'];
   var LABS = [['wbc', 'WBC'], ['hb', 'Hb'], ['hct', 'Hct'], ['plt', 'Plt'], ['bun', 'BUN'], ['cr', 'Cr'], ['na', 'Na'], ['k', 'K'], ['inr', 'INR'], ['dtx', 'DTX'],
     ['crp', 'CRP (mg/L)', 'CRP'], ['tb', 'TB'], ['alp', 'ALP'], ['ast', 'AST'], ['alt', 'ALT'], ['alb', 'Alb'], ['lipase', 'Lipase'], ['lactate', 'Lactate'], ['neut', 'PMN %', 'PMN']];
   var LAB_EXTRA = { wound: ['crp'], 'Acute cholecystitis': ['crp', 'tb'], 'Acute cholangitis': ['tb', 'alp', 'ast', 'alt', 'alb', 'crp'],
@@ -463,12 +531,28 @@ body.locked { overflow: hidden; }
   var LAB_ABN = { wbc: function (v) { return v > 15000 || v < 4000; }, hb: function (v) { return v < 10; }, hct: function (v) { return v < 30; },
     plt: function (v) { return v < 100000; }, cr: function (v) { return v > 2; }, na: function (v) { return v < 130 || v > 150; }, k: function (v) { return v < 3 || v > 5.5; },
     inr: function (v) { return v > 1.5; }, dtx: function (v) { return v > 250; }, tb: function (v) { return v > 2; }, alb: function (v) { return v < 3; }, lactate: function (v) { return v >= 2; } };
+  /* แลปเป็นชุด: แตะ N (ปกติ) / Abn (กรอกเฉพาะค่าที่ผิดปกติ) / P (รอผล) · ค่าที่ไม่กรอกในชุดที่ส่งแล้ว = ปกติ (ใช้ค่ากลางนี้คิด score) */
+  var PANELS = [['CBC', ['wbc', 'neut', 'hb', 'hct', 'plt']], ['BUN/Cr', ['bun', 'cr']], ['Elyte', ['na', 'k']], ['LFT', ['tb', 'alp', 'ast', 'alt', 'alb']],
+    ['INR', ['inr']], ['DTX', ['dtx']], ['CRP', ['crp']], ['Lipase', ['lipase']], ['Lactate', ['lactate']]];
+  var NORMAL = { wbc: 8000, neut: 60, hb: 13, hct: 39, plt: 250000, bun: 12, cr: 0.8, na: 138, k: 4, tb: 0.6, alp: 80, ast: 25, alt: 25, alb: 4, inr: 1,
+    dtx: 110, crp: 3, lipase: 30, lactate: 1 };
+  var LABLBL = { wbc: 'WBC', neut: 'PMN', hb: 'Hb', hct: 'Hct', plt: 'Plt', bun: 'BUN', cr: 'Cr', na: 'Na', k: 'K', tb: 'TB', alp: 'ALP', ast: 'AST', alt: 'ALT',
+    alb: 'Alb', inr: 'INR', dtx: 'DTX', crp: 'CRP', lipase: 'Lipase', lactate: 'lactate' };
+  /* Plan ที่เสนอแบบ checklist */
+  var IVF = ['NSS', 'LRS', 'Acetar', 'D5S/2', 'D5N/2', 'D5W'];
+  var ELY = ['KCl IV', 'K oral', '3% NaCl', 'NSS', 'fluid restriction', 'Ca gluconate', 'insulin + glucose', 'Kalimate', 'MgSO₄', 'repeat Elyte'];
+  var ATBS = ['ceftriaxone', 'metronidazole', 'cefazolin', 'clindamycin', 'amoxi/clav', 'pip/tazo', 'meropenem', 'no ATB'];
+  var PAIN = ['paracetamol', 'morphine', 'pethidine', 'tramadol', 'fentanyl', 'NSAID'];
+  var DEFP = ['set OR', 'conservative', 'observe', 'endoscopy'];
+  var BLOOD = ['PRC', 'FFP', 'Platelet', 'Cryo'];
+  var NPOX = [['clear', 'clear fluid', 2], ['milk', 'milk / non-clear fluid', 6], ['light', 'light meal', 6], ['meal', 'full / fatty meal', 8], ['other', 'อื่น…', 6]];
+  var REFERMAX = 3;
   var REGIONS = ['RUQ', 'Epigastrium', 'LUQ', 'Rt flank', 'Periumbilical', 'Lt flank', 'RLQ', 'Suprapubic', 'LLQ'];
   var ASIGNS = ['soft', 'distended', 'generalized tenderness', 'guarding', 'rebound tenderness', 'rigidity'];
   var BSOUND = ['normal', 'hypoactive', 'hyperactive', 'absent'];
-  var ROWLBL = { head: 'Patient', calls: 'Call', dx: 'Dx', pi: 'PI', prev: 'Prior Mx', ud: 'U/D', vs: 'V/S', abd: 'Abd', pe: 'PE', lab: 'Lab', img: 'Imaging',
-    photos: 'Photos', miss: 'Pending', plan: 'Mx', npo: 'NPO' };
-  var ROWORDER = ['head', 'calls', 'dx', 'pi', 'prev', 'ud', 'vs', 'abd', 'pe', 'lab', 'img', 'photos', 'miss', 'plan', 'npo'];
+  var ROWLBL = { head: 'Patient', calls: 'Call', dx: 'Dx', refer: 'Refer', pi: 'PI', prev: 'Prior Mx', ud: 'U/D', vs: 'V/S', abd: 'Abd', pe: 'PE', lab: 'Lab', img: 'Imaging',
+    photos: 'Photos', miss: 'Pending', plan: 'Plan', npo: 'NPO' };
+  var ROWORDER = ['head', 'calls', 'dx', 'refer', 'pi', 'prev', 'ud', 'vs', 'abd', 'pe', 'lab', 'img', 'photos', 'miss', 'plan', 'npo'];
   var MAXPHOTO = 3;
 
   /* ================= imaging: findings & measurements per modality, tuned to the disease group ================= */
@@ -639,12 +723,31 @@ body.locked { overflow: hidden; }
   var CFG = {}, ME = { name: '', isStaff: false }, LX = null, LIFF_ID = CONF.LIFF_ID || '';
 
   function blank() {
-    return { type: 'Admit', cat: '', dx: '', ward: '', sex: '', ud: {}, med: {}, prev: {}, vsx: {}, press: {}, vsChg: '', vsSrc: 'ER',
-      img: {}, imgd: {}, m: {}, abd: { r: {}, s: {}, bs: '' }, labs: {}, photos: [] };
+    return { type: 'Admit', refer: false, cat: '', dx: '', ward: '', sex: '', ud: {}, med: {}, prev: {}, vsx: {}, press: {}, vsChg: '', vsSrc: 'ER',
+      img: {}, imgd: {}, m: {}, abd: { r: {}, s: {}, bs: '' }, labs: {}, lp: {}, labMore: false, photos: [], npox: '',
+      pl: { iv: {}, ivt: '', b: {}, bt: '', ely: {}, elyt: '', atb: {}, atbt: '', pain: {}, paint: '', def: '', deft: '', showB: false, showE: false } };
   }
   function fill(x) {
     var b = blank(); Object.keys(b).forEach(function (k) { if (x[k] === undefined || x[k] === null) x[k] = b[k]; });
-    x.abd.r = x.abd.r || {}; x.abd.s = x.abd.s || {}; return x;
+    x.abd.r = x.abd.r || {}; x.abd.s = x.abd.s || {};
+    Object.keys(b.pl).forEach(function (k) { if (x.pl[k] === undefined || x.pl[k] === null) x.pl[k] = b.pl[k]; });
+    return x;
+  }
+  /* รายงานเก่า/ร่างเก่า → รูปแบบใหม่ (BP ช่องเดียว, รับ refer, แลปเป็นชุด) */
+  function migrate(sn) {
+    var st = sn.S || {}, v = sn.v || {};
+    ['', '0'].forEach(function (x) { if (v['bp' + x] === undefined && v['sbp' + x]) v['bp' + x] = v['sbp' + x] + (v['dbp' + x] ? '/' + v['dbp' + x] : ''); });
+    if (st.prev && st.prev['refer from รพช.']) { st.refer = true; delete st.prev['refer from รพช.']; }
+    if (st.vsSrc === 'รพช.') st.vsSrc = 'รพ.ต้นทาง';
+    if (!st.lp && st.labs) {
+      st.lp = {};
+      PANELS.forEach(function (p) {
+        var got = p[1].filter(function (k) { return st.labs[k] !== undefined && st.labs[k] !== ''; });
+        if (got.length) st.lp[p[0]] = got.some(function (k) { return LAB_ABN[k] && LAB_ABN[k](num(st.labs[k])); }) ? 'a' : 'n';
+      });
+    }
+    if (v.freedx === undefined && st.m && st.m.freedx) v.freedx = st.m.freedx;
+    sn.S = st; sn.v = v; return sn;
   }
 
   /* ================= small helpers ================= */
@@ -653,9 +756,32 @@ body.locked { overflow: hidden; }
     return '<button type="button" class="chip' + (cls ? ' ' + cls : '') + '" data-g="' + esc(group) + '" data-v="' + esc(v) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + (label || esc(v)) + '</button>';
   }
   function num(v) { if (v === undefined || v === null || v === '') return null; var n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? null : n; }
-  function L(k) { var v = num(S.labs[k]); if (k === 'plt' && v !== null && v < 2000) v = v * 1000; if (k === 'wbc' && v !== null && v < 200) v = v * 1000; return v; }
-  function V(k) { return num($(k).value); }
-  function V0(k) { return S.vsChg === 'changed' ? num($(k + '0').value) : null; }
+  function Lraw(k) { var v = num(S.labs[k]); if (k === 'plt' && v !== null && v < 2000) v = v * 1000; if (k === 'wbc' && v !== null && v < 200) v = v * 1000; return v; }
+  function panelOf(k) { for (var i = 0; i < PANELS.length; i++) if (PANELS[i][1].indexOf(k) >= 0) return PANELS[i][0]; return ''; }
+  var DEFD = {};
+  function L(k) { // ค่าที่กรอก หรือ ค่ากลางถ้าชุดนั้นส่งแล้ว (N/Abn) แต่ไม่ได้กรอกค่านี้
+    var v = Lraw(k); if (v !== null) return v;
+    var st = S.lp && S.lp[panelOf(k)];
+    if ((st === 'n' || st === 'a') && NORMAL[k] !== undefined) { DEFD[k] = true; return NORMAL[k]; }
+    return null;
+  }
+  function labAbn(k) { var v = Lraw(k); return v !== null && !!LAB_ABN[k] && LAB_ABN[k](v); }
+  function bpOf(sfx) {
+    var m = String(($('bp' + sfx) || {}).value || '').match(/(\d{2,3})\s*(?:[\/\s.,\-]\s*(\d{2,3}))?/);
+    return m ? { s: +m[1], d: m[2] ? +m[2] : null } : { s: null, d: null };
+  }
+  function V(k) { if (k === 'sbp' || k === 'dbp') return bpOf('')[k === 'sbp' ? 's' : 'd']; return num($(k).value); }
+  function V0(k) {
+    if (S.vsChg !== 'changed') return null;
+    if (k === 'sbp' || k === 'dbp') return bpOf('0')[k === 'sbp' ? 's' : 'd'];
+    return num($(k + '0').value);
+  }
+  function hm(v) { // 8 / 8.30 / 0830 / 08:30 → 08:30
+    var m = String(v || '').trim().match(/^(\d{1,2})(?:[:.\s]?(\d{2}))?$/); if (!m) return String(v || '').trim();
+    var h = +m[1], mi = m[2] ? +m[2] : 0; return h < 24 && mi < 60 ? String(h).padStart(2, '0') + ':' + String(mi).padStart(2, '0') : String(v).trim();
+  }
+  function photosOf(tag) { return S.photos.filter(function (p) { return tag === 'refer' ? p.tag === 'refer' : p.tag !== 'refer'; }); }
+  function capFor(tag) { return tag === 'refer' ? REFERMAX : MAXPHOTO; }
   function pres(k) { var a = V0(k); return a !== null ? a : V(k); }
   function on(group, k) { return !!(S[group] && S[group][k]); }
   function M(k) { return S.m[k]; }
@@ -692,19 +818,35 @@ body.locked { overflow: hidden; }
   /* ================= render: static chips ================= */
   function renderStatic() {
     $('g-type').innerHTML = ['Admit', 'Consult', 'Notify'].map(function (t) { return chip('type', t, t, S.type === t); }).join('');
-    $('g-cat').innerHTML = CATS.map(function (c) { return chip('cat', c.k, esc(c.label), S.cat === c.k); }).join('');
+    $('g-refer').innerHTML = chip('refer', '1', (S.refer ? '✓ ' : '') + 'รับ refer', !!S.refer, 'refer');
+    $('refersec').hidden = !S.refer;
+    $('g-cat').innerHTML = CATS.map(function (c) {
+      return '<button type="button" class="cat" data-g="cat" data-v="' + c.k + '" aria-pressed="' + (S.cat === c.k) + '"><b>' + esc(c.label) + '</b>' +
+        '<small>' + esc(c.dx.length ? c.dx.slice(0, 3).join(' · ') + (c.dx.length > 3 ? ' …' : '') : 'พิมพ์ Dx เอง') + '</small></button>';
+    }).join('');
     var cat = CATS.filter(function (c) { return c.k === S.cat; })[0];
+    $('dxwrap').hidden = !cat || !cat.dx.length;
     $('g-dx').innerHTML = cat ? cat.dx.map(function (d) { return chip('dx', d, esc(d), S.dx === d); }).join('') : '';
-    $('cat-note').textContent = !cat ? 'เลือกหมวดก่อน แล้วเลือกโรค ฟอร์มจะถามเฉพาะข้อที่โรคนั้นต้องรู้' : cat.k === 'other' ? 'ใส่ Dx เองในช่องด้านล่าง' : '';
+    $('freedxwrap').hidden = !cat || cat.k !== 'other';
+    $('cat-note').textContent = !cat ? 'เลือกหมวดก่อน แล้วเลือก Diagnosis ฟอร์มจะถามเฉพาะข้อที่โรคนั้นต้องรู้' : '';
+    bwVis(); renderReferPh();
     $('g-ward').innerHTML = WARDS.map(function (w) { return chip('ward', w, w === 'other' ? 'อื่น…' : w, S.ward === w); }).join('');
     $('wardxwrap').hidden = S.ward !== 'other';
     $('g-sex').innerHTML = ['M', 'F'].map(function (x) { return chip('sex', x, x, S.sex === x); }).join('');
     $('g-ud').innerHTML = UD.map(function (u) { return chip('ud', u, esc(u), !!S.ud[u]); }).join('');
     $('g-med').innerHTML = MED.map(function (u) { return chip('med', u, 'on ' + u, !!S.med[u]); }).join('');
     $('g-prev').innerHTML = PREV.map(function (u) { return chip('prev', u, esc(u), !!S.prev[u]); }).join('');
-    $('g-labx').innerHTML = chip('img', 'lab pending', 'lab pending', !!S.img['lab pending']);
-    renderVS(); renderImg();
+    $('g-npox').innerHTML = NPOX.map(function (x) { return chip('npox', x[0], esc(x[1]), S.npox === x[0]); }).join('');
+    $('npoxwrap').hidden = S.npox !== 'other';
+    renderVS(); renderImg(); renderPlan();
   }
+  function bwVis() { // BW เฉพาะเด็ก < 15 ปี (บังคับ) หรือมียากระตุ้นความดัน (ไว้คำนวณ dose)
+    var age = num(S.age), kid = age !== null && age < 15, show = kid || !!S.vsx.pressor;
+    $('bwwrap').hidden = !show;
+    $('bwlbl').textContent = kid ? 'BW (kg)' : 'BW (kg) · คำนวณ dose';
+    $('bwlbl').className = kid ? 'need' : '';
+  }
+  function renderReferPh() { $('referph').innerHTML = S.refer ? attachUI('refer') : ''; }
   function renderVS() {
     $('g-vsx').innerHTML = VSX.map(function (x) { return chip('vsx', x[0], esc(x[1]), !!S.vsx[x[0]], 'flag'); }).join('');
     var pr = $('pressor'); pr.hidden = !S.vsx.pressor;
@@ -716,11 +858,12 @@ body.locked { overflow: hidden; }
             '<label class="f"><span>conc (' + u + ':ml)</span><input class="num" data-press="' + d + '|conc" placeholder="' + (d === 'NE' ? '4:250' : d === 'vasopressin' ? '20:100' : d === 'adrenaline' ? '1:100' : '250:250') + '" value="' + esc(p.conc || '') + '"></label>' +
             '<label class="f"><span>rate (ml/hr)</span><input class="num" inputmode="decimal" data-press="' + d + '|rate" value="' + esc(p.rate || '') + '"></label>' +
             '<span class="dose" data-dose="' + d + '">' + esc(doseText(d)) + '</span></div>';
-        }).join('') + '<div class="hint">ใส่ BW ในส่วนผู้ป่วยเพื่อคำนวณเป็น mcg/kg/min</div>';
+        }).join('') + '<div class="hint">ใส่ BW (ช่องในส่วนผู้ป่วย) เพื่อคำนวณเป็น mcg/kg/min</div>';
     }
+    bwVis();
     $('g-vschg').innerHTML = ['stable', 'changed'].map(function (x) { return chip('vschg', x, x, S.vsChg === x); }).join('');
     $('vs0').hidden = S.vsChg !== 'changed';
-    $('g-vssrc').innerHTML = ['ER', 'รพช.'].map(function (x) { return chip('vssrc', x, x, S.vsSrc === x); }).join('');
+    $('g-vssrc').innerHTML = ['ER', 'รพ.ต้นทาง'].map(function (x) { return chip('vssrc', x, x, S.vsSrc === x); }).join('');
   }
   function doseText(d) {
     var p = S.press[d] || {}, m = String(p.conc || '').match(/(\d+(?:\.\d+)?)\s*[:\/]\s*(\d+(?:\.\d+)?)/), r = num(p.rate);
@@ -740,12 +883,32 @@ body.locked { overflow: hidden; }
     });
   }
 
+  function suggestedPanels() { // ตามโรค + preop + shock
+    var out = ['CBC'];
+    preop().forEach(function (p) { if (PANELS.some(function (x) { return x[0] === p.item; }) && out.indexOf(p.item) < 0) out.push(p.item); });
+    (LAB_EXTRA[S.dx] || []).concat(S.cat === 'wound' ? LAB_EXTRA.wound : []).forEach(function (k) { var pn = panelOf(k); if (pn && out.indexOf(pn) < 0) out.push(pn); });
+    if ((S.vsx.pressor || S.dx === 'NF' || S.dx === 'Perforation/peritonitis') && out.indexOf('Lactate') < 0) out.push('Lactate');
+    return out;
+  }
+  function panelHasVal(p) { return p[1].some(function (k) { return S.labs[k] !== undefined && S.labs[k] !== ''; }); }
   function renderLabs() {
-    var extra = (LAB_EXTRA[S.dx] || []).concat(S.cat === 'wound' ? LAB_EXTRA.wound : []);
-    var show = LABS.filter(function (l, i) { return i < 10 || extra.indexOf(l[0]) >= 0 || l[0] === 'lactate' || (S.labs[l[0]] !== undefined && S.labs[l[0]] !== ''); });
-    $('labs').innerHTML = show.map(function (l) {
-      return '<label class="f"><span>' + esc(l[1]) + '</span><input class="num" inputmode="decimal" data-lab="' + l[0] + '" value="' + esc(S.labs[l[0]] !== undefined ? S.labs[l[0]] : '') + '"></label>';
-    }).join('');
+    var sug = suggestedPanels();
+    var rows = PANELS.filter(function (p) { return S.labMore || sug.indexOf(p[0]) >= 0 || S.lp[p[0]] || panelHasVal(p); });
+    var hidden = PANELS.length - rows.length;
+    $('labs').innerHTML = rows.map(function (p) {
+      var st = S.lp[p[0]] || '', showIn = st === 'a' || (st !== 'p' && panelHasVal(p));
+      var lbl = p[0] === 'INR' ? 'INR / PT' : p[0];
+      return '<div class="lrow' + (st ? ' on' : '') + '"><div class="ln"><b>' + esc(lbl) + '</b>' + (sug.indexOf(p[0]) >= 0 ? '<i>แนะนำ</i>' : '') +
+        '<small>' + esc(p[1].length > 1 ? p[1].map(function (k) { return LABLBL[k]; }).join(' ') : '') + '</small></div>' +
+        '<div class="seg">' + [['n', 'N'], ['a', 'Abn'], ['p', 'P']].map(function (x) {
+          return chip('lp', p[0] + '|' + x[0], x[1], st === x[0], x[0] === 'a' ? 'flag' : '');
+        }).join('') + '</div>' +
+        (showIn ? '<div class="lvals">' + p[1].map(function (k) {
+          var l = LABS.filter(function (x) { return x[0] === k; })[0] || [k, k];
+          return '<label class="f"><span>' + esc(l[1]) + '</span><input class="num' + (labAbn(k) ? ' abn' : '') + '" inputmode="decimal" data-lab="' + k + '" placeholder="ปกติ" value="' +
+            esc(S.labs[k] !== undefined ? S.labs[k] : '') + '"></label>';
+        }).join('') + '</div>' : '') + '</div>';
+    }).join('') + (hidden ? '<button type="button" class="linkbtn" id="lab-more">+ แลปอื่น (' + hidden + ')</button>' : '');
   }
 
   /* ================= photos ================= */
@@ -758,9 +921,11 @@ body.locked { overflow: hidden; }
     return h ? '<div class="thumbs">' + h + '</div>' : '';
   }
   function attachUI(tag) {
-    var n = S.photos.length;
-    return thumbs(tag) + '<div class="attachrow"><button type="button" class="ghost" data-attach="' + esc(tag) + '"' + (n >= MAXPHOTO ? ' disabled' : '') + '>📷 แนบรูป (' + n + '/' + MAXPHOTO + ')</button>' +
-      '<span class="hint">ห้ามติดหน้า ชื่อ หรือ HN · สูงสุด ' + MAXPHOTO + ' รูปต่อเคส · บนการ์ดขึ้นเป็นปุ่ม "ดูรูป" เปิดได้เฉพาะสมาชิกกลุ่ม</span></div>';
+    var n = photosOf(tag).length, cap = capFor(tag);
+    if (tag === 'refer') return thumbs(tag) + '<div class="attachrow"><button type="button" class="ghost" data-attach="refer"' + (n >= cap ? ' disabled' : '') + '>📄 แนบรูปเอกสาร (' + n + '/' + cap + ')</button>' +
+      '<span class="hint">ใบ refer มีชื่อผู้ป่วยได้ · เก็บแบบส่วนตัว เปิดดูได้เฉพาะสมาชิกกลุ่มเวร และลบเองตามกำหนด</span></div>';
+    return thumbs(tag) + '<div class="attachrow"><button type="button" class="ghost" data-attach="' + esc(tag) + '"' + (n >= cap ? ' disabled' : '') + '>📷 แนบรูป (' + n + '/' + cap + ')</button>' +
+      '<span class="hint">ห้ามติดหน้า ชื่อ หรือ HN · สูงสุด ' + cap + ' รูปต่อเคส · บนการ์ดขึ้นเป็นปุ่ม "ดูรูป" เปิดได้เฉพาะสมาชิกกลุ่ม</span></div>';
   }
   function shrink(file, cb) {
     var url = URL.createObjectURL(file), img = new Image();
@@ -829,6 +994,65 @@ body.locked { overflow: hidden; }
       return { t: lbl + (parts.length ? ': ' + parts.map(function (x) { return x.t; }).join(', ') : ''),
         segs: [{ t: lbl, s: 'b' }].concat(parts.length ? [{ t: ': ' }].concat(joinSegs(parts.map(function (x) { return [x]; }), ', ')) : []) };
     });
+  }
+
+  /* ================= plan checklist (IV · Blood · Elyte · ATB · Pain · OR/conservative) ================= */
+  function needBlood() { return ['hb', 'hct', 'plt', 'inr'].some(labAbn) || S.cat === 'gib'; }
+  function needEly() { return ['na', 'k'].some(labAbn); }
+  function hasBlood() { return BLOOD.some(function (c) { var b = S.pl.b[c] || {}; return b.g || b.p; }) || !!S.pl.bt; }
+  function hasEly() { return sel(S.pl.ely).length > 0 || !!S.pl.elyt; }
+  function plChips(row, list, multi) {
+    return '<div class="chips">' + list.map(function (x) {
+      return chip(multi ? 'plm:' + row : 'pl1:' + row, x, esc(x), multi ? !!S.pl[row][x] : S.pl[row] === x, x === 'no ATB' ? '' : '');
+    }).join('') + '</div>';
+  }
+  function plInput(k, ph) { return '<input class="plin" data-pl="' + k + '" placeholder="' + esc(ph) + '" value="' + esc(S.pl[k] || '') + '">'; }
+  function renderPlan() {
+    var P = S.pl, h = '', showB = needBlood() || P.showB || hasBlood(), showE = needEly() || P.showE || hasEly();
+    h += '<div class="plrow"><div class="pll">IV fluid</div>' + plChips('iv', IVF, true) + plInput('ivt', 'rate e.g. 100 ml/hr, load 1 L') + '</div>';
+    if (showB) {
+      h += '<div class="plrow"><div class="pll">Blood component' + (needBlood() ? ' <span class="why">' + esc(['hb', 'hct', 'plt', 'inr'].filter(labAbn).map(function (k) { return LABLBL[k] + ' ' + S.labs[k]; }).join(', ') || 'GI bleeding') + '</span>' : '') + '</div>' +
+        '<div class="bgrid"><span></span><span class="bh">given (u)</span><span class="bh">plan (u)</span>' + BLOOD.map(function (c) {
+          var b = P.b[c] || {};
+          return '<span class="bc">' + c + '</span><input class="num" inputmode="decimal" data-bl="' + c + '|g" value="' + esc(b.g || '') + '"><input class="num" inputmode="decimal" data-bl="' + c + '|p" value="' + esc(b.p || '') + '">';
+        }).join('') + '</div>' + plInput('bt', 'target / note e.g. keep Hct > 30, Plt > 50k, vit K 10 mg') + '</div>';
+    }
+    if (showE) {
+      h += '<div class="plrow"><div class="pll">IV add. / แก้ Elyte' + (needEly() ? ' <span class="why">' + esc(['na', 'k'].filter(labAbn).map(function (k) { return LABLBL[k] + ' ' + S.labs[k]; }).join(', ')) + '</span>' : '') + '</div>' +
+        plChips('ely', ELY, true) + plInput('elyt', 'e.g. KCl 40 mEq in NSS 1 L, recheck K 6 h') + '</div>';
+    }
+    h += '<div class="plrow"><div class="pll">ATB</div>' + plChips('atb', ATBS, true) + plInput('atbt', 'dose e.g. ceftriaxone 2 g IV OD') + '</div>';
+    h += '<div class="plrow"><div class="pll">Pain control</div>' + plChips('pain', PAIN, true) + plInput('paint', 'e.g. morphine 3 mg IV prn q4h') + '</div>';
+    h += '<div class="plrow"><div class="pll"><span' + (S.type === 'Admit' ? ' class="need"' : '') + '>Plan</span></div>' + plChips('def', DEFP, false) +
+      plInput('deft', P.def === 'set OR' ? 'e.g. LC, EL, debridement · ด่วน / พรุ่งนี้' : 'e.g. observe abdominal signs, re-evaluate 24 h') + '</div>';
+    var add = (!showB ? '<button type="button" class="ghost" data-plshow="B">+ Blood component</button>' : '') + (!showE ? '<button type="button" class="ghost" data-plshow="E">+ แก้ Elyte</button>' : '');
+    if (add) h += '<div class="row">' + add + '</div>';
+    $('planbox').innerHTML = h;
+  }
+  function planParts() {
+    var P = S.pl, out = [], t;
+    var j = function (list, txt) { // ชื่อที่พิมพ์ซ้ำในช่องรายละเอียดแล้ว ไม่ต้องแสดงซ้ำจากปุ่ม
+      txt = String(txt || '').trim(); var low = txt.toLowerCase();
+      return [list.filter(function (x) { return !low || low.indexOf(x.toLowerCase()) < 0; }).join(', '), txt].filter(Boolean).join(' · ');
+    };
+    if ((t = j(sel(P.iv), P.ivt))) out.push(['IV', t]);
+    var got = [], pl = [];
+    BLOOD.forEach(function (c) { var b = P.b[c] || {}; if (num(b.g)) got.push(c + ' ' + b.g + ' u'); if (num(b.p)) pl.push(c + ' ' + b.p + ' u'); });
+    t = [got.length ? 'given ' + got.join(', ') : '', pl.length ? 'plan ' + pl.join(', ') : '', String(P.bt || '').trim()].filter(Boolean).join(' → ');
+    if (t) out.push(['Blood', t]);
+    if ((t = j(sel(P.ely), P.elyt))) out.push(['Elyte', t]);
+    if ((t = j(sel(P.atb), P.atbt))) out.push(['ATB', t]);
+    if ((t = j(sel(P.pain), P.paint))) out.push(['Pain', t]);
+    if ((t = j(P.def ? [P.def] : [], P.deft))) out.push(['Plan', t]);
+    if ((t = $('plan').value.trim().replace(/\s*\n\s*/g, '; '))) out.push(['Other', t]);
+    return out;
+  }
+  function npoText() {
+    var tm = hm($('npo').value), x = NPOX.filter(function (n) { return n[0] === S.npox; })[0];
+    var last = x ? (x[0] === 'other' ? $('npox').value.trim() || 'other' : x[1]) : '';
+    var ok = '';
+    if (x && /^\d{2}:\d{2}$/.test(tm)) { var p = tm.split(':'), mins = (+p[0] * 60 + +p[1] + x[2] * 60) % 1440; ok = '≥ ' + x[2] + ' h → ' + String(Math.floor(mins / 60)).padStart(2, '0') + ':' + String(mins % 60).padStart(2, '0'); }
+    return { text: [tm ? 'since ' + tm : '', last ? 'last: ' + last + (ok ? ' (' + ok + ')' : '') : ''].filter(Boolean).join(' · '), ok: ok };
   }
 
   /* ================= abdomen exam ================= */
@@ -1275,12 +1499,9 @@ body.locked { overflow: hidden; }
 
   function preop() {
     var age = num(S.age), u = S.ud, out = [];
-    var has = {
-      CBC: ['wbc', 'hb', 'hct', 'plt'].some(function (k) { return L(k) !== null; }),
-      'BUN/Cr': L('bun') !== null || L('cr') !== null, Elyte: L('na') !== null || L('k') !== null, INR: L('inr') !== null,
-      LFT: ['tb', 'alp', 'ast', 'alt', 'alb'].some(function (k) { return L(k) !== null; }), DTX: L('dtx') !== null,
-      EKG: !!S.img.EKG, CXR: !!S.img.CXR, UPT: !!S.img.UPT
-    };
+    var sent = function (pn) { var p = PANELS.filter(function (x) { return x[0] === pn; })[0]; return S.lp[pn] === 'n' || S.lp[pn] === 'a' || (!!p && panelHasVal(p)); };
+    var has = { CBC: sent('CBC'), 'BUN/Cr': sent('BUN/Cr'), Elyte: sent('Elyte'), INR: sent('INR'), LFT: sent('LFT'), DTX: sent('DTX'),
+      EKG: !!S.img.EKG, CXR: !!S.img.CXR, UPT: !!S.img.UPT };
     var cardiac = u.CAD || u.AF || u.HF, renal = u.CKD || u.ESRD, biliary = S.cat === 'hpb', anticoag = S.med.warfarin || S.med.DOAC || u.AF || u.Cirrhosis;
     var major = S.dx === 'NF' || S.dx === 'Acute cholangitis' || S.dx === 'Perforation/peritonitis' || on('vsx', 'pressor');
     var obs = S.dx === 'Gut obstruction', gib = S.cat === 'gib';
@@ -1299,7 +1520,7 @@ body.locked { overflow: hidden; }
       var item = r[0], why = null;
       for (var i = 1; i < r.length; i++) if (r[i][0]) { why = r[i][1]; break; }
       if (why === null) return;
-      out.push({ item: item, ok: has[item], why: why, pending: !has[item] && !!S.img['lab pending'] && !/EKG|CXR|UPT/.test(item) });
+      out.push({ item: item, ok: has[item], why: why, pending: !has[item] && (S.lp[item] === 'p' || (!!S.img['lab pending'] && !/EKG|CXR|UPT/.test(item))) });
     });
     if (age !== null && age < 18) out.push({ item: 'guardian consent', ok: false, why: 'age ' + age });
     return out;
@@ -1312,7 +1533,8 @@ body.locked { overflow: hidden; }
       ['HN', /^\d{5,9}$/.test($('hn').value.trim())], ['age', num(S.age) !== null], ['sex', !!S.sex],
       ['BT', V('bt') !== null], ['BP', V('sbp') !== null], ['HR', V('hr') !== null], ['U/D', hasUD]
     ];
-    if (S.type === 'Admit') r.push(['plan', !!$('plan').value.trim()]);
+    if (num(S.age) !== null && num(S.age) < 15) r.push(['BW (เด็ก)', V('bw') !== null]);
+    if (S.type === 'Admit') r.push(['plan', !!S.pl.def || !!$('plan').value.trim()]);
     if (S.vsChg === 'changed') r.push(['initial V/S', V0('sbp') !== null || V0('hr') !== null]);
     if (!S.vsChg) r.push(['V/S vs initial', false]);
     live().forEach(function (x) { if (x.req && x.t !== 'hint' && !(x.k === 'freedx')) r.push([x.t === 'abd' ? 'abdomen exam' : x.l, answered(x)]); });
@@ -1334,8 +1556,8 @@ body.locked { overflow: hidden; }
 
   /* ================= report model: one source for the Flex card, plain text and the edit diff ================= */
   function vsParts(sfx) {
-    var g = function (k) { return num($(k + sfx).value); };
-    var bt = g('bt'), sbp = g('sbp'), dbp = g('dbp'), hr = g('hr'), rr = g('rr'), sat = g('sat');
+    var g = function (k) { return num($(k + sfx).value); }, bp = bpOf(sfx);
+    var bt = g('bt'), sbp = bp.s, dbp = bp.d, hr = g('hr'), rr = g('rr'), sat = g('sat');
     return [['BT', bt, bt !== null && (bt >= 38 || bt < 36)], ['BP', sbp !== null ? sbp + (dbp !== null ? '/' + dbp : '') : null, sbp !== null && sbp < 90],
       ['HR', hr, hr !== null && hr > 100], ['RR', rr, rr !== null && rr >= 22], ['SpO₂', sat !== null ? sat + '%' : null, sat !== null && sat < 92]]
       .filter(function (x) { return x[1] !== null; });
@@ -1348,16 +1570,24 @@ body.locked { overflow: hidden; }
   function buildModel(c, pre, calls) {
     var name = $('name').value.trim(), hn = $('hn').value.trim(), age = S.age, bed = $('bed').value.trim(), bw = $('bw').value.trim();
     var dx = S.cat === 'other' ? (S.m.freedx || '') : S.dx, imp = $('imp').value.trim();
-    var md = { type: S.type, calls: calls.slice(), rows: [], nphotos: S.photos.length };
+    var md = { type: S.type, refer: !!S.refer, calls: calls.slice(), rows: [], nphotos: S.photos.length };
     md.title = [wardName() + (bed ? ' ' + bed : ''), name].filter(Boolean).join(' · ') || 'ยังไม่ระบุผู้ป่วย';
-    md.sub = [hn ? 'HN ' + hn : 'no HN', (S.sex || '') + (age || ''), bw ? bw + ' kg' : ''].filter(Boolean).join(' · ');
+    md.sub = [hn ? 'HN ' + hn : 'no HN', (S.sex || '') + (age || ''), bw && !$('bwwrap').hidden ? bw + ' kg' : ''].filter(Boolean).join(' · ');
     md.dx = (dx || 'Dx not selected') + (imp ? ' ' + imp : '');
     md.badge = c && c.short ? c.short : '';
     md.badgeCls = !c ? '' : c.level !== undefined ? c.level : /Grade III|high risk/.test(c.verdict) ? 'bad' : c.ok ? '' : 'warn';
     function row(k, text, segs, cls) {
       if (!text) return;
       segs = (segs || [{ t: text }]).filter(function (s) { return s.t; });
-      md.rows.push({ k: k, label: k === 'plan' ? 'Mx (ext)' : ROWLBL[k], text: text, segs: segs, cls: cls || '' });
+      md.rows.push({ k: k, label: ROWLBL[k], text: text, segs: segs, cls: cls || '' });
+    }
+    if (S.refer) {
+      var rf = $('refrom').value.trim(), rt = $('refertxt').value.trim().replace(/\s+/g, ' '), rph = photosOf('refer').length;
+      var ex = rt.length > 90 ? rt.slice(0, 88) + '…' : rt;
+      md.referText = rt.length;
+      row('refer', ['รับ refer' + (rf ? ' จาก ' + rf : ''), ex, rph ? '📄 ' + rph + ' รูป' : ''].filter(Boolean).join(' · ') + '#' + rt.length,
+        [{ t: 'รับ refer' + (rf ? ' จาก ' + rf : ''), s: 'b' }].concat(ex ? [{ t: ' · ' + ex }] : [],
+          rph || rt.length > 90 ? [{ t: ' · ' + (rph ? '📄 ' + rph + ' รูป · ' : '') + 'กด "เอกสาร/รูป"', s: 'i' }] : []));
     }
     row('pi', $('pi').value.trim().replace(/\s*\n\s*/g, ' '));
     var prev = PREV.filter(function (k) { return S.prev[k]; }), ptx = $('prevtxt').value.trim();
@@ -1377,24 +1607,32 @@ body.locked { overflow: hidden; }
 
     row('abd', abdText(), joinSegs(abdParts().map(function (x) { return [{ t: x.t, s: x.bad ? 'bad' : '' }]; }), ', '));
     row('pe', peText());
-    var labs = LABS.filter(function (l) { return L(l[0]) !== null; }).map(function (l) {
-      var v = L(l[0]), t = l[0] === 'plt' ? Math.round(v / 1000) + 'k' : l[0] === 'wbc' ? fmt(v) : l[0] === 'neut' ? v + '%' : String(v), lb = l[2] || l[1];
+    var labs = LABS.filter(function (l) { return Lraw(l[0]) !== null && S.lp[panelOf(l[0])] !== 'p'; }).map(function (l) {
+      var v = Lraw(l[0]), t = l[0] === 'plt' ? Math.round(v / 1000) + 'k' : l[0] === 'wbc' ? fmt(v) : l[0] === 'neut' ? v + '%' : String(v), lb = l[2] || l[1];
       return { t: lb + ' ' + t, s: [{ t: lb + ' ' }, { t: t, s: LAB_ABN[l[0]] && LAB_ABN[l[0]](v) ? 'bad' : '' }] };
     });
-    var pend = S.img['lab pending'] ? 'lab pending' : '';
-    row('lab', labs.map(function (x) { return x.t; }).concat(pend ? [pend] : []).join(' · '),
-      joinSegs(labs.map(function (x) { return x.s; }).concat(pend ? [[{ t: pend, s: 'i' }]] : []), ' · '));
+    var lpn = PANELS.filter(function (p) { return S.lp[p[0]] === 'n' && !panelHasVal(p); }).map(function (p) { return p[0]; });
+    var lpa = PANELS.filter(function (p) { return S.lp[p[0]] === 'a' && !panelHasVal(p); }).map(function (p) { return p[0]; });
+    var lpp = PANELS.filter(function (p) { return S.lp[p[0]] === 'p'; }).map(function (p) { return p[0]; });
+    var labTail = [lpn.length ? [{ t: lpn.join(', ') + ' normal' }] : null, lpa.length ? [{ t: lpa.join(', ') + ' abnormal (ไม่ได้ใส่ค่า)', s: 'bad' }] : null,
+      lpp.length ? [{ t: 'pending: ' + lpp.join(', '), s: 'i' }] : null, S.img['lab pending'] ? [{ t: 'lab pending', s: 'i' }] : null,
+      $('labx').value.trim() ? [{ t: $('labx').value.trim() }] : null].filter(Boolean);
+    var labSegs = labs.map(function (x) { return x.s; }).concat(labTail);
+    row('lab', labSegs.map(segText).join(' · '), joinSegs(labSegs, ' · '));
     var im = imgItems();
     row('img', im.map(function (x) { return x.t; }).join(' · '), joinSegs(im.map(function (x) { return x.segs; }), '\n'));
-    if (S.photos.length) {
-      var tags = S.photos.map(function (p) { return p.tag; }).join(', ');
-      row('photos', S.photos.length + ' (' + tags + ')#' + S.photos.map(function (p) { return String(p.src || '').length; }).join('.'),
-        [{ t: '📷 ' + S.photos.length + ' รูป (' + tags + ') · กด "ดูรูป"' }]);
+    var oph = photosOf('other');
+    if (oph.length) {
+      var tags = oph.map(function (p) { return p.tag; }).join(', ');
+      row('photos', oph.length + ' (' + tags + ')#' + S.photos.map(function (p) { return String(p.src || '').length; }).join('.'),
+        [{ t: '📷 ' + oph.length + ' รูป (' + tags + ') · กด "' + (S.refer ? 'เอกสาร/รูป' : 'ดูรูป') + '"' }]);
     }
     var miss = pre.filter(function (p) { return !p.ok; }).map(function (p) { return p.item + (p.pending ? ' (pending)' : ''); });
     row('miss', miss.join(', '), null, 'warn');
-    row('plan', $('plan').value.trim().replace(/\s*\n\s*/g, '; '), null, 'acc');
-    row('npo', $('npo').value.trim() ? 'since ' + $('npo').value.trim() : '');
+    var pp = planParts();
+    row('plan', pp.map(function (x) { return x[0] + ': ' + x[1]; }).join('; '),
+      joinSegs(pp.map(function (x) { return [{ t: x[0] + ': ', s: 'b' }, { t: x[1] }]; }), '\n'), 'plan');
+    row('npo', npoText().text);
     return md;
   }
   function peText() {
@@ -1420,7 +1658,10 @@ body.locked { overflow: hidden; }
     if (md.calls.length) out.push('⚠ Call: ' + md.calls.join(', '));
     out.push('[' + md.type + '] ' + md.title + ' · ' + md.sub);
     out.push('Dx: ' + md.dx + (md.badge ? ' (' + md.badge + ')' : ''));
-    md.rows.forEach(function (r) { out.push(r.label + ': ' + (r.k === 'photos' ? r.text.split('#')[0] + ' — ดูรูปจากปุ่มบนการ์ด' : r.text)); });
+    md.rows.forEach(function (r) {
+      if (r.k === 'refer') { var full = $('refertxt').value.trim(); out.push(r.label + ': ' + r.text.split(' · ')[0] + (full ? '\n' + full.slice(0, 1500) : '')); return; }
+      out.push(r.label + ': ' + (r.k === 'photos' ? r.text.split('#')[0] + ' — ดูรูปจากปุ่มบนการ์ด' : r.text));
+    });
     return out.join('\n');
   }
 
@@ -1437,7 +1678,7 @@ body.locked { overflow: hidden; }
     return { type: 'box', layout: 'vertical', backgroundColor: bg, cornerRadius: 'md', paddingAll: '6px', contents: [ftext(text, { size: size || 'xs', color: color, weight: 'bold' })] };
   }
   function frow(label, segs, cls) {
-    var color = cls === 'warn' ? COL.warn : cls === 'acc' ? COL.acc : cls === 'ok' ? COL.ok : cls === 'gone' ? COL.mute : COL.ink;
+    var color = cls === 'warn' ? COL.warn : cls === 'acc' || cls === 'plan' ? COL.acc : cls === 'ok' ? COL.ok : cls === 'gone' ? COL.mute : COL.ink;
     var v = ftext(segText(segs) || '-', { size: 'sm', color: color, flex: 7 });
     if (cls === 'acc' || cls === 'ok') v.weight = 'bold';
     if (segs.some(function (s) { return s.s; })) v.contents = segs.map(fspan);
@@ -1448,7 +1689,7 @@ body.locked { overflow: hidden; }
     var upd = o.kind === 'upd', only = upd ? o.changes : null;
     var want = function (k) { return !only || only.indexOf(k) >= 0; };
     var head = upd ? COL.upd : md.calls.length ? COL.urgent : COL[md.type] || COL.Admit;
-    var tag = (upd ? 'Update' : md.type) + (o.id ? ' #' + o.id : '') + (upd && o.ver ? ' · v' + o.ver : '') + (!upd && md.calls.length ? ' · urgent' : '');
+    var tag = (upd ? 'Update' : md.type) + (o.id ? ' #' + o.id : '') + (upd && o.ver ? ' · v' + o.ver : '') + (!upd && md.refer ? ' · รับ refer' : '') + (!upd && md.calls.length ? ' · urgent' : '');
     var body = [];
     if (upd) body.push(ftint(only.length ? 'แก้: ' + only.map(function (k) { return ROWLBL[k]; }).join(', ') : 'ยังไม่มีช่องที่เปลี่ยน', COL.warnSoft, COL.warn));
     if (want('calls')) {
@@ -1470,7 +1711,9 @@ body.locked { overflow: hidden; }
     body.push({ type: 'separator', margin: 'md', color: COL.line });
     body.push(ftext((upd ? 'แก้ไขโดย ' : 'รายงานโดย ') + (o.by || 'ext') + (o.time ? ' · ' + o.time : ''), { size: 'xxs', color: COL.mute, margin: 'sm' }));
     var btns = [];
-    if (md.nphotos && o.id) btns.push({ type: 'button', style: 'secondary', height: 'sm', action: { type: 'uri', label: '📷 ดูรูป (' + md.nphotos + ')', uri: liffUrl('view', o.id) } });
+    var docs = md.refer && (md.nphotos || md.referText > 90);
+    if ((md.nphotos || docs) && o.id) btns.push({ type: 'button', style: 'secondary', height: 'sm',
+      action: { type: 'uri', label: docs ? '📄 เอกสาร/รูป' + (md.nphotos ? ' (' + md.nphotos + ')' : '') : '📷 ดูรูป (' + md.nphotos + ')', uri: liffUrl('view', o.id) } });
     if (o.id) btns.push({ type: 'button', style: 'link', height: 'sm', color: COL.acc, action: { type: 'uri', label: 'แก้ไข', uri: liffUrl('edit', o.id) } });
     var bubble = { type: 'bubble', size: 'mega',
       header: { type: 'box', layout: 'vertical', backgroundColor: head, paddingAll: '12px', spacing: 'xs',
@@ -1521,8 +1764,18 @@ body.locked { overflow: hidden; }
   }
 
   /* ================= update outputs ================= */
+  function showNormals(t) { // ค่ากลางที่ใช้แทน "ปกติ" ไม่ควรโผล่เป็นตัวเลขในตัวช่วยประเมิน
+    Object.keys(DEFD).forEach(function (k) {
+      var v = NORMAL[k], vt = k === 'plt' ? Math.round(v / 1000) + 'k' : k === 'wbc' ? fmt(v) : String(v);
+      t = t.replace(new RegExp('(' + LABLBL[k] + ')\\s*' + vt.replace(/[.,]/g, '\\$&') + '(?![\\d.])', 'gi'), '$1 normal');
+    });
+    return t;
+  }
   function update() {
+    DEFD = {};
     var c = criteria(), pre = preop(), req = required(), calls = callReasons(c);
+    if (c) { c.lines = c.lines.map(function (l) { return [l[0], showNormals(l[1])]; }); c.verdict = showNormals(c.verdict); if (c.note) c.note = showNormals(c.note); }
+    calls = calls.map(showNormals);
     var done = req.filter(function (r) { return r[1]; }).length, pct = Math.round(done / req.length * 100);
     $('barfill').style.width = pct + '%';
     var need = req.filter(function (r) { return !r[1]; }).map(function (r) { return r[0]; });
@@ -1572,7 +1825,7 @@ body.locked { overflow: hidden; }
       var v = parseFloat(m[1]); if (m[2]) v = v * 1000;
       S.labs[k] = String(v); got++;
     });
-    if (/pending|รอผล/i.test(s)) S.img['lab pending'] = true;
+    PANELS.forEach(function (p) { if (panelHasVal(p) && S.lp[p[0]] !== 'p') S.lp[p[0]] = p[1].some(labAbn) ? 'a' : (S.lp[p[0]] || 'n'); });
     return got;
   }
 
@@ -1590,19 +1843,30 @@ body.locked { overflow: hidden; }
     var fb = t.closest('.fx-btn'); if (fb) { flexButton(fb.dataset.uri); return; }
     var ex = t.closest('[data-ex]'); if (ex) { fresh(ex.dataset.ex); if (!ex.dataset.ex) { clearDraft(); window.scrollTo({ top: 0 }); } return; }
     var act = t.closest('[data-act]'); if (act) { screenAction(act.dataset.act); return; }
-    var at = t.closest('[data-attach]'); if (at) { if (S.photos.length >= MAXPHOTO) return; pendingTag = at.dataset.attach; $('file').click(); return; }
-    var dp = t.closest('[data-delphoto]'); if (dp) { S.photos.splice(Number(dp.dataset.delphoto), 1); renderModule(); renderImg(); update(); return; }
+    var at = t.closest('[data-attach]'); if (at) { if (photosOf(at.dataset.attach).length >= capFor(at.dataset.attach)) return; pendingTag = at.dataset.attach; $('file').click(); return; }
+    var dp = t.closest('[data-delphoto]'); if (dp) { S.photos.splice(Number(dp.dataset.delphoto), 1); renderModule(); renderImg(); renderReferPh(); update(); return; }
+    if (t.closest('#theme')) { cycleTheme(); return; }
+    if (t.id === 'lab-more') { S.labMore = true; renderLabs(); return; }
+    if (t.id === 'lab-allnormal') { suggestedPanels().forEach(function (pn) { if (!S.lp[pn]) S.lp[pn] = 'n'; }); startTimer(); renderLabs(); renderPlan(); update(); return; }
+    if (t.id === 'npo-now') { $('npo').value = hhmm(); startTimer(); update(); return; }
+    var ps = t.closest('[data-plshow]'); if (ps) { S.pl[ps.dataset.plshow === 'B' ? 'showB' : 'showE'] = true; renderPlan(); return; }
     if (t.id === 'cfgtoggle') { cfgMode = !cfgMode; renderModule(); return; }
     if (t.id === 'cfg-add') { addCfgItem(); return; }
     if (t.id === 'cfg-reset') { delete CFG[dxKey()]; saveCfg(); renderModule(); update(); toast('คืนค่าเริ่มต้นแล้ว'); return; }
     var cd = t.closest('[data-cfgdel]');
     if (cd) { var c = CFG[dxKey()] || {}; c.add = (c.add || []).filter(function (x) { return x.k !== cd.dataset.cfgdel; }); saveCfg(); renderModule(); update(); return; }
 
-    var b = t.closest('.chip'); if (!b || !b.dataset.g) return;
+    var b = t.closest('.chip, .cat'); if (!b || !b.dataset.g) return;
     startTimer();
     var g = b.dataset.g, v = b.dataset.v;
     if (g === 'type' || g === 'ward' || g === 'sex') { S[g] = v; renderStatic(); if (g === 'ward' && v === 'other') $('wardx').focus(); }
-    else if (g === 'cat') { if (S.cat !== v) { S.cat = v; S.dx = ''; S.m = {}; } cfgMode = false; renderStatic(); renderModule(); renderLabs(); }
+    else if (g === 'refer') {
+      S.refer = !S.refer;
+      if (S.refer && S.vsSrc === 'ER') S.vsSrc = 'รพ.ต้นทาง';
+      if (!S.refer) S.photos = S.photos.filter(function (p) { return p.tag !== 'refer'; });
+      renderStatic(); if (S.refer) $('refrom').focus();
+    }
+    else if (g === 'cat') { if (S.cat !== v) { S.cat = v; S.dx = ''; S.m = {}; if (v === 'other') S.m.freedx = $('freedx').value.trim(); } cfgMode = false; renderStatic(); renderModule(); renderLabs(); if (v === 'other') $('freedx').focus(); }
     else if (g === 'dx') { S.dx = S.dx === v ? '' : v; S.m = {}; cfgMode = false; renderStatic(); renderModule(); renderLabs(); }
     else if (g === 'ud') {
       S.ud[v] = !S.ud[v];
@@ -1611,6 +1875,12 @@ body.locked { overflow: hidden; }
       renderStatic();
     }
     else if (g === 'med' || g === 'img' || g === 'prev') { S[g][v] = !S[g][v]; renderStatic(); }
+    else if (g === 'lp') { var lpk = v.split('|'); S.lp[lpk[0]] = S.lp[lpk[0]] === lpk[1] ? '' : lpk[1]; renderLabs(); renderPlan(); }
+    else if (g === 'npox') { S.npox = S.npox === v ? '' : v; renderStatic(); if (v === 'other' && S.npox) $('npox').focus(); }
+    else if (g.indexOf('plm:') === 0) { var pr = g.slice(4); S.pl[pr][v] = !S.pl[pr][v];
+      if (pr === 'atb' && S.pl.atb[v]) Object.keys(S.pl.atb).forEach(function (k) { if (k !== v && (v === 'no ATB' || k === 'no ATB')) S.pl.atb[k] = false; });
+      renderPlan(); }
+    else if (g.indexOf('pl1:') === 0) { var pk = g.slice(4); S.pl[pk] = S.pl[pk] === v ? '' : v; renderPlan(); }
     else if (g === 'vsx') {
       S.vsx[v] = !S.vsx[v];
       if (v === 'pressor' && S.vsx[v] && !DRUGS.some(function (d) { return S.press[d] && S.press[d].on; })) S.press.NE = Object.assign(S.press.NE || {}, { on: true });
@@ -1648,15 +1918,28 @@ body.locked { overflow: hidden; }
     var t = e.target;
     if ((t.dataset && t.dataset.cfg) || /^cfg-/.test(t.id || '') || (t.id === 'notify' && !editing)) return;
     if (t.id !== 'notify') startTimer();
-    if (t.dataset.lab) S.labs[t.dataset.lab] = t.value;
+    if (t.dataset.lab) {
+      S.labs[t.dataset.lab] = t.value; var lpn = panelOf(t.dataset.lab);
+      if (t.value !== '' && (!S.lp[lpn] || S.lp[lpn] === 'n') && labAbn(t.dataset.lab)) S.lp[lpn] = 'a';
+      t.classList.toggle('abn', labAbn(t.dataset.lab));
+      if (/^(hb|hct|plt|inr|na|k)$/.test(t.dataset.lab)) renderPlan();
+    }
+    else if (t.dataset.pl) S.pl[t.dataset.pl] = t.value;
+    else if (t.dataset.bl) { var bl = t.dataset.bl.split('|'); S.pl.b[bl[0]] = S.pl.b[bl[0]] || {}; S.pl.b[bl[0]][bl[1]] = t.value; }
+    else if (t.id === 'freedx') S.m.freedx = t.value;
     else if (t.dataset.m) S.m[t.dataset.m] = t.value;
     else if (t.dataset.imgn) { var pr = t.dataset.imgn.split('|'); imgD(pr[0]).n[pr[1]] = t.value; }
     else if (t.dataset.imgt) imgD(t.dataset.imgt).t = t.value;
     else if (t.dataset.press) { var pp = t.dataset.press.split('|'); S.press[pp[0]] = S.press[pp[0]] || { on: true }; S.press[pp[0]][pp[1]] = t.value; refreshDoses(); }
     else if (t.id === 'bw') refreshDoses();
-    else if (t.id === 'age') { S.age = t.value; renderStatic(); }
+    else if (t.id === 'age') { S.age = t.value; renderStatic(); renderLabs(); }
     else if (t.id === 'paste') { var n = parsePaste(t.value); if (n) { renderLabs(); renderStatic(); toast('แยกแลปได้ ' + n + ' ค่า'); } }
     update();
+  });
+  document.addEventListener('change', function (e) { // จัดรูปแบบตอนออกจากช่อง: BP 120.80 → 120/80 · เวลา 8.30 → 08:30
+    var t = e.target, b;
+    if ((t.id === 'bp' || t.id === 'bp0') && (b = bpOf(t.id === 'bp' ? '' : '0')).s !== null) { t.value = b.s + (b.d !== null ? '/' + b.d : ''); update(); }
+    if (t.id === 'npo' && t.value.trim()) { t.value = hm(t.value); update(); }
   });
   document.addEventListener('change', function (e) {
     var t = e.target; if (!t.dataset || !t.dataset.cfg) return;
@@ -1666,13 +1949,14 @@ body.locked { overflow: hidden; }
   });
   $('form').addEventListener('submit', function (e) { e.preventDefault(); });
   $('file').addEventListener('change', function () {
-    var files = Array.prototype.slice.call(this.files || [], 0, Math.max(0, MAXPHOTO - S.photos.length)), tag = pendingTag || 'other';
+    var tag = pendingTag || 'other', cap = capFor(tag);
+    var files = Array.prototype.slice.call(this.files || [], 0, Math.max(0, cap - photosOf(tag).length));
     this.value = '';
     var left = files.length; if (!left) return;
     files.forEach(function (f) {
       shrink(f, function (src) {
-        if (src && S.photos.length < MAXPHOTO) S.photos.push({ tag: tag, src: src });
-        if (--left === 0) { renderModule(); renderImg(); update(); toast('แนบรูปแล้ว ' + S.photos.length + '/' + MAXPHOTO); }
+        if (src && photosOf(tag).length < cap) S.photos.push({ tag: tag, src: src });
+        if (--left === 0) { renderModule(); renderImg(); renderReferPh(); update(); toast('แนบรูปแล้ว ' + photosOf(tag).length + '/' + cap); }
       });
     });
   });
@@ -1800,10 +2084,12 @@ body.locked { overflow: hidden; }
     else if (a === 'vclose') { if (LX.isInClient && LX.isInClient()) LX.closeWindow(); else if (MOCK) screen(null); else history.back(); }
   }
   function viewer(id) {
-    screen('loading', 'กำลังโหลดรูป…');
+    screen('loading', 'กำลังโหลดเอกสาร/รูป…');
     return api('photos', { caseId: id }).then(function (r) {
       var ph = r.photos || [];
-      var h = '<div class="stitle">รูปเคส #' + r.caseId + '</div><div><b>' + esc(r.title || '') + '</b></div><div class="hint">' + esc([r.sub, r.dx].filter(Boolean).join(' · ')) + '</div>';
+      var h = '<div class="stitle">' + (r.referText || r.referFrom ? 'เอกสาร/รูปเคส' : 'รูปเคส') + ' #' + r.caseId + '</div><div><b>' + esc(r.title || '') + '</b></div><div class="hint">' + esc([r.sub, r.dx].filter(Boolean).join(' · ')) + '</div>';
+      if (r.referText || r.referFrom) h += '<div class="box info"><div class="sub">รับ refer' + (r.referFrom ? ' จาก ' + esc(r.referFrom) : '') + '</div>' +
+        (r.referText ? '<div class="refertxt">' + esc(r.referText) + '</div>' : '') + '</div>';
       h += ph.length ? ph.map(function (p) {
         return p.src ? '<figure class="vph"><img src="' + p.src + '" alt="รูป ' + esc(p.tag) + '"><figcaption>' + esc(p.tag) + '</figcaption></figure>' : '<div class="hint">รูป ' + esc(p.tag) + ' ถูกลบแล้ว (ครบกำหนดเก็บ)</div>';
       }).join('') : '<div class="hint">ไม่มีรูป หรือรูปถูกลบตามกำหนดแล้ว</div>';
@@ -1826,11 +2112,13 @@ body.locked { overflow: hidden; }
   function freeze() { if (started && frozen === null) { frozen = Math.floor((Date.now() - started) / 1000); clearInterval(timerId); tick(); } return frozen || 0; }
   function snapshot() { var v = {}; FIELDS.forEach(function (k) { v[k] = $(k).value; }); return { S: JSON.parse(JSON.stringify(S)), v: v }; }
   function restore(sn) {
-    S = fill(JSON.parse(JSON.stringify(sn.S)));
+    sn = migrate({ S: JSON.parse(JSON.stringify(sn.S || {})), v: Object.assign({}, sn.v || {}) });
+    S = fill(sn.S);
     FIELDS.forEach(function (k) { $(k).value = sn.v[k] || ''; });
     $('paste').value = ''; started = 0; frozen = null; clearInterval(timerId); tick();
     rerenderAll();
   }
+  if (MOCK) window.__restoreForTest = function (sn) { restore(sn); }; // ใช้ทดสอบการแปลงร่างรูปแบบเก่า (โหมดจำลองเท่านั้น)
   function stateForSave() { var x = JSON.parse(JSON.stringify(S)); delete x.photos; return x; }
   function fieldVals() { var v = {}; FIELDS.forEach(function (k) { v[k] = $(k).value; }); return v; }
   function sendLabels() {
@@ -1852,7 +2140,8 @@ body.locked { overflow: hidden; }
     if (editing && !changes.length) { toast('ยังไม่มีช่องไหนเปลี่ยน', true); return; }
     var notify = !editing || $('notify').checked, wasEdit = !!editing, secs = freeze();
     armed = 0; busy = true; sendLabels(); toast('กำลังบันทึก…');
-    api('save', { caseId: editing || null, state: stateForSave(), fields: fieldVals(), model: r.md, plain: plain(r.md), notify: notify,
+    var fv = fieldVals(); fv.planAll = planParts().map(function (x) { return x[0] + ': ' + x[1]; }).join('; '); fv.npoAll = npoText().text;
+    api('save', { caseId: editing || null, state: stateForSave(), fields: fv, model: r.md, plain: plain(r.md), notify: notify,
       changes: changes.map(function (k) { return ROWLBL[k]; }),
       photos: S.photos.map(function (p) { return p.id ? { id: p.id, tag: p.tag } : { src: p.src, tag: p.tag }; }) })
       .then(function (res) {
@@ -1896,6 +2185,20 @@ body.locked { overflow: hidden; }
   $('docksend').addEventListener('click', send);
   $('copy').addEventListener('click', function () { copyText($('msg').textContent); });
   $('canceledit').addEventListener('click', function () { exitEdit(); toast('ยกเลิกการแก้ไข'); });
+
+  /* ================= theme: อัตโนมัติ (ตามเครื่อง) → มืด → สว่าง ================= */
+  var TKEY = 'caseform.theme';
+  function applyTheme(m) {
+    if (m === 'dark' || m === 'light') document.documentElement.setAttribute('data-theme', m); else document.documentElement.removeAttribute('data-theme');
+    $('themelbl').textContent = m === 'dark' ? 'มืด' : m === 'light' ? 'สว่าง' : 'อัตโนมัติ';
+  }
+  function cycleTheme() {
+    var cur = ''; try { cur = localStorage.getItem(TKEY) || ''; } catch (e) { }
+    var nx = cur === '' ? 'dark' : cur === 'dark' ? 'light' : '';
+    try { if (nx) localStorage.setItem(TKEY, nx); else localStorage.removeItem(TKEY); } catch (e) { }
+    applyTheme(nx);
+  }
+  (function () { var m = ''; try { m = localStorage.getItem(TKEY) || ''; } catch (e) { } applyTheme(m); })();
 
   /* ================= draft autosave (this phone only, 6 h) =================
      ฟอร์มอาจถูกปิดกลางคัน (ปัดย้อนกลับ/ปัดลง/สลับแอปแล้วเครื่องคืนหน่วยความจำ) → บันทึกแทบทันที + ตอนแอปถูกพับ
@@ -1953,49 +2256,63 @@ body.locked { overflow: hidden; }
       S.ud = { DM: true, HT: true };
       S.m = { murphy: '+', mass: '−', fever: '+', days: '4', local: {} };
       S.abd = { r: { RUQ: true }, s: { guarding: true }, bs: 'normal' };
-      S.labs = { wbc: '15200', hb: '11.2', hct: '34', plt: '245000', bun: '18', cr: '0.9', na: '136', k: '3.8', inr: '1.1', dtx: '182', tb: '1.2', crp: '86' };
+      S.labs = { wbc: '15200', dtx: '182', crp: '86' };
       S.img = { 'U/S': true };
       S.imgd = { 'U/S': { f: { 'pericholecystic fluid': true, 'sonographic Murphy': true, gallstone: true, 'impacted stone at GB neck': true }, n: { gbwall: '6', stone: '15', cbd: '5' }, t: 'no IHD dilatation' } };
       S.prev = { 'IV fluid': true, analgesics: true };
-      setVals({ pi: 'RUQ pain 4 d, fever with chills, nausea, poor intake', prevtxt: 'NSS 1,000 ml + tramadol at ER', name: 'นางสมมติ ทดสอบ', hn: '123456', bed: '12', age: '68', bw: '58',
-        bt: '38.4', sbp: '132', dbp: '80', hr: '104', rr: '20', sat: '97', bt0: '38.9', sbp0: '124', dbp0: '76', hr0: '112', rr0: '22', sat0: '96',
-        plan: 'NPO, IV fluid, ceftriaxone + metronidazole, plan LC', npo: '08:00' });
+      S.lp = { CBC: 'a', 'BUN/Cr': 'n', Elyte: 'n', INR: 'n', LFT: 'n', DTX: 'a', CRP: 'a' };
+      S.pl = Object.assign(blank().pl, { iv: { NSS: true }, ivt: '100 ml/hr', atb: { ceftriaxone: true, metronidazole: true }, atbt: 'ceftriaxone 2 g OD + metronidazole 500 mg q8h',
+        pain: { paracetamol: true, morphine: true }, def: 'set OR', deft: 'LC พรุ่งนี้' });
+      S.npox = 'light';
+      setVals({ pi: 'RUQ pain 4 d, fever with chills, nausea, poor intake', prevtxt: 'NSS 1,000 ml + tramadol at ER', name: 'นางสมมติ ทดสอบ', hn: '123456', bed: '12', age: '68',
+        bt: '38.4', bp: '132/80', hr: '104', rr: '20', sat: '97', bt0: '38.9', bp0: '124/76', hr0: '112', rr0: '22', sat0: '96', npo: '08:00' });
     },
     nf: function () {
-      Object.assign(S, { cat: 'wound', dx: 'NF', ward: 'ศช', sex: 'M', age: '58', vsChg: 'changed', vsSrc: 'รพช.' });
+      Object.assign(S, { cat: 'wound', dx: 'NF', ward: 'ศช', sex: 'M', age: '58', vsChg: 'changed', vsSrc: 'รพ.ต้นทาง', refer: true });
       S.ud = { DM: true };
       S.m = { site: 'Lt leg', size: '15x10', days: '2', find: { 'ascending cellulitis': true }, nf: { 'pain out of proportion': true, bullae: true } };
-      S.labs = { wbc: '26400', hb: '10.5', plt: '180000', bun: '38', cr: '1.9', na: '131', k: '4.1', dtx: '264', crp: '212', lactate: '3.1' };
+      S.labs = { wbc: '26400', hb: '10.5', bun: '38', cr: '1.9', na: '131', dtx: '264', crp: '212', lactate: '3.1' };
+      S.lp = { CBC: 'a', 'BUN/Cr': 'a', Elyte: 'a', INR: 'n', DTX: 'a', CRP: 'a', Lactate: 'a' };
       S.vsx = { pressor: true }; S.press = { NE: { on: true, conc: '4:250', rate: '8' } };
-      S.prev = { 'refer from รพช.': true, 'IV fluid': true, antibiotics: true };
-      setVals({ pi: 'Abrasion Lt leg 3 d, rapidly spreading erythema and swelling, severe pain, bullae today', prevtxt: 'NSS 2 L, ceftriaxone 2 g at รพช. 18:00', name: 'นายตัวอย่าง ใจดี',
-        hn: '654321', bed: '21', age: '58', bw: '60', bt: '38.9', sbp: '88', dbp: '56', hr: '124', rr: '24', sat: '95', bt0: '38.5', sbp0: '102', dbp0: '64', hr0: '110', rr0: '22', sat0: '96',
-        plan: 'NPO, load IV fluid, NE titrate MAP ≥ 65, meropenem + clindamycin, set OR debridement ด่วน', npo: '22:00' });
+      S.prev = { 'IV fluid': true, antibiotics: true };
+      S.pl = Object.assign(blank().pl, { iv: { LRS: true }, ivt: 'load 1 L then 120 ml/hr', atb: { meropenem: true, clindamycin: true }, atbt: 'meropenem 1 g q8h + clindamycin 900 mg q8h',
+        pain: { morphine: true }, def: 'set OR', deft: 'debridement ด่วน' });
+      S.npox = 'meal';
+      setVals({ pi: 'Abrasion Lt leg 3 d, rapidly spreading erythema and swelling, severe pain, bullae today', prevtxt: 'NSS 2 L, ceftriaxone 2 g ที่ รพ.ต้นทาง 18:00', name: 'นายตัวอย่าง ใจดี',
+        hn: '654321', bed: '21', age: '58', bw: '60', bt: '38.9', bp: '88/56', hr: '124', rr: '24', sat: '95', bt0: '38.5', bp0: '102/64', hr0: '110', rr0: '22', sat0: '96',
+        npo: '19:00', refrom: 'รพ.ตัวอย่าง (สมมติ)',
+        refertxt: 'ส่งต่อผู้ป่วยชาย 58 ปี DM แผลถลอกขาซ้าย 3 วัน บวมแดงลามเร็ว ปวดมาก มี bullae, BP 102/64 HR 110 หลังให้ NSS 2 L, ceftriaxone 2 g IV 18:00, DTX 280 — ขอส่งต่อเพื่อพิจารณาผ่าตัด debridement' });
     },
     sbo: function () {
       Object.assign(S, { cat: 'abd', dx: 'Gut obstruction', ward: 'ศช', sex: 'M', age: '72', vsChg: 'stable' });
       S.ud = { HT: true };
       S.m = { level: 'SBO', vomit: '+', noflatus: '+', prevop: '+', hernia: 'absent', strang: {}, days: '2', ng: '800 ml bile-stained' };
       S.abd = { r: { Periumbilical: true }, s: { soft: true, distended: true }, bs: 'hyperactive' };
-      S.labs = { wbc: '11800', hb: '13.1', hct: '40', plt: '310000', bun: '42', cr: '1.6', na: '132', k: '2.9', lactate: '1.4' };
+      S.labs = { bun: '42', cr: '1.6', na: '132', k: '2.9' };
+      S.lp = { CBC: 'n', 'BUN/Cr': 'a', Elyte: 'a', Lactate: 'n' };
       S.img = { film: true, CT: true };
       S.imgd = { film: { f: { 'dilated SB': true, 'air-fluid levels': true, 'step-ladder sign': true, 'paucity of colonic gas': true }, n: { sbdia: '4.5' }, t: '' },
         CT: { f: { 'transition point': true, 'free fluid': true }, n: {}, t: 'transition point at distal ileum, no closed loop' } };
       S.prev = { 'IV fluid': true, 'NG tube': true, 'Foley catheter': true };
+      S.pl = Object.assign(blank().pl, { iv: { NSS: true }, ivt: '120 ml/hr', ely: { 'KCl IV': true, 'repeat Elyte': true }, elyt: 'KCl 40 mEq in NSS 1 L, recheck K 6 h',
+        atb: { 'no ATB': true }, pain: { paracetamol: true }, def: 'conservative', deft: 'NG decompression, observe 24–48 hr; strangulation sign → ex-lap' });
+      S.npox = 'clear';
       setVals({ pi: 'Colicky abdominal pain, distension, vomiting 2 d, obstipation; Hx open appendectomy 20 yr', prevtxt: 'NSS 1.5 L at ER', name: 'นายสมมุติ ลำไส้ดี',
-        hn: '246810', bed: '8', age: '72', bw: '65', bt: '37.6', sbp: '118', dbp: '72', hr: '98', rr: '20', sat: '97',
-        plan: 'NPO, NG decompression, IV fluid, KCl correction, observe 24–48 hr; if no improvement or signs of strangulation → ex-lap', npo: '06:00' });
+        hn: '246810', bed: '8', age: '72', bt: '37.6', bp: '118/72', hr: '98', rr: '20', sat: '97', npo: '06:00' });
     },
     ugib: function () {
       Object.assign(S, { cat: 'gib', dx: 'UGIB', ward: 'ศช', sex: 'M', age: '64', vsChg: 'changed', vsSrc: 'ER' });
       S.ud = { Cirrhosis: true, HT: true };
       S.m = { pres: { hematemesis: true, melena: true }, syncope: '+', active: '−', liver: '+', hf: '−', risk: { alcohol: true }, amount: '2 episodes, ~300 ml' };
-      S.labs = { wbc: '9800', hb: '8.1', hct: '24', plt: '92000', bun: '38', cr: '1.1', na: '134', k: '3.9', inr: '1.6', tb: '2.4', alb: '2.8' };
+      S.labs = { hb: '8.1', hct: '24', plt: '92000', bun: '38', inr: '1.6', tb: '2.4', alb: '2.8' };
+      S.lp = { CBC: 'a', 'BUN/Cr': 'a', Elyte: 'n', INR: 'a', LFT: 'a' };
       S.prev = { 'IV fluid': true, PPI: true, 'blood transfusion': true };
+      S.pl = Object.assign(blank().pl, { iv: { NSS: true }, ivt: '100 ml/hr', b: { PRC: { g: '1', p: '2' }, FFP: { p: '2' } }, bt: 'keep Hb > 7, Plt > 50k',
+        atb: { ceftriaxone: true }, atbt: '1 g IV OD (SBP prophylaxis)', def: 'endoscopy', deft: 'urgent EGD < 12 h, IV PPI + octreotide' });
+      S.npox = 'clear';
       setVals({ pi: 'Hematemesis 2 episodes + melena since this morning, syncope 1 episode; alcohol use', prevtxt: 'PRC 1 U, omeprazole 80 mg IV, ceftriaxone 1 g at ER',
-        name: 'นายสมมติ เลือดออก', hn: '135790', bed: '15', age: '64', bw: '62', bt: '37.2', sbp: '108', dbp: '66', hr: '102', rr: '20', sat: '98',
-        bt0: '37.0', sbp0: '86', dbp0: '50', hr0: '118', rr0: '22', sat0: '97',
-        plan: 'NPO, PRC 2 U, IV PPI, octreotide, ceftriaxone, urgent EGD', npo: '12:00' });
+        name: 'นายสมมติ เลือดออก', hn: '135790', bed: '15', age: '64', bt: '37.2', bp: '108/66', hr: '102', rr: '20', sat: '98',
+        bt0: '37.0', bp0: '86/50', hr0: '118', rr0: '22', sat0: '97', npo: '12:00' });
     }
   };
 
@@ -2025,7 +2342,8 @@ body.locked { overflow: hidden; }
           if (action === 'get' || action === 'photos') {
             c = db.cases[d.caseId]; if (!c) throw new Error('ไม่พบรายงาน #' + d.caseId);
             if (action === 'get') return resolve({ ok: true, caseId: +d.caseId, ver: c.ver, state: JSON.parse(JSON.stringify(c.state)), fields: c.fields, model: c.model, photos: c.photos, reporter: c.reporter });
-            return resolve({ ok: true, caseId: +d.caseId, title: c.model.title, sub: c.model.sub, dx: c.model.dx, photos: c.photos });
+            return resolve({ ok: true, caseId: +d.caseId, title: c.model.title, sub: c.model.sub, dx: c.model.dx, photos: c.photos,
+              referFrom: c.state.refer ? (c.fields.refrom || '') : '', referText: c.state.refer ? (c.fields.refertxt || '') : '' });
           }
           if (action === 'saveCfg') { if (d.cfg) db.cfg[d.dx] = d.cfg; else delete db.cfg[d.dx]; mockSave(); return resolve({ ok: true, cfg: db.cfg }); }
           reject(new Error('unknown action'));
