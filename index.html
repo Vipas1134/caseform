@@ -307,6 +307,42 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
 .sub2 { font-size: 12px; color: var(--mute); }
 .refertxt { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.55; }
 .seg .chip.flag[aria-pressed="true"] { background: var(--bad); color: var(--surface); }
+
+/* ---------- General / Trauma ---------- */
+:root { --tr: #a8501a; --tr-soft: #fbe9dc; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --tr: #f2a46c; --tr-soft: #3a2416; } }
+:root[data-theme="dark"] { --tr: #f2a46c; --tr-soft: #3a2416; }
+.stack { display: grid; gap: 12px; min-width: 0; }
+body:not(.mode-trauma) .tr-only, body.mode-trauma .gen-only { display: none !important; }
+.modebar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mode { display: grid; gap: 1px; text-align: left; border: 1.5px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 14px; cursor: pointer; color: var(--ink); min-height: 58px; }
+.mode b { font-size: 17px; font-weight: 700; line-height: 1.2; }
+.mode small { font-size: 12px; color: var(--mute); }
+.mode[aria-pressed="true"] { border-color: var(--acc); background: var(--acc-soft); box-shadow: inset 0 0 0 1px var(--acc); }
+.mode.tr[aria-pressed="true"] { border-color: var(--tr); background: var(--tr-soft); box-shadow: inset 0 0 0 1px var(--tr); }
+.mode[aria-pressed="true"] b::before { content: "✓ "; }
+.mode-trauma .injtiles .cat[aria-pressed="true"] { border-color: var(--tr); background: var(--tr-soft); box-shadow: inset 0 0 0 1px var(--tr); }
+.mode-trauma .injtiles .cat[aria-pressed="true"] b::before { color: var(--tr); }
+.injbox { border: 1px solid var(--line); border-left: 3px solid var(--tr); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; min-width: 0; }
+.injh { font-weight: 700; font-size: 14px; }
+#ps { display: grid; }
+.psl { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 6px 10px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.psl:first-child { padding-top: 0; }
+.psl:last-child { border-bottom: 0; }
+.psl .lt { grid-row: span 2; width: 34px; height: 34px; border-radius: 9px; background: var(--chip); border: 1px solid var(--line); display: grid; place-items: center; font-weight: 700; font-size: 17px; font-family: var(--f-mono); }
+.psl.done .lt { background: var(--acc); border-color: var(--acc); color: var(--acc-ink); }
+.psl.bad .lt { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+.psl .ph { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; min-height: 34px; }
+.psl .pb { grid-column: 2; display: grid; gap: 8px; min-width: 0; }
+.slot { display: contents; }
+.gcs { display: grid; gap: 2px; }
+.gcs .gcsn { font-family: var(--f-mono); font-size: 16px; margin-left: 4px; }
+.gcs .tri .seg .chip { min-width: 34px; padding: 5px 9px; }
+.chip.sug { border-style: dashed; border-color: var(--acc); }
+.chip.sug::before { content: "★ "; color: var(--acc); }
+.chip.sug[aria-pressed="true"]::before { color: inherit; }
+.pll .sugw { font-size: 12px; font-weight: 600; color: var(--acc); background: var(--acc-soft); border-radius: 99px; padding: 0 8px; }
+#vschgslot:empty { display: none; }
 </style>
 <script src="config.js"></script>
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -327,12 +363,16 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     <button type="button" class="ghost" data-ex="nf">ตัวอย่าง: NF + shock</button>
     <button type="button" class="ghost" data-ex="sbo">ตัวอย่าง: SBO</button>
     <button type="button" class="ghost" data-ex="ugib">ตัวอย่าง: UGIB</button>
+    <button type="button" class="ghost" data-ex="mca">Trauma: MCA major</button>
+    <button type="button" class="ghost" data-ex="burn">Trauma: burn</button>
+    <button type="button" class="ghost" data-ex="lac">Trauma: minor</button>
   </span>
   <button type="button" class="ghost" data-ex="">ล้างฟอร์ม · จับเวลาใหม่</button>
 </div>
 
 <div class="layout">
   <form class="form" id="form" autocomplete="off">
+    <div class="modebar" id="g-mode" role="group" aria-label="หมวดใหญ่"></div>
     <div class="editbar" id="ctxbar" hidden>
       <span>📍 <span id="ctxmsg"></span></span>
     </div>
@@ -350,16 +390,28 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     </div>
 
     <section class="sec">
-      <h2>เคส · Diagnosis</h2>
+      <h2 id="casehead">เคส · Diagnosis</h2>
       <div class="row"><div class="seg" id="g-type"></div><span id="g-refer"></span></div>
-      <div class="steplbl">หมวด</div>
-      <div class="cats" id="g-cat"></div>
-      <div id="dxwrap" hidden>
-        <div class="steplbl">Diagnosis</div>
-        <div class="chips dxchips" id="g-dx"></div>
+      <div class="stack gen-only">
+        <div class="steplbl">หมวด</div>
+        <div class="cats" id="g-cat"></div>
+        <div id="dxwrap" hidden>
+          <div class="steplbl">Diagnosis</div>
+          <div class="chips dxchips" id="g-dx"></div>
+        </div>
+        <label class="f" id="freedxwrap" hidden><span class="need">Dx / consult issue</span><input id="freedx" placeholder="e.g. breast abscess, R/O ovarian torsion"></label>
+        <div class="hint" id="cat-note"></div>
       </div>
-      <label class="f" id="freedxwrap" hidden><span class="need">Dx / consult issue</span><input id="freedx" placeholder="e.g. breast abscess, R/O ovarian torsion"></label>
-      <div class="hint" id="cat-note"></div>
+      <div class="stack tr-only">
+        <div class="row"><span class="steplbl need" style="margin:0">ความรุนแรง</span><div class="seg" id="g-sev"></div><span class="hint" id="sevnote"></span></div>
+        <div class="steplbl">Mechanism</div>
+        <div class="chips" id="g-mech"></div>
+        <div class="stack" id="trmech"></div>
+        <div class="grid2">
+          <label class="f"><span id="tinjlbl">เวลาเกิดเหตุ</span><input id="tinj" class="num" inputmode="decimal" placeholder="02:10"></label>
+          <div class="f" style="display:grid;align-content:end"><span id="g-etoh"></span></div>
+        </div>
+      </div>
       <label class="f"><span>Impression เพิ่มเติม</span><input id="imp" placeholder="e.g. with localized peritonitis, R/O gangrenous GB"></label>
     </section>
 
@@ -401,9 +453,9 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
       <div class="hint">ถ้าเรื่องยาวหรือซับซ้อน โทรเล่าดีกว่าพิมพ์</div>
     </section>
 
-    <section class="sec">
-      <h2>Vital signs · at ward</h2>
-      <div class="grid">
+    <section class="sec gen-only" id="vssec">
+      <h2 id="vsec-h">Vital signs · at ward</h2>
+      <div class="grid" id="vsgrid">
         <label class="f"><span class="need">BT (°C)</span><input id="bt" class="num" inputmode="decimal"></label>
         <label class="f"><span class="need">BP</span><input id="bp" class="num" inputmode="decimal" placeholder="120/80"></label>
         <label class="f"><span class="need">HR</span><input id="hr" class="num" inputmode="numeric"></label>
@@ -412,6 +464,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
       </div>
       <div class="chips" id="g-vsx"></div>
       <div class="press" id="pressor" hidden></div>
+      <div class="stack" id="vschgwrap">
       <div class="sub">V/S เทียบกับแรกรับ (ER / รพ.ต้นทาง)</div>
       <div class="chips" id="g-vschg"></div>
       <div class="vs0" id="vs0" hidden>
@@ -424,9 +477,23 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
           <label class="f"><span>SpO₂ %</span><input id="sat0" class="num" inputmode="numeric"></label>
         </div>
       </div>
+      </div>
     </section>
 
-    <section class="sec" id="module"></section>
+    <section class="sec tr-only" id="pssec">
+      <div class="sechead"><h2>Primary survey · XABCDE</h2><button type="button" class="linkbtn" id="ps-allnormal">ปกติทั้งหมด</button></div>
+      <div id="ps"></div>
+      <div id="vschgslot"></div>
+    </section>
+
+    <section class="sec gen-only" id="module"></section>
+
+    <section class="sec tr-only" id="injsec">
+      <h2>Injuries · secondary survey</h2>
+      <div class="hint">แตะส่วนที่บาดเจ็บ (เลือกได้หลายส่วน) แล้วเลือกรายละเอียด</div>
+      <div class="cats injtiles" id="g-inj"></div>
+      <div class="imgs" id="injd"></div>
+    </section>
 
     <section class="sec">
       <div class="sechead"><h2>Lab</h2><button type="button" class="linkbtn" id="lab-allnormal">ที่แนะนำ = normal ทั้งหมด</button></div>
@@ -459,6 +526,12 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
         <label class="f" id="npoxwrap" hidden><span>อาหาร / เครื่องดื่มที่กิน</span><input id="npox" placeholder="e.g. นมกล่อง 1 กล่อง, ข้าวต้ม"></label>
         <div class="hint" id="npohint"></div>
       </div>
+    </section>
+
+    <section class="sec tr-only" id="legalsec">
+      <h2>คดี · พ.ร.บ. · ไม่บังคับ</h2>
+      <div class="row"><div class="chips" id="g-legal"></div><span class="hint" id="legalnote"></span></div>
+      <label class="f"><span>หมายเหตุ</span><input id="legalx" placeholder="e.g. สภ.เมือง รับแจ้งแล้ว, ขอใบชันสูตรบาดแผล"></label>
     </section>
   </form>
 
@@ -495,6 +568,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
 </div>
 
 <input type="file" id="file" accept="image/*" multiple hidden>
+<div id="vspark" hidden></div>
 <div id="screen" hidden></div>
 
 <div class="dock">
@@ -522,22 +596,24 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   var VSX = [['o2', 'on O₂'], ['ett', 'on ETT'], ['pressor', 'on vasopressor / inotrope'], ['ams', 'alteration of consciousness']];
   var DRUGS = ['NE', 'adrenaline', 'dopamine', 'dobutamine', 'vasopressin'];
   var FIELDS = ['name', 'hn', 'bed', 'age', 'bw', 'wardx', 'udx', 'allergy', 'pi', 'prevtxt', 'bt', 'bp', 'hr', 'rr', 'sat',
-    'bt0', 'bp0', 'hr0', 'rr0', 'sat0', 'imp', 'plan', 'npo', 'npox', 'refrom', 'refertxt', 'labx', 'freedx'];
+    'bt0', 'bp0', 'hr0', 'rr0', 'sat0', 'imp', 'plan', 'npo', 'npox', 'refrom', 'refertxt', 'labx', 'freedx', 'tinj', 'legalx'];
   var LABS = [['wbc', 'WBC'], ['hb', 'Hb'], ['hct', 'Hct'], ['plt', 'Plt'], ['bun', 'BUN'], ['cr', 'Cr'], ['na', 'Na'], ['k', 'K'], ['inr', 'INR'], ['dtx', 'DTX'],
-    ['crp', 'CRP (mg/L)', 'CRP'], ['tb', 'TB'], ['alp', 'ALP'], ['ast', 'AST'], ['alt', 'ALT'], ['alb', 'Alb'], ['lipase', 'Lipase'], ['lactate', 'Lactate'], ['neut', 'PMN %', 'PMN']];
+    ['crp', 'CRP (mg/L)', 'CRP'], ['tb', 'TB'], ['alp', 'ALP'], ['ast', 'AST'], ['alt', 'ALT'], ['alb', 'Alb'], ['lipase', 'Lipase'], ['lactate', 'Lactate'], ['neut', 'PMN %', 'PMN'],
+    ['cpk', 'CPK'], ['ph', 'pH'], ['be', 'BE'], ['uarbc', 'UA RBC (/HPF)', 'UA RBC']];
   var LAB_EXTRA = { wound: ['crp'], 'Acute cholecystitis': ['crp', 'tb'], 'Acute cholangitis': ['tb', 'alp', 'ast', 'alt', 'alb', 'crp'],
     'Acute pancreatitis': ['lipase', 'tb'], 'Symptomatic gallstone': ['tb', 'alp'], Appendicitis: ['neut', 'crp'], 'Perforation/peritonitis': ['alb', 'crp'],
     UGIB: ['tb', 'alb'], 'Perianal abscess': ['crp'] };
   var LAB_ABN = { wbc: function (v) { return v > 15000 || v < 4000; }, hb: function (v) { return v < 10; }, hct: function (v) { return v < 30; },
     plt: function (v) { return v < 100000; }, cr: function (v) { return v > 2; }, na: function (v) { return v < 130 || v > 150; }, k: function (v) { return v < 3 || v > 5.5; },
-    inr: function (v) { return v > 1.5; }, dtx: function (v) { return v > 250; }, tb: function (v) { return v > 2; }, alb: function (v) { return v < 3; }, lactate: function (v) { return v >= 2; } };
+    inr: function (v) { return v > 1.5; }, dtx: function (v) { return v > 250; }, tb: function (v) { return v > 2; }, alb: function (v) { return v < 3; }, lactate: function (v) { return v >= 2; },
+    cpk: function (v) { return v > 1000; }, ph: function (v) { return v < 7.3 || v > 7.5; }, be: function (v) { return v < -6; }, uarbc: function (v) { return v >= 5; } };
   /* แลปเป็นชุด: แตะ N (ปกติ) / Abn (กรอกเฉพาะค่าที่ผิดปกติ) / P (รอผล) · ค่าที่ไม่กรอกในชุดที่ส่งแล้ว = ปกติ (ใช้ค่ากลางนี้คิด score) */
   var PANELS = [['CBC', ['wbc', 'neut', 'hb', 'hct', 'plt']], ['BUN/Cr', ['bun', 'cr']], ['Elyte', ['na', 'k']], ['LFT', ['tb', 'alp', 'ast', 'alt', 'alb']],
-    ['INR', ['inr']], ['DTX', ['dtx']], ['CRP', ['crp']], ['Lipase', ['lipase']], ['Lactate', ['lactate']]];
+    ['INR', ['inr']], ['DTX', ['dtx']], ['CRP', ['crp']], ['Lipase', ['lipase']], ['Lactate', ['lactate']], ['CPK', ['cpk']], ['ABG', ['ph', 'be']], ['UA', ['uarbc']]];
   var NORMAL = { wbc: 8000, neut: 60, hb: 13, hct: 39, plt: 250000, bun: 12, cr: 0.8, na: 138, k: 4, tb: 0.6, alp: 80, ast: 25, alt: 25, alb: 4, inr: 1,
-    dtx: 110, crp: 3, lipase: 30, lactate: 1 };
+    dtx: 110, crp: 3, lipase: 30, lactate: 1, cpk: 100, ph: 7.4, be: 0, uarbc: 0 };
   var LABLBL = { wbc: 'WBC', neut: 'PMN', hb: 'Hb', hct: 'Hct', plt: 'Plt', bun: 'BUN', cr: 'Cr', na: 'Na', k: 'K', tb: 'TB', alp: 'ALP', ast: 'AST', alt: 'ALT',
-    alb: 'Alb', inr: 'INR', dtx: 'DTX', crp: 'CRP', lipase: 'Lipase', lactate: 'lactate' };
+    alb: 'Alb', inr: 'INR', dtx: 'DTX', crp: 'CRP', lipase: 'Lipase', lactate: 'lactate', cpk: 'CPK', ph: 'pH', be: 'BE', uarbc: 'UA RBC' };
   /* Plan ที่เสนอแบบ checklist */
   var IVF = ['NSS', 'LRS', 'Acetar', 'D5S/2', 'D5N/2', 'D5W'];
   var ELY = ['KCl IV', 'K oral', '3% NaCl', 'NSS', 'fluid restriction', 'Ca gluconate', 'insulin + glucose', 'Kalimate', 'MgSO₄', 'repeat Elyte'];
@@ -551,21 +627,23 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   var ASIGNS = ['soft', 'distended', 'generalized tenderness', 'guarding', 'rebound tenderness', 'rigidity'];
   var BSOUND = ['normal', 'hypoactive', 'hyperactive', 'absent'];
   var ROWLBL = { head: 'Patient', calls: 'Call', dx: 'Dx', refer: 'Refer', pi: 'PI', prev: 'Prior Mx', ud: 'U/D', vs: 'V/S', abd: 'Abd', pe: 'PE', lab: 'Lab', img: 'Imaging',
-    photos: 'Photos', miss: 'Pending', plan: 'Plan', npo: 'NPO' };
-  var ROWORDER = ['head', 'calls', 'dx', 'refer', 'pi', 'prev', 'ud', 'vs', 'abd', 'pe', 'lab', 'img', 'photos', 'miss', 'plan', 'npo'];
+    photos: 'Photos', miss: 'Pending', plan: 'Plan', npo: 'NPO', mech: 'Mech', x: 'X', a: 'A', b: 'B', c: 'C', d: 'D', e: 'E', inj: 'Injury', legal: 'คดี' };
+  var ROWORDER = ['head', 'calls', 'dx', 'refer', 'mech', 'pi', 'prev', 'ud', 'vs', 'x', 'a', 'b', 'c', 'd', 'e', 'abd', 'pe', 'inj', 'lab', 'img', 'photos', 'miss', 'plan', 'npo', 'legal'];
   var MAXPHOTO = 3;
 
   /* ================= imaging: findings & measurements per modality, tuned to the disease group ================= */
-  var IMGMODS = ['EKG', 'CXR', 'film', 'U/S', 'CT', 'UPT'];
+  var IMGMODS = ['EKG', 'CXR', 'film', 'U/S', 'CT', 'pelvis', 'CTbrain', 'CTcs', 'CTchest', 'CTabd', 'UPT'];
   var IMG = {
     EKG: { label: 'EKG', all: { f: ['normal', 'sinus tachycardia', 'AF', 'ST-T change', 'LVH', 'BBB'], ph: 'e.g. Q wave II, III, aVF' } },
-    CXR: { label: 'CXR', all: { f: ['normal', 'subdiaphragmatic free air', 'infiltrate', 'pleural effusion', 'cardiomegaly'] } },
+    CXR: { label: 'CXR', all: { f: ['normal', 'subdiaphragmatic free air', 'infiltrate', 'pleural effusion', 'cardiomegaly'] },
+      trauma: { f: ['normal', 'pneumothorax', 'hemothorax', 'rib fx', 'widened mediastinum', 'lung contusion', 'subcutaneous emphysema', 'pneumomediastinum', 'free air', 'clavicle fx'], ph: 'e.g. Rt 4th–6th rib fx, ICD in place' } },
     film: { label: 'Film abdomen', all: { f: ['normal', 'dilated bowel', 'free air'] },
       obs: { f: ['dilated SB', 'air-fluid levels', 'step-ladder sign', 'paucity of colonic gas', 'dilated colon', 'coffee bean sign', 'free air'], n: ['sbdia', 'coldia'],
         note: '3-6-9 rule: SB > 3, colon > 6, cecum > 9 cm' },
       perf: { f: ['free air', 'Rigler sign', 'dilated bowel'] },
       appy: { f: ['normal', 'appendicolith', 'sentinel loop'] },
-      wound: { f: ['normal', 'soft tissue gas', 'foreign body', 'bone destruction'] } },
+      wound: { f: ['normal', 'soft tissue gas', 'foreign body', 'bone destruction'] },
+      trauma: { f: ['normal', 'fracture', 'dislocation', 'foreign body', 'soft tissue gas'], ph: 'e.g. Lt distal radius fx, displaced' } },
     'U/S': { label: 'U/S', all: { f: ['normal', 'free fluid'] },
       chole: { f: ['GB wall thickening', 'pericholecystic fluid', 'sonographic Murphy', 'GB distension (> 8×4 cm)', 'gallstone', 'impacted stone at GB neck', 'CBD dilatation'],
         n: ['gbwall', 'stone', 'cbd'], ph: 'e.g. no IHD dilatation', note: 'GB wall > 4 mm = thickening (Tokyo criteria; ไม่นับถ้ามี cirrhosis, ascites, HF)' },
@@ -591,13 +669,19 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
       wound: { f: ['soft tissue gas', 'fascial fluid', 'abscess'] },
       ano: { f: ['abscess', 'supralevator extension', 'soft tissue gas'] },
       gib: { f: ['active extravasation', 'cirrhosis', 'varices', 'mass'] } },
-    UPT: { label: 'UPT', all: { f: ['negative', 'positive'] } }
+    UPT: { label: 'UPT', all: { f: ['negative', 'positive'] } },
+    pelvis: { label: 'Pelvis X-ray', all: { f: ['normal', 'pubic rami fx', 'symphysis diastasis (open book)', 'SI joint widening', 'acetabular fx', 'hip dislocation', 'femoral neck fx'] } },
+    CTbrain: { label: 'CT brain', all: { f: ['normal', 'EDH', 'SDH', 'SAH', 'ICH / contusion', 'IVH', 'midline shift', 'skull fx', 'depressed skull fx', 'pneumocephalus', 'cerebral edema'], n: ['hthick', 'mls'] } },
+    CTcs: { label: 'CT C-spine', all: { f: ['normal', 'fracture', 'subluxation / dislocation', 'prevertebral swelling'], ph: 'level e.g. C5 body fx' } },
+    CTchest: { label: 'CT chest', all: { f: ['normal', 'pneumothorax', 'hemothorax', 'lung contusion', 'rib fx', 'aortic injury', 'pericardial effusion', 'pneumomediastinum', 'sternal fx'] } },
+    CTabd: { label: 'CT whole abdomen', all: { f: ['normal', 'free fluid', 'hemoperitoneum', 'liver injury', 'spleen injury', 'kidney injury', 'pancreatic injury', 'active extravasation (blush)', 'free air',
+      'bowel / mesenteric injury', 'retroperitoneal hematoma', 'pelvic fx', 'spine fx'], ph: 'e.g. liver gr III segment 6–7, no blush' } }
   };
   var NUMLBL = { gbwall: ['GB wall', 'mm'], stone: ['stone', 'mm'], cbd: ['CBD', 'mm'], appdia: ['appendix Ø', 'mm'], sbdia: ['SB Ø', 'cm'], coldia: ['colon Ø', 'cm'],
-    neck: ['hernia neck', 'cm'], coll: ['collection', 'cm'], necpct: ['necrosis', '%'] };
+    neck: ['hernia neck', 'cm'], coll: ['collection', 'cm'], necpct: ['necrosis', '%'], hthick: ['hematoma thickness', 'mm'], mls: ['midline shift', 'mm'] };
   var NUMABN = { gbwall: function (v) { return v > 4; }, cbd: function (v) { return v > 6; }, appdia: function (v) { return v > 6; }, sbdia: function (v) { return v > 3; },
-    coldia: function (v) { return v > 6; }, necpct: function (v) { return v >= 30; } };
-  var DANGER = /free air|Rigler|closed loop|whirl|decreased wall enhancement|pneumatosis|gas in|soft tissue gas|extraluminal|absent Doppler|coffee bean|necrosis|positive|ST-T|extravasation|supralevator/;
+    coldia: function (v) { return v > 6; }, necpct: function (v) { return v >= 30; }, hthick: function (v) { return v >= 10; }, mls: function (v) { return v >= 5; } };
+  var DANGER = /free air|Rigler|closed loop|whirl|decreased wall enhancement|pneumatosis|gas in|soft tissue gas|extraluminal|absent Doppler|coffee bean|necrosis|positive|ST-T|extravasation|supralevator|pneumothorax|hemothorax|widened mediastinum|aortic injury|EDH|SDH|SAH|ICH|IVH|midline shift|depressed|cerebral edema|hemoperitoneum|injury|blush|retroperitoneal|open book|SI joint|subluxation|fracture|fx$|pericardial effusion|pneumomediastinum|dislocation/;
 
   /* ================= disease modules as data =================
      t: tri (one row of short options) | one (single choice chips) | multi (chips) | field (input) | abd (abdomen map) | photo | hint
@@ -717,6 +801,743 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
       { t: 'photo', tag: 'other', l: 'Photo' }] }
   };
 
+
+  /* ================= TRAUMA (เลือก General / Trauma ด้านบนสุด) =================
+     คำตอบฝั่ง trauma เก็บใน S.t แยกจาก General (S.m) สลับไปมาแล้วข้อมูลไม่หาย
+     ช่อง V/S ชุดเดิม (BT BP HR RR SpO₂) ย้ายไปอยู่ใน B / C / E ของ XABCDE · TBI ส่ง neurosurgery รับ Mx · ไม่คิด ISS (ทำหลัง audit chart) */
+  var TMECH = [['MCA', 'MCA (จยย.)'], ['car', 'Car accident'], ['ped', 'Pedestrian'], ['fall', 'Fall'], ['assault', 'Body assault'],
+    ['stab', 'Stab wound'], ['gsw', 'Gunshot wound'], ['crush', 'Crush / machine'], ['burn', 'Burn'], ['elec', 'Electrical injury'],
+    ['drown', 'Drowning'], ['hang', 'Hanging'], ['bite', 'Animal bite'], ['other', 'Other']];
+  var MECHN = { MCA: 'MCA', car: 'car accident', ped: 'pedestrian', fall: 'fall', assault: 'body assault', stab: 'stab wound', gsw: 'GSW',
+    crush: 'crush injury', burn: 'burn', elec: 'electrical injury', drown: 'drowning', hang: 'hanging', bite: 'animal bite', other: 'other' };
+  var PEN = ['stab', 'gsw'];
+  function TQ(k) { return S.t[k]; }
+  function TM(k, v) { return !!(S.t[k] && S.t[k][v]); }
+  function trMajor() { return S.t.sev === 'major'; }
+  function isTR() { return S.mode === 'trauma'; }
+  function when1(k, vals) { return function () { return vals.indexOf(TQ(k)) >= 0; }; }
+  function whenM(k, v) { return function () { return TM(k, v); }; }
+
+  /* รายละเอียดตามกลไก (ขึ้นเมื่อเลือก mechanism นั้น) */
+  var MECHD = {
+    MCA: [{ t: 'one', k: 'mca_r', l: 'Role', o: ['rider', 'passenger'] },
+      { t: 'one', k: 'mca_h', l: 'Helmet', o: ['helmet', 'no helmet'], bad: ['no helmet'] },
+      { t: 'one', k: 'mca_x', l: 'Collision', o: ['vs car / truck', 'vs motorcycle', 'vs object', 'self-skid'] }],
+    car: [{ t: 'one', k: 'car_r', l: 'Role', o: ['driver', 'front passenger', 'rear passenger'] },
+      { t: 'multi', k: 'car_x', l: 'Details', o: ['seatbelt', 'no seatbelt', 'airbag deployed', 'ejected', 'rollover', 'entrapment', 'death in same car'],
+        flagv: ['no seatbelt', 'ejected', 'rollover', 'entrapment', 'death in same car'] }],
+    ped: [{ t: 'one', k: 'ped_x', l: 'Hit by', o: ['motorcycle', 'car', 'truck / bus'], f: 'hit by {}' }],
+    fall: [{ t: 'field', k: 'fall_h', l: 'Height (m)', num: true, f: '{} m' },
+      { t: 'one', k: 'fall_l', l: 'Landed on', o: ['feet', 'head', 'back / side'], f: 'landed on {}' }],
+    assault: [{ t: 'multi', k: 'as_x', l: 'Weapon', o: ['fist / kick', 'blunt object', 'multiple assailants'] }],
+    stab: [{ t: 'field', k: 'st_n', l: 'Number of wounds', num: true, f: '{} wound(s)' },
+      { t: 'field', k: 'st_w', l: 'Weapon / site', ph: 'e.g. knife ~10 cm, Lt flank', f: '{}' }],
+    gsw: [{ t: 'one', k: 'gsw_x', l: 'Wounds', o: ['entry only', 'entry + exit', 'multiple'] },
+      { t: 'field', k: 'gsw_s', l: 'Sites', ph: 'e.g. entry Rt chest, exit Rt back', f: '{}' }],
+    crush: [{ t: 'multi', k: 'cr_x', l: 'Type', o: ['limb crush', 'torso crush', 'machine (degloving / amputation)'] },
+      { t: 'field', k: 'cr_t', l: 'Entrapment (min)', num: true, f: 'entrapped {} min' }],
+    burn: [{ t: 'one', k: 'bu_t', l: 'Burn type', o: ['flame', 'scald', 'chemical', 'contact', 'explosion'] },
+      { t: 'one', k: 'bu_e', l: 'Place', o: ['enclosed space', 'open space'], bad: ['enclosed space'] }],
+    elec: [{ t: 'one', k: 'el_v', l: 'Voltage', o: ['low (< 1,000 V)', 'high (≥ 1,000 V)', 'lightning'], bad: ['high (≥ 1,000 V)', 'lightning'], req: true },
+      { t: 'multi', k: 'el_f', l: 'Features', o: ['LOC', 'cardiac arrest / CPR', 'entry wound', 'exit wound', 'dark urine', 'compartment syndrome', 'fall from height'],
+        flagv: ['LOC', 'cardiac arrest / CPR', 'dark urine', 'compartment syndrome'] },
+      { t: 'field', k: 'el_s', l: 'Entry / exit site', ph: 'e.g. entry Rt hand, exit Lt foot', f: '{}' }],
+    drown: [{ t: 'field', k: 'dr_m', l: 'Submersion (min)', num: true, f: 'submersion {} min' },
+      { t: 'one', k: 'dr_w', l: 'Water', o: ['fresh water', 'salt water'] },
+      { t: 'multi', k: 'dr_f', l: 'Features', o: ['CPR at scene', 'LOC', 'foam at mouth / nose', 'hypothermia', 'diving (C-spine risk)'], flag: true }],
+    hang: [{ t: 'one', k: 'hg_t', l: 'Suspension', o: ['complete', 'partial (feet touching)'], f: '{} suspension' },
+      { t: 'field', k: 'hg_m', l: 'Time (min)', num: true, f: '~{} min' },
+      { t: 'multi', k: 'hg_f', l: 'Findings', o: ['LOC', 'CPR', 'ligature mark', 'stridor / hoarseness', 'dysphagia', 'neck hematoma', 'subcutaneous emphysema', 'petechiae', 'neuro deficit'],
+        flagv: ['LOC', 'CPR', 'stridor / hoarseness', 'neck hematoma', 'subcutaneous emphysema', 'neuro deficit'] },
+      { t: 'hint', x: 'ส่วนใหญ่ทำร้ายตนเอง: consult จิตเวช · ประเมิน airway, C-spine และ vascular injury ของคอ' }],
+    bite: [{ t: 'one', k: 'bt_a', l: 'Animal', o: ['dog', 'cat', 'human', 'snake', 'other'] },
+      { t: 'one', k: 'bt_c', l: 'Rabies exposure (WHO)', o: ['cat I', 'cat II', 'cat III'], f: 'WHO {}', when: when1('bt_a', ['dog', 'cat', 'other']) }],
+    other: [{ t: 'field', k: 'mo_t', l: 'Mechanism', ph: 'e.g. ถูกวัวขวิด, ต้นไม้ล้มทับ', req: true, f: '{}' }]
+  };
+
+  /* Primary survey · XABCDE (slot = ช่อง V/S เดิมที่ย้ายมาวาง) */
+  var PSD = {
+    X: { t: 'Exsanguinating hemorrhage', items: [
+      { t: 'one', k: 'x', l: 'External bleeding', o: ['none', 'controlled', 'ongoing'], bad: ['ongoing'],
+        fm: { none: 'no external hemorrhage', controlled: 'external bleeding controlled', ongoing: 'ongoing external bleeding' } },
+      { t: 'multi', k: 'x_how', l: 'Control', o: ['direct pressure', 'pressure dressing', 'wound packing', 'tourniquet', 'hemostatic suture'], when: when1('x', ['controlled', 'ongoing']) },
+      { t: 'field', k: 'x_site', l: 'Site', ph: 'e.g. Lt thigh, scalp', f: 'at {}', when: when1('x', ['controlled', 'ongoing']) },
+      { t: 'field', k: 'x_tq', l: 'Tourniquet on at', ph: '14:20', num: true, f: 'tourniquet on {}', when: whenM('x_how', 'tourniquet') }] },
+    A: { t: 'Airway + C-spine', items: [
+      { t: 'one', k: 'a', l: 'Airway', o: ['patent', 'at risk', 'obstructed', 'on ETT', 'surgical airway'], bad: ['at risk', 'obstructed'],
+        fm: { patent: 'airway patent', 'at risk': 'airway at risk', obstructed: 'airway obstructed' } },
+      { t: 'multi', k: 'a_f', l: 'Signs', o: ['stridor', 'gurgling', 'blood / vomitus in airway', 'facial / airway burn', 'maxillofacial fx', 'expanding neck hematoma'], flag: true },
+      { t: 'one', k: 'cs', l: 'C-spine', o: ['C-collar on', 'no collar', 'cleared'], fm: { 'C-collar on': 'C-collar', 'no collar': 'no C-collar', cleared: 'C-spine cleared' } },
+      { t: 'one', k: 'cs_mt', l: 'Midline C-spine tenderness', o: ['+', '−', 'cannot assess'], f: 'midline C-tenderness {}', bad: ['+'] }] },
+    B: { t: 'Breathing', items: [
+      { t: 'slot', k: 'rr' }, { t: 'slot', k: 'sat' }, { t: 'vsx', o: ['o2'] },
+      { t: 'sub', l: 'Breath sound' },
+      { t: 'tri', k: 'bs_r', l: 'Rt', o: ['normal', 'decreased', 'absent'], bad: ['decreased', 'absent'], nope: true },
+      { t: 'tri', k: 'bs_l', l: 'Lt', o: ['normal', 'decreased', 'absent'], bad: ['decreased', 'absent'], nope: true },
+      { t: 'multi', k: 'b_f', l: 'Signs', o: ['resp distress', 'chest wall tenderness', 'paradoxical movement', 'subcutaneous emphysema', 'tracheal deviation', 'distended neck veins', 'open chest wound'], flag: true },
+      { t: 'one', k: 'icd', l: 'ICD', o: ['Rt ICD', 'Lt ICD', 'bilateral ICD'], maj: true, nope: true },
+      { t: 'field', k: 'icd_ml', l: 'ICD output (ml)', num: true, nope: true, when: function () { return !!TQ('icd'); } },
+      { t: 'field', k: 'icd_c', l: 'Content', ph: 'blood / air / bubble', nope: true, when: function () { return !!TQ('icd'); } }] },
+    C: { t: 'Circulation', items: [
+      { t: 'slot', k: 'bp' }, { t: 'slot', k: 'hr' }, { t: 'vsx', o: ['pressor'] }, { t: 'pressor' },
+      { t: 'multi', k: 'c_f', l: 'Signs', o: ['cold / clammy', 'cap refill > 2 s', 'distended abdomen', 'pelvic instability', 'femur fx', 'external bleeding'], flag: true },
+      { t: 'one', k: 'fast', l: 'FAST / eFAST', o: ['not done', 'negative', 'positive'], bad: ['positive'], maj: true, nope: true },
+      { t: 'multi', k: 'fast_s', l: 'FAST positive at', o: ['Morison pouch', 'splenorenal', 'pelvis', 'pericardium', 'Rt pleura', 'Lt pleura', 'no lung sliding'], flag: true, maj: true, nope: true,
+        when: function () { return TQ('fast') === 'positive'; } },
+      { t: 'one', k: 'c_resp', l: 'Response to fluid', o: ['responder', 'transient responder', 'non-responder'], bad: ['transient responder', 'non-responder'], maj: true }] },
+    D: { t: 'Disability', items: [
+      { t: 'gcs' },
+      { t: 'field', k: 'pup_r', l: 'Pupil Rt (mm)', num: true, nope: true }, { t: 'field', k: 'pup_l', l: 'Pupil Lt (mm)', num: true, nope: true },
+      { t: 'one', k: 'pup_x', l: 'Light reflex', o: ['both RTL', 'Rt sluggish / fixed', 'Lt sluggish / fixed', 'both fixed'], bad: ['Rt sluggish / fixed', 'Lt sluggish / fixed', 'both fixed'], nope: true },
+      { t: 'multi', k: 'd_f', l: 'Signs', o: ['lateralizing sign', 'seizure', 'paraplegia / quadriplegia', 'agitation'], flagv: ['lateralizing sign', 'seizure', 'paraplegia / quadriplegia'] }] },
+    E: { t: 'Exposure', items: [
+      { t: 'slot', k: 'bt' },
+      { t: 'multi', k: 'e_f', l: 'Log roll / exposure', o: ['hypothermia', 'back / flank wound', 'spinal tenderness', 'perineal injury', 'blood at meatus', 'blood on DRE'], flag: true },
+      { t: 'field', k: 'e_t', l: 'Other findings', ph: 'e.g. abrasion Rt shoulder', f: '{}' }] }
+  };
+  var PSL = ['X', 'A', 'B', 'C', 'D', 'E'];
+  var NORMS = { X: { x: 'none' }, A: { a: 'patent' }, B: { bs_r: 'normal', bs_l: 'normal' }, C: { cOK: true },
+    D: { gcs_e: '4', gcs_v: '5', gcs_m: '6', pup_r: '3', pup_l: '3', pup_x: 'both RTL' }, E: { eOK: true } };
+  function trNorm(L) {
+    if (L === 'gcs15') { Object.assign(S.t, { gcs_e: '4', gcs_v: '5', gcs_m: '6' }); return; }
+    (L === 'all' ? PSL : [L]).forEach(function (k) { Object.assign(S.t, NORMS[k]); });
+  }
+
+  /* Injury ตามส่วนของร่างกาย */
+  var GR = ['I', 'II', 'III', 'IV', 'V'];
+  var INJ = [
+    { k: 'tbi', l: 'TBI', x: 'head injury', items: [
+      { t: 'multi', k: 'tbi_sx', l: 'History', nope: true, o: ['LOC', 'amnesia', 'vomiting ≥ 2', 'seizure', 'headache', 'disorientation'], flagv: ['LOC', 'vomiting ≥ 2', 'seizure'] },
+      { t: 'field', k: 'tbi_loc', l: 'LOC (min)', num: true, nope: true, when: whenM('tbi_sx', 'LOC') },
+      { t: 'multi', k: 'tbi_f', l: 'Signs', o: ['scalp laceration', 'scalp hematoma', 'suspected skull fx', 'depressed skull fx', 'raccoon eyes', 'Battle sign', 'CSF leak', 'hemotympanum'],
+        flagv: ['suspected skull fx', 'depressed skull fx', 'raccoon eyes', 'Battle sign', 'CSF leak', 'hemotympanum'] },
+      { t: 'hint', x: 'ผล CT brain ใส่ในส่วน Imaging · TBI ส่ง neurosurgery รับ Mx ต่อ' }] },
+    { k: 'face', l: 'Maxillofacial', x: 'face · eye · teeth', items: [
+      { t: 'multi', k: 'fc_f', l: 'Injury', o: ['facial laceration', 'nasal bone fx', 'zygoma fx', 'orbital fx', 'mandible fx', 'maxilla / Le Fort fx', 'eye injury', 'dental injury', 'ear laceration'] },
+      { t: 'field', k: 'fc_t', l: 'Details', ph: 'e.g. Lt eyebrow lac 3 cm, malocclusion', f: '{}' }] },
+    { k: 'neck', l: 'Neck', x: 'zone I–III · hard signs', items: [
+      { t: 'one', k: 'nk_t', l: 'Type', o: ['blunt', 'superficial (platysma intact)', 'penetrating (platysma violated)'], bad: ['penetrating (platysma violated)'] },
+      { t: 'one', k: 'nk_z', l: 'Zone', o: ['I', 'II', 'III'], f: 'zone {}' },
+      { t: 'multi', k: 'nk_f', l: 'Hard / soft signs', o: ['expanding / pulsatile hematoma', 'active bleeding', 'bruit / thrill', 'air bubbling', 'hoarseness', 'dysphagia', 'hematemesis', 'subcutaneous emphysema', 'neuro deficit'], flag: true }] },
+    { k: 'spine', l: 'C-spine / spine', x: 'tenderness · deficit', items: [
+      { t: 'multi', k: 'sp_f', l: 'Findings', o: ['midline neck tenderness', 'midline back tenderness', 'step-off', 'focal neuro deficit', 'priapism', 'neurogenic shock'], flag: true },
+      { t: 'multi', k: 'sp_fx', l: 'Injury', o: ['C-spine fx', 'T-spine fx', 'L-spine fx', 'SCI complete', 'SCI incomplete'], flag: true },
+      { t: 'field', k: 'sp_l', l: 'Level / motor-sensory', ph: 'e.g. C5, motor gr 2 both legs', f: '{}' }] },
+    { k: 'chest', l: 'Chest', x: 'rib · PTX · HTX', items: [
+      { t: 'one', k: 'ch_s', l: 'Side', o: ['Rt', 'Lt', 'bilateral'], nope: true },
+      { t: 'multi', k: 'ch_f', l: 'Injury', nope: true, o: ['rib fx', 'flail chest', 'pneumothorax', 'tension pneumothorax', 'open pneumothorax', 'hemothorax', 'massive hemothorax', 'lung contusion',
+        'cardiac tamponade', 'subcutaneous emphysema', 'sternal fx', 'suspected aortic injury', 'diaphragm injury'],
+        flagv: ['flail chest', 'tension pneumothorax', 'open pneumothorax', 'massive hemothorax', 'cardiac tamponade', 'suspected aortic injury'] },
+      { t: 'field', k: 'ch_r', l: 'Rib fx (level)', ph: 'e.g. 4–7', nope: true, when: function () { return TM('ch_f', 'rib fx') || TM('ch_f', 'flail chest'); } }] },
+    { k: 'abd', l: 'Abdomen', x: 'BAT · organ injury', items: [
+      { t: 'abd' },
+      { t: 'multi', k: 'ab_s', l: 'Signs', o: ['seat belt sign', 'abrasion / contusion', 'distension', 'evisceration', 'impaled object'], flagv: ['seat belt sign', 'evisceration', 'impaled object'] },
+      { t: 'multi', k: 'ab_o', l: 'Organ injury (CT / OR)', o: ['liver', 'spleen', 'kidney', 'pancreas', 'bowel / hollow viscus', 'mesentery', 'bladder', 'diaphragm', 'retroperitoneal hematoma'], flag: true, nope: true },
+      { t: 'tri', k: 'gr_liver', l: 'Liver · AAST grade', o: GR, nope: true, when: whenM('ab_o', 'liver') },
+      { t: 'tri', k: 'gr_spleen', l: 'Spleen · AAST grade', o: GR, nope: true, when: whenM('ab_o', 'spleen') },
+      { t: 'tri', k: 'gr_kidney', l: 'Kidney · AAST grade', o: GR, nope: true, when: whenM('ab_o', 'kidney') }] },
+    { k: 'pelvis', l: 'Pelvis / perineum', x: 'pelvic fx · urethra', items: [
+      { t: 'one', k: 'pv_t', l: 'Pelvic fx', o: ['stable', 'unstable', 'acetabular'], bad: ['unstable'], fm: { stable: 'stable pelvic fx', unstable: 'unstable pelvic fx', acetabular: 'acetabular fx' } },
+      { t: 'multi', k: 'pv_f', l: 'Findings', o: ['open pelvic fx', 'pelvic binder applied', 'blood at meatus', 'perineal hematoma', 'scrotal / labial injury', 'rectal injury'],
+        flagv: ['open pelvic fx', 'blood at meatus', 'rectal injury'] }] },
+    { k: 'ext', l: 'Extremity', x: 'fx · vascular · compartment', items: [
+      { t: 'one', k: 'ex_s', l: 'Side', o: ['Rt', 'Lt', 'both'], nope: true },
+      { t: 'multi', k: 'ex_l', l: 'Site', o: ['clavicle', 'shoulder', 'humerus', 'elbow', 'forearm', 'wrist / hand', 'hip', 'femur', 'knee', 'tibia / fibula', 'ankle / foot'], nope: true },
+      { t: 'multi', k: 'ex_f', l: 'Injury', o: ['closed fx', 'open fx', 'dislocation', 'vascular injury (hard signs)', 'compartment syndrome', 'traumatic amputation', 'degloving', 'nerve injury', 'tendon injury'],
+        flagv: ['open fx', 'vascular injury (hard signs)', 'compartment syndrome', 'traumatic amputation'] },
+      { t: 'tri', k: 'ex_g', l: 'Gustilo', o: ['I', 'II', 'IIIA', 'IIIB', 'IIIC'], when: whenM('ex_f', 'open fx'), bad: ['IIIA', 'IIIB', 'IIIC'] },
+      { t: 'tri', k: 'ex_p', l: 'Distal pulse', o: ['palpable', 'weak', 'absent'], s: 'distal pulse', bad: ['weak', 'absent'] },
+      { t: 'field', k: 'ex_t', l: 'Details', ph: 'e.g. Lt distal radius, angulated', f: '{}' },
+      { t: 'photo', tag: 'extremity', l: 'Photo' }] },
+    { k: 'soft', l: 'Wound / soft tissue', x: 'lac · abrasion · bite', items: [
+      { t: 'multi', k: 'w_t', l: 'Type', o: ['laceration', 'abrasion', 'contusion', 'avulsion', 'degloving', 'puncture', 'bite wound', 'crush'] },
+      { t: 'field', k: 'w_s', l: 'Site', ph: 'e.g. Lt forearm', f: 'at {}' },
+      { t: 'field', k: 'w_z', l: 'Size (cm)', ph: '5x1', f: '{} cm' },
+      { t: 'one', k: 'w_c', l: 'Contamination', o: ['clean', 'contaminated', 'dirty'], bad: ['dirty'] },
+      { t: 'multi', k: 'w_d', l: 'Deep structure', o: ['tendon exposed', 'bone exposed', 'joint involved', 'FB in wound'], flag: true },
+      { t: 'photo', tag: 'wound', l: 'Wound photo' }] },
+    { k: 'burn', l: 'Burn', x: 'TBSA · depth · inhalation', items: [
+      { t: 'field', k: 'bn_p', l: 'TBSA % (2nd + 3rd degree)', num: true, req: true, f: 'TBSA {}%' },
+      { t: 'multi', k: 'bn_d', l: 'Depth', o: ['superficial', 'superficial partial', 'deep partial', 'full thickness'], flagv: ['full thickness'] },
+      { t: 'multi', k: 'bn_a', l: 'Special areas', f: 'involving {}', o: ['face', 'neck', 'hands', 'feet', 'genitalia / perineum', 'major joints', 'circumferential limb', 'circumferential chest'],
+        flagv: ['circumferential limb', 'circumferential chest'] },
+      { t: 'multi', k: 'bn_i', l: 'Inhalation injury signs', o: ['facial burn', 'singed nasal hair', 'carbonaceous sputum', 'hoarseness / stridor', 'enclosed space'], flag: true, f: 'inhalation signs: {}' },
+      { t: 'hint', x: 'Rule of nines (ผู้ใหญ่): ศีรษะ 9 · แขนข้างละ 9 · ลำตัวหน้า 18 · หลัง 18 · ขาข้างละ 18 · perineum 1 · ฝ่ามือผู้ป่วยรวมนิ้ว ≈ 1% · ไม่นับ superficial (1st degree)' },
+      { t: 'photo', tag: 'burn', l: 'Burn photo' }] },
+    { k: 'fb', l: 'Foreign body', x: 'impaled · ingested', items: [
+      { t: 'one', k: 'fb_t', l: 'Type', o: ['impaled object', 'FB in soft tissue', 'ingested FB', 'rectal FB', 'FB eye / ear / nose'], bad: ['impaled object'] },
+      { t: 'field', k: 'fb_w', l: 'What / size', ph: 'e.g. glass 2 cm, nail', f: '{}' },
+      { t: 'field', k: 'fb_s', l: 'Site', ph: 'e.g. Rt sole', f: 'at {}' },
+      { t: 'hint', x: 'impaled object: ห้ามดึงออก ยึดให้อยู่กับที่ แล้วเอาออกในห้องผ่าตัด', when: when1('fb_t', ['impaled object']) },
+      { t: 'photo', tag: 'FB', l: 'Photo' }] }
+  ];
+  function injOf(k) { return INJ.filter(function (r) { return r.k === k; })[0]; }
+  var TPREV = ['IV fluid', 'blood transfusion', 'TXA', 'ETT', 'ICD', 'C-collar', 'pelvic binder', 'splint', 'tourniquet', 'wound dressing', 'tetanus', 'antibiotics', 'analgesics', 'Foley catheter', 'NG tube'];
+  var TX = ['MTP', 'TXA'];
+  var TPROC = ['needle decompression', 'ICD', 'pelvic binder', 'splint / slab', 'skin traction', 'wound care', 'suture', 'tourniquet', 'Foley', 'NG / OG', 'C-collar', 'escharotomy', 'fasciotomy'];
+  var TPROPH = ['tetanus toxoid', 'TIG', 'rabies vaccine', 'RIG', 'tetanus up to date'];
+  var TATBS = ['cefazolin', 'gentamicin', 'ceftriaxone', 'metronidazole', 'amoxi/clav', 'clindamycin', 'no ATB'];
+  var TDEFP = ['set OR', 'NOM', 'observe', 'admit SICU', 'D/C + F/U'];
+  var TCONS = ['neurosurgery', 'ortho', 'plastic', 'maxillofacial', 'uro', 'CVT', 'eye', 'ENT', 'forensic', 'psychiatry', 'med', 'pediatric', 'OB-GYN'];
+  var TLBL = { MTP: 'MTP activated', TXA: 'TXA 1 g IV', forensic: 'forensic (นิติเวช)', psychiatry: 'psychiatry (จิตเวช)' };
+  var LEGAL = ['คดี', 'พ.ร.บ.'];
+
+  /* ================= render ================= */
+  function itemsHTML(items) { // ช่องข้อความติดกันวางเป็น 2 คอลัมน์ เหมือน renderModule
+    var h = '', buf = [];
+    var flush = function () { if (buf.length) { h += buf.length > 1 ? '<div class="grid2">' + buf.join('') + '</div>' : buf[0]; buf = []; } };
+    items.forEach(function (x) {
+      if (x.when && !x.when()) return; if (x.maj && !trMajor()) return;
+      if (x.t === 'field') { buf.push(itemHTML(x)); return; }
+      flush(); h += itemHTML(x);
+    });
+    flush(); return h;
+  }
+  function renderTrHead() {
+    var t = S.t;
+    $('casehead').textContent = isTR() ? 'เคส · Trauma' : 'เคส · Diagnosis';
+    $('imp').placeholder = isTR() ? 'e.g. R/O hollow viscus injury, intoxicated' : 'e.g. with localized peritonitis, R/O gangrenous GB';
+    $('pi').placeholder = isTR() ? 'e.g. ขับ จยย. ชนรถกระบะ ไม่สวมหมวก หมดสติ ~5 นาที' : 'e.g. RUQ pain 4 d, fever with chills, nausea';
+    $('prevtxt').placeholder = isTR() ? 'e.g. LRS 1 L, PRC 2 u, TXA 1 g ที่ ER 03:00' : 'e.g. NSS 1 L, ceftriaxone 2 g ที่ รพ.ต้นทาง 10:00';
+    if (!isTR()) return;
+    $('g-sev').innerHTML = [['minor', 'Minor'], ['major', 'Major']].map(function (x) { return chip('tsev', x[0], x[1], t.sev === x[0], x[0] === 'major' ? 'flag' : ''); }).join('');
+    $('sevnote').textContent = t.sev === 'major' ? 'Major: multiple / unstable / penetrating — กรอก XABCDE ครบ' : t.sev === 'minor' ? 'Minor: แผล, fx ปิด, minor head injury — ฟอร์มสั้น' : 'เลือก Minor / Major ก่อน';
+    $('g-mech').innerHTML = TMECH.map(function (m) { return chip('tmech', m[0], esc(m[1]), !!t.mech[m[0]], PEN.indexOf(m[0]) >= 0 ? 'flag' : ''); }).join('');
+    $('trmech').innerHTML = TMECH.filter(function (m) { return t.mech[m[0]] && MECHD[m[0]]; }).map(function (m) {
+      return '<div class="injbox"><div class="injh">' + esc(m[1]) + '</div>' + itemsHTML(MECHD[m[0]]) + '</div>';
+    }).join('');
+    $('g-etoh').innerHTML = chip('tetoh', '1', 'ETOH / สงสัยเมา', !!t.etoh, 'flag');
+    $('tinjlbl').className = trMajor() ? 'need' : '';
+    $('g-legal').innerHTML = LEGAL.map(function (x) { return chip('tlegal', x, esc(x), !!t.legal[x]); }).join('');
+    var lg = PEN.concat(['assault', 'hang']).filter(function (k) { return t.mech[k]; });
+    $('legalnote').textContent = lg.length && !sel(t.legal).length ? MECHN[lg[0]] + ' มักเป็นคดี — ระบุถ้าแจ้งตำรวจแล้ว' : '';
+  }
+  function renderTrPS() {
+    parkVS();
+    $('ps').innerHTML = PSL.map(function (L) {
+      var p = psParts(L), bad = p.some(function (x) { return x.some(function (s) { return s.s === 'bad'; }); });
+      return '<div class="psl' + (bad ? ' bad' : p.length ? ' done' : '') + '"><span class="lt">' + L + '</span>' +
+        '<div class="ph"><span>' + esc(PSD[L].t) + '</span><button type="button" class="linkbtn" data-tnorm="' + L + '">ปกติ</button></div>' +
+        '<div class="pb">' + psItemsHTML(PSD[L].items) + '</div></div>';
+    }).join('');
+    placeVS();
+  }
+  function psItemsHTML(items) {
+    var h = '', slots = [], buf = [];
+    var fs = function () { if (slots.length) { h += '<div class="grid">' + slots.join('') + '</div>'; slots = []; } };
+    var allNum = true;
+    var fb = function () { if (buf.length) { h += buf.length > 1 ? '<div class="' + (allNum ? 'grid' : 'grid2') + '">' + buf.join('') + '</div>' : buf[0]; buf = []; allNum = true; } };
+    items.forEach(function (x) {
+      if (x.when && !x.when()) return; if (x.maj && !trMajor()) return;
+      if (x.t === 'slot') { fb(); slots.push('<span class="slot" data-slot="' + x.k + '"></span>'); return; }
+      fs();
+      if (x.t === 'field') { buf.push(itemHTML(x)); if (!x.num) allNum = false; return; }
+      fb();
+      if (x.t === 'vsx') h += '<div class="chips">' + x.o.map(function (k) { var d = VSX.filter(function (v) { return v[0] === k; })[0]; return chip('vsx', k, esc(d[1]), !!S.vsx[k], 'flag'); }).join('') + '</div>';
+      else if (x.t === 'pressor') h += '<span class="slot" data-slot="pressor"></span>';
+      else if (x.t === 'gcs') h += gcsHTML();
+      else h += itemHTML(x);
+    });
+    fs(); fb(); return h;
+  }
+  function gcsHTML() {
+    var g = gcsOf(), rows = [['gcs_e', 'E', ['1', '2', '3', '4']], ['gcs_v', 'V', ['1', '2', '3', '4', '5', 'T']], ['gcs_m', 'M', ['1', '2', '3', '4', '5', '6']]];
+    return '<div class="gcs"><div class="sechead"><span class="sub"><span class="need">GCS</span> <b class="gcsn">' + esc(g.ok ? g.short : '–') + '</b></span>' +
+      '<button type="button" class="linkbtn" data-tnorm="gcs15">= 15</button></div>' + rows.map(function (r) {
+        return '<div class="tri"><span>' + r[1] + '</span><div class="seg">' + r[2].map(function (o) { return chip('m:' + r[0], o, o, S.t[r[0]] === o); }).join('') + '</div></div>';
+      }).join('') + '</div>';
+  }
+  function renderTrInj() {
+    $('g-inj').innerHTML = INJ.map(function (r) {
+      return '<button type="button" class="cat" data-g="tinj" data-v="' + r.k + '" aria-pressed="' + !!S.t.inj[r.k] + '"><b>' + esc(r.l) + '</b><small>' + esc(r.x) + '</small></button>';
+    }).join('');
+    $('injd').innerHTML = INJ.filter(function (r) { return S.t.inj[r.k]; }).map(function (r) {
+      return '<div class="injbox"><div class="injh">' + esc(r.l) + '</div>' + itemsHTML(r.items) + '</div>';
+    }).join('');
+  }
+  /* ช่อง V/S ชุดเดิม: General อยู่ในส่วน Vital signs · Trauma ย้ายไปวางใน B (RR, SpO₂) C (BP, HR, ยากระตุ้นความดัน) E (BT) */
+  var VSN = null;
+  function vsNodes() {
+    if (!VSN) VSN = { bt: $('bt').closest('label'), bp: $('bp').closest('label'), hr: $('hr').closest('label'), rr: $('rr').closest('label'),
+      sat: $('sat').closest('label'), pressor: $('pressor'), chg: $('vschgwrap') };
+    return VSN;
+  }
+  function parkVS() { var n = vsNodes(), pk = $('vspark'); Object.keys(n).forEach(function (k) { pk.appendChild(n[k]); }); }
+  function placeVS() {
+    var n = vsNodes();
+    if (isTR()) {
+      document.querySelectorAll('#ps [data-slot]').forEach(function (sl) { var x = n[sl.dataset.slot]; if (x && sl.firstChild !== x) sl.appendChild(x); });
+      $('vschgslot').appendChild(n.chg);
+    } else {
+      var g = $('vsgrid'); ['bt', 'bp', 'hr', 'rr', 'sat'].forEach(function (k) { g.appendChild(n[k]); });
+      $('vssec').appendChild(n.pressor); $('vssec').appendChild(n.chg);
+    }
+  }
+  function applyMode() {
+    document.body.classList.toggle('mode-trauma', isTR());
+    $('g-mode').innerHTML = [['gen', 'General', 'ศัลยกรรมทั่วไป'], ['trauma', 'Trauma', 'อุบัติเหตุ · บาดเจ็บ']].map(function (m) {
+      return '<button type="button" class="mode' + (m[0] === 'trauma' ? ' tr' : '') + '" data-g="mode" data-v="' + m[0] + '" aria-pressed="' + (S.mode === m[0]) + '"><b>' + m[1] + '</b><small>' + m[2] + '</small></button>';
+    }).join('');
+    $('vsec-h').textContent = isTR() ? 'V/S' : 'Vital signs · at ward';
+    if (!isTR()) placeVS();
+  }
+
+  /* ================= text for the card ================= */
+  function P1(t, bad) { return [{ t: t, s: bad ? 'bad' : '' }]; }
+  function partsOf(items) { // [[seg…], …] ตามค่าที่เลือก (ช่องที่มี nope ทำข้อความเอง)
+    var st = S.t, out = [];
+    items.forEach(function (x) {
+      if (x.nope || (x.when && !x.when()) || (x.maj && !trMajor())) return;
+      var v = st[x.k];
+      if ((x.t === 'one' || x.t === 'tri') && v) out.push(P1(x.fm && x.fm[v] ? x.fm[v] : x.f ? x.f.replace('{}', v) : x.t === 'tri' ? (x.s || x.l) + ' ' + v : v, !!(x.bad && x.bad.indexOf(v) >= 0)));
+      else if (x.t === 'multi') {
+        var l = sel(v); if (!l.length) return;
+        var sg = joinSegs(l.map(function (o) { return P1(o, x.flag || (x.flagv && x.flagv.indexOf(o) >= 0)); }), ', ');
+        if (x.f) { var pr = x.f.split('{}'); sg = [{ t: pr[0] }].concat(sg, [{ t: pr[1] || '' }]); }
+        out.push(sg.filter(function (s) { return s.t; }));
+      } else if (x.t === 'field' && v && String(v).trim()) out.push(P1(x.f ? x.f.replace('{}', String(v).trim()) : String(v).trim()));
+      else if (x.t === 'abd') { var ap = abdParts(); if (ap.length) out.push(joinSegs(ap.map(function (a) { return P1(a.t, a.bad); }), ', ')); }
+    });
+    return out;
+  }
+  function vsMap() { var o = {}; vsParts('').forEach(function (x) { o[x[0]] = x; }); return o; }
+  function vsSeg(x) { return [{ t: x[0] + ' ' }, { t: String(x[1]), s: x[2] ? 'bad' : '' }]; }
+  function gcsOf() {
+    var e = TQ('gcs_e'), v = TQ('gcs_v'), m = TQ('gcs_m');
+    if (!e || !v || !m) return { ok: false, n: null };
+    var vt = v === 'T', n = +e + (vt ? 0 : +v) + +m;
+    return { ok: true, vt: vt, n: vt ? null : n, txt: 'E' + e + 'V' + v + 'M' + m, short: vt ? (+e + +m) + 'T' : String(n) };
+  }
+  function pupilBad() {
+    var t = S.t, r = num(t.pup_r), l = num(t.pup_l), out = [];
+    if (/fixed/.test(t.pup_x || '')) out.push(t.pup_x.replace(' sluggish / fixed', ' pupil sluggish/fixed'));
+    if (r !== null && l !== null && Math.abs(r - l) >= 1) out.push('anisocoria ' + r + '/' + l + ' mm');
+    return out.join(', ');
+  }
+  function psParts(L) {
+    var t = S.t, o = [], vm = vsMap(), it = PSD[L].items;
+    if (L === 'B') {
+      ['RR', 'SpO₂'].forEach(function (k) { if (vm[k]) o.push(vsSeg(vm[k])); });
+      if (S.vsx.o2) o.push(P1('on O₂'));
+      if (t.bs_r || t.bs_l) o.push(t.bs_r === 'normal' && t.bs_l === 'normal' ? P1('BS equal') :
+        [{ t: 'BS ' }].concat(joinSegs([['Rt', t.bs_r], ['Lt', t.bs_l]].filter(function (x) { return x[1]; }).map(function (x) { return P1(x[0] + ' ' + x[1], x[1] !== 'normal'); }), ', ')));
+    }
+    if (L === 'C') {
+      ['BP', 'HR'].forEach(function (k) { if (vm[k]) o.push(vsSeg(vm[k])); });
+      var hr1 = V('hr'), sb1 = V('sbp'), si = hr1 && sb1 ? { v: hr1 / sb1 } : null; if (si && si.v >= 0.9) o.push(P1('SI ' + si.v.toFixed(2), si.v >= 1));
+      pressText().forEach(function (x) { o.push(P1(x, true)); });
+      if (S.vsx.pressor && !pressText().length) o.push(P1('on vasopressor', true));
+    }
+    if (L === 'D') {
+      var g = gcsOf(); if (g.ok) o.push(P1('GCS ' + g.short + ' (' + g.txt + ')', g.vt || g.n < 13));
+      var pr = num(t.pup_r), pl = num(t.pup_l), pb = pupilBad();
+      if (pr !== null || pl !== null || t.pup_x) o.push(P1('pupils ' + [pr !== null || pl !== null ? (pr !== null ? pr : '?') + '/' + (pl !== null ? pl : '?') + ' mm' : '', t.pup_x || ''].filter(Boolean).join(', '), !!pb));
+    }
+    if (L === 'E') { if (vm.BT) o.push(vsSeg(vm.BT)); }
+    o = o.concat(partsOf(it));
+    if (L === 'B' && t.icd && trMajor()) o.push(P1(t.icd + (num(t.icd_ml) !== null ? ' ' + num(t.icd_ml) + ' ml' : '') + (String(t.icd_c || '').trim() ? ' ' + String(t.icd_c).trim() : ''), num(t.icd_ml) >= 1500));
+    if (L === 'C') {
+      if (t.fast && trMajor()) o.push(t.fast === 'positive' ? P1('FAST +' + (sel(t.fast_s).length ? ' (' + sel(t.fast_s).join(', ') + ')' : ''), true) : P1('FAST ' + t.fast));
+      var sbp = V('sbp');
+      if (t.cOK && !sel(t.c_f).length && !S.vsx.pressor && !(sbp !== null && sbp < 90) && !(si && si.v >= 1)) o.push(P1('hemodynamically stable')); // ไม่ใช้คำว่า shock: กฎค่า ward จะนับเป็น Resuscitation
+      if (S.vsChg === 'stable' && o.length) o.push([{ t: 'stable since ' + S.vsSrc, s: 'i' }]);
+    }
+    if (L === 'E' && t.eOK && !sel(t.e_f).length && !String(t.e_t || '').trim()) o.push(P1('log roll: no other findings'));
+    return o;
+  }
+  function mechShort() {
+    var t = S.t, out = [];
+    TMECH.forEach(function (m) {
+      var k = m[0]; if (!t.mech[k]) return;
+      var d = k === 'MCA' && t.mca_h === 'no helmet' ? 'no helmet' : k === 'elec' && t.el_v === 'lightning' ? 'lightning' : k === 'car' ? ['ejected', 'no seatbelt', 'rollover'].filter(function (x) { return TM('car_x', x); }).join(', ') :
+        k === 'fall' && num(t.fall_h) !== null ? num(t.fall_h) + ' m' : k === 'elec' && t.el_v ? t.el_v.split(' ')[0] + ' voltage' : k === 'ped' && t.ped_x ? 'hit by ' + t.ped_x : '';
+      out.push(k === 'other' ? (String(t.mo_t || '').trim() || 'other') : MECHN[k] + (d ? ' (' + d + ')' : ''));
+    });
+    if (t.etoh) out.push('ETOH');
+    return out.join(', ');
+  }
+  function mechSegs() {
+    var t = S.t, parts = [];
+    TMECH.forEach(function (m) {
+      var k = m[0]; if (!t.mech[k]) return;
+      if (k === 'other') { parts.push([{ t: String(t.mo_t || '').trim() || 'other', s: 'b' }]); return; }
+      var d = partsOf(MECHD[k] || []);
+      parts.push([{ t: MECHN[k], s: 'b' }].concat(d.length ? [{ t: ': ' }].concat(joinSegs(d, ', ')) : []));
+    });
+    var sg = joinSegs(parts, ' + ');
+    if (t.etoh) sg = sg.concat(sg.length ? [{ t: ' · ' }] : [], [{ t: 'ETOH', s: 'bad' }]);
+    var ti = hm($('tinj').value); if (ti) sg = sg.concat(sg.length ? [{ t: ' · ' }] : [], [{ t: 'injury at ' + ti }]);
+    return sg;
+  }
+  function injSegs(r) {
+    var t = S.t, p;
+    if (r.k === 'tbi') {
+      var sx = sel(t.tbi_sx).map(function (o) { return P1(o === 'LOC' && num(t.tbi_loc) !== null ? 'LOC ' + num(t.tbi_loc) + ' min' : o, ['LOC', 'vomiting ≥ 2', 'seizure'].indexOf(o) >= 0); });
+      p = (sx.length ? [joinSegs(sx, ', ')] : []).concat(partsOf(r.items));
+    } else if (r.k === 'chest') {
+      var cf = sel(t.ch_f).map(function (o, i) {
+        var txt = (i === 0 && t.ch_s ? t.ch_s + ' ' : '') + o + (o === 'rib fx' && String(t.ch_r || '').trim() ? ' ' + String(t.ch_r).trim() : '');
+        return P1(txt, injOf('chest').items[1].flagv.indexOf(o) >= 0);
+      });
+      p = (cf.length ? [joinSegs(cf, ', ')] : t.ch_s ? [P1(t.ch_s)] : []).concat(partsOf(r.items));
+    } else if (r.k === 'abd') {
+      p = partsOf(r.items);
+      var org = sel(t.ab_o).map(function (o) { var g = t['gr_' + o]; return P1(o + (g ? ' gr ' + g : ' injury'), true); });
+      if (org.length) p = p.concat([joinSegs(org, ', ')]);
+    } else if (r.k === 'ext') {
+      p = partsOf(r.items);
+      var lead = [t.ex_s, sel(t.ex_l).join(', ')].filter(Boolean).join(' ');
+      if (lead) p = p.length ? [[{ t: lead + ' ' }].concat(p[0])].concat(p.slice(1)) : [P1(lead)];
+    } else p = partsOf(r.items);
+    return [{ t: r.l, s: 'b' }].concat(p.length ? [{ t: ': ' }].concat(joinSegs(p, ', ')) : [{ t: ' (no details)', s: 'i' }]);
+  }
+  function injShort(r) {
+    var t = S.t, k = r.k, a;
+    if (k === 'tbi') {
+      var g = gcsOf(), ct = imgF('CTbrain').filter(function (f) { return f !== 'normal'; });
+      return 'TBI' + (g.ok ? ' (' + (g.vt ? 'intubated' : g.n <= 8 ? 'severe' : g.n <= 12 ? 'moderate' : 'mild') + ')' : '') + (ct.length ? ' with ' + ct.slice(0, 2).join(', ') : '');
+    }
+    if (k === 'face') return (a = sel(t.fc_f)).length ? a.slice(0, 2).join(', ') : 'maxillofacial injury';
+    if (k === 'neck') return (t.nk_t === 'penetrating (platysma violated)' ? 'penetrating neck injury' : 'neck injury') + (t.nk_z ? ' zone ' + t.nk_z : '');
+    if (k === 'spine') return (a = sel(t.sp_fx)).length ? a.join(', ') : 'spine injury';
+    if (k === 'chest') return (a = sel(t.ch_f)).length ? (t.ch_s ? t.ch_s + ' ' : '') + a.slice(0, 3).join(', ') : 'chest injury';
+    if (k === 'abd') {
+      a = sel(t.ab_o).map(function (o) { var gg = t['gr_' + o]; return o + (gg ? ' gr ' + gg : ' injury'); });
+      return a.length ? a.join(', ') : PEN.some(function (m) { return t.mech[m]; }) ? 'penetrating abdominal injury' : 'blunt abdominal trauma';
+    }
+    if (k === 'pelvis') return t.pv_t ? PSDfm(injOf('pelvis').items[0], t.pv_t) : 'pelvic injury';
+    if (k === 'ext') {
+      var ty = TM('ex_f', 'traumatic amputation') ? 'traumatic amputation' : TM('ex_f', 'open fx') ? 'open fx' + (t.ex_g ? ' (Gustilo ' + t.ex_g + ')' : '') : TM('ex_f', 'closed fx') ? 'fx' : TM('ex_f', 'dislocation') ? 'dislocation' : 'injury';
+      return [t.ex_s, sel(t.ex_l).slice(0, 2).join(', '), ty].filter(Boolean).join(' ');
+    }
+    if (k === 'soft') return [(sel(t.w_t)[0] || 'wound'), String(t.w_s || '').trim()].filter(Boolean).join(' ');
+    if (k === 'burn') return (num(t.bn_p) !== null ? num(t.bn_p) + '% TBSA ' : '') + 'burn' + (sel(t.bn_i).length || t.bu_e === 'enclosed space' ? ' + suspected inhalation injury' : '');
+    if (k === 'fb') return [t.fb_t || 'foreign body', String(t.fb_s || '').trim()].filter(Boolean).join(' ');
+    return r.l;
+  }
+  function PSDfm(x, v) { return x.fm && x.fm[v] ? x.fm[v] : v; }
+  function trDx() {
+    var t = S.t, imp = $('imp').value.trim();
+    var pre = t.sev === 'major' ? 'Major trauma' : t.sev === 'minor' ? 'Minor trauma' : 'Trauma', ms = mechShort();
+    var inj = INJ.filter(function (r) { return t.inj[r.k]; }).map(injShort).filter(Boolean);
+    return pre + (ms ? ': ' + ms : '') + (inj.length ? ' → ' + inj.join(', ') : '') + (imp ? ' · ' + imp : '');
+  }
+
+  /* ================= calculators ================= */
+  function minsNow() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+  function sinceInj() { var m = hm($('tinj').value).match(/^(\d{2}):(\d{2})$/); return m ? (minsNow() - (+m[1] * 60 + +m[2]) + 1440) % 1440 : null; }
+  function durTxt(min) { var h = Math.floor(min / 60), mi = min % 60; return (h ? h + ' ชม. ' : '') + mi + ' นาที'; }
+  function shockIdx() {
+    var a = V('hr'), b = V('sbp'), a0 = V0('hr'), b0 = V0('sbp'), s1 = a && b ? a / b : null, s0 = a0 && b0 ? a0 / b0 : null;
+    if (s1 === null && s0 === null) return null;
+    if (s0 !== null && (s1 === null || s0 > s1)) return { v: s0, why: 'HR ' + a0 + ' / SBP ' + b0 + ' ที่ ' + S.vsSrc };
+    return { v: s1, why: 'HR ' + a + ' / SBP ' + b };
+  }
+  function abcScore() {
+    var t = S.t, n = 0, pts = [], miss = [];
+    var sb = [V('sbp'), V0('sbp')].filter(function (x) { return x !== null; }), hr = [V('hr'), V0('hr')].filter(function (x) { return x !== null; });
+    if (PEN.some(function (k) { return t.mech[k]; })) { n++; pts.push('penetrating'); }
+    if (!sb.length) miss.push('SBP'); else if (Math.min.apply(null, sb) <= 90) { n++; pts.push('SBP ≤ 90'); }
+    if (!hr.length) miss.push('HR'); else if (Math.max.apply(null, hr) >= 120) { n++; pts.push('HR ≥ 120'); }
+    if (t.fast === 'positive') { n++; pts.push('FAST +'); } else if (!t.fast || t.fast === 'not done') miss.push('FAST');
+    return { n: n, pts: pts, miss: miss };
+  }
+  function bleeding() {
+    var t = S.t, si = shockIdx(), sbp = V('sbp'), sbp0 = V0('sbp');
+    return (si && si.v >= 0.9) || (sbp !== null && sbp < 90) || (sbp0 !== null && sbp0 < 90) || t.fast === 'positive' || t.x === 'ongoing' ||
+      TM('ch_f', 'hemothorax') || TM('ch_f', 'massive hemothorax') || t.pv_t === 'unstable' || TM('ab_o', 'liver') || TM('ab_o', 'spleen');
+  }
+  function txaLine() {
+    if (!trMajor() || !bleeding()) return null;
+    var el = sinceInj(), given = !!S.pl.tx.TXA || !!S.prev.TXA;
+    if (el === null) return mk('q', 'TXA: ใส่เวลาเกิดเหตุ เพื่อดูว่ายังอยู่ใน 3 ชม.');
+    if (el <= 180) return mk(given ? 'y' : 'q', 'TXA: เกิดเหตุ ' + hm($('tinj').value) + ' ผ่านมา ' + durTxt(el) + (given ? ' — ให้แล้ว' : ' — ยังให้ได้ (≤ 3 ชม.) 1 g IV ใน 10 นาที แล้ว 1 g drip 8 ชม.'));
+    return mk(given ? 'q' : 'n', 'TXA: ผ่านมา ' + durTxt(el) + ' (> 3 ชม.) — ไม่แนะนำเริ่ม TXA');
+  }
+  function distracting() {
+    var t = S.t;
+    return ['closed fx', 'open fx', 'dislocation', 'traumatic amputation', 'degloving'].some(function (x) { return TM('ex_f', x); }) || sel(t.ch_f).length > 0 ||
+      (t.inj.burn && num(t.bn_p) >= 10) || !!t.pv_t || sel(t.ab_o).length > 0 || !!t.mech.crush;
+  }
+  function nexus() {
+    var t = S.t, g = gcsOf();
+    if (!g.ok) return null;
+    if (g.vt || t.a === 'on ETT' || t.a === 'surgical airway') return mk('n', 'C-spine: on ETT — clear ทางคลินิกไม่ได้ → คง C-collar · CT C-spine');
+    var pos = [], unk = [];
+    if (t.cs_mt === '+' || TM('sp_f', 'midline neck tenderness')) pos.push('midline tenderness'); else if (t.cs_mt !== '−') unk.push('midline C-spine tenderness');
+    if (t.etoh) pos.push('intoxication');
+    if (g.n < 15) pos.push('GCS ' + g.n);
+    if (TM('sp_f', 'focal neuro deficit') || TM('d_f', 'lateralizing sign') || TM('d_f', 'paraplegia / quadriplegia') || sel(t.sp_fx).length) pos.push('focal deficit');
+    if (distracting()) pos.push('distracting injury');
+    if (pos.length) return mk('n', 'NEXUS: ' + pos.join(', ') + ' → คง C-collar · CT C-spine');
+    if (unk.length) return mk('q', 'NEXUS: ยังไม่ได้ตรวจ ' + unk.join(', '));
+    return mk('y', 'NEXUS low risk ครบ 5 ข้อ → clear C-spine ทางคลินิกได้');
+  }
+  function dangerousMech() { var t = S.t; return !!t.mech.ped || TM('car_x', 'ejected') || (t.mech.fall && num(t.fall_h) >= 1); }
+  function ctHead() {
+    var t = S.t, g = gcsOf(), age = num(S.age), hi = [], md = [], done = !!S.img.CTbrain;
+    if (g.vt) return mk(done ? 'y' : 'n', 'on ETT → CT brain' + (done ? ' ทำแล้ว' : '') + ' + consult neurosurgery');
+    if (g.ok && g.n <= 12) return mk(done ? 'y' : 'n', 'GCS ' + g.n + ' → CT brain' + (done ? ' ทำแล้ว' : ' ด่วน') + ' + consult neurosurgery');
+    if (g.ok && g.n < 15) hi.push('GCS < 15');
+    if (TM('tbi_f', 'suspected skull fx') || TM('tbi_f', 'depressed skull fx')) hi.push('suspected open/depressed skull fx');
+    if (['raccoon eyes', 'Battle sign', 'CSF leak', 'hemotympanum'].some(function (x) { return TM('tbi_f', x); })) hi.push('basal skull fx sign');
+    if (TM('tbi_sx', 'vomiting ≥ 2')) hi.push('vomiting ≥ 2');
+    if (age !== null && age >= 65) hi.push('age ≥ 65');
+    if (TM('tbi_sx', 'seizure')) hi.push('seizure');
+    ['warfarin', 'DOAC', 'antiplatelet'].forEach(function (d) { if (S.med[d]) hi.push('on ' + d); });
+    if (TM('tbi_sx', 'amnesia')) md.push('amnesia');
+    if (dangerousMech()) md.push('dangerous mechanism');
+    if (hi.length || md.length) return mk(done ? 'y' : 'n', 'CT brain ' + (done ? 'ทำแล้ว' : 'indicated') + ': ' + hi.concat(md).join(', '));
+    return mk('y', 'Canadian CT head rule: low risk' + (sel(t.tbi_sx).length ? '' : ' (ใช้กับ GCS 13–15 ที่มี LOC / amnesia / disorientation)'));
+  }
+  function tetanusNeed() {
+    var t = S.t, w = [];
+    if (t.inj.soft) w.push('wound'); if (t.inj.burn) w.push('burn'); if (TM('ex_f', 'open fx')) w.push('open fx');
+    if (t.mech.bite) w.push('bite'); if (PEN.some(function (k) { return t.mech[k]; })) w.push('penetrating');
+    if (t.inj.fb && /impaled|soft/.test(t.fb_t || '')) w.push('FB'); if (TM('el_f', 'entry wound')) w.push('electrical wound');
+    if (TM('tbi_f', 'scalp laceration') || TM('fc_f', 'facial laceration') || TM('fc_f', 'ear laceration')) w.push('laceration');
+    return w.join(', ');
+  }
+  function sentPanel(pn) { var p = PANELS.filter(function (x) { return x[0] === pn; })[0]; return S.lp[pn] === 'n' || S.lp[pn] === 'a' || (!!p && panelHasVal(p)); }
+  function burnBox() {
+    var t = S.t, p = num(t.bn_p), bw = V('bw'), age = num(S.age), kid = age !== null && age < 15, el = !!t.mech.elec, lines = [], short = '', since = sinceInj();
+    if (p === null) lines.push(mk('q', 'ใส่ TBSA % (เฉพาะ 2nd + 3rd degree)'));
+    if (bw === null) lines.push(mk('q', 'ใส่ BW (kg) ในส่วนผู้ป่วย เพื่อคำนวณสารน้ำ'));
+    if (p !== null && bw !== null) {
+      var k = el ? 4 : kid ? 3 : 2, tot = k * bw * p, half = tot / 2;
+      lines.push(mk('y', '24 ชม.: ' + k + ' ml × ' + bw + ' kg × ' + p + '% = ' + fmt(Math.round(tot)) + ' ml LRS (ATLS' + (el ? ' electrical' : kid ? ' เด็ก' : '') + ')' +
+        (!el && !kid ? ' · Parkland 4 ml = ' + fmt(Math.round(4 * bw * p)) + ' ml' : '')));
+      if (since !== null && since < 480) lines.push(mk('y', 'ครึ่งแรก ' + fmt(Math.round(half)) + ' ml ให้หมดใน 8 ชม.หลังเกิดเหตุ (เหลือ ' + durTxt(480 - since) + ') → ~' + fmt(Math.round(half / ((480 - since) / 60))) + ' ml/hr'));
+      else if (since !== null) lines.push(mk('q', 'เลย 8 ชม.แรกแล้ว: ครึ่งหลัง ' + fmt(Math.round(half)) + ' ml ใน 16 ชม. → ~' + fmt(Math.round(half / 16)) + ' ml/hr'));
+      else lines.push(mk('q', 'ครึ่งแรก ' + fmt(Math.round(half)) + ' ml ใน 8 ชม.นับจากเวลาเกิดเหตุ (~' + fmt(Math.round(half / 8)) + ' ml/hr ถ้าเพิ่งเกิด) — ใส่เวลาเกิดเหตุเพื่อคำนวณเวลาที่เหลือ'));
+      lines.push(mk('y', 'ปรับตาม urine output ' + (el ? '1–1.5 ml/kg/hr (~' + Math.round(bw) + '–' + Math.round(bw * 1.5) + ' ml/hr) จนปัสสาวะใส' : kid && bw < 30 ? '1 ml/kg/hr (~' + Math.round(bw) + ' ml/hr)' : '0.5 ml/kg/hr (~' + Math.round(bw / 2) + ' ml/hr)')));
+      if (kid) lines.push(mk('q', 'เด็ก: ให้ maintenance fluid ที่มี glucose เพิ่มด้วย'));
+      short = 'TBSA ' + p + '% · ' + fmt(Math.round(tot)) + ' ml/24 h';
+    }
+    var crit = [], inh = sel(t.bn_i).length || t.bu_e === 'enclosed space';
+    if (p !== null && p > 10) crit.push('> 10% TBSA');
+    if (TM('bn_d', 'full thickness')) crit.push('full thickness');
+    var sp = ['face', 'hands', 'feet', 'genitalia / perineum', 'major joints'].filter(function (a) { return TM('bn_a', a); }); if (sp.length) crit.push(sp.join('/'));
+    if (el) crit.push('electrical'); if (t.bu_t === 'chemical') crit.push('chemical'); if (inh) crit.push('inhalation');
+    if (crit.length) lines.push(mk('n', 'เข้าเกณฑ์ส่ง burn unit: ' + crit.join(', ')));
+    if (inh) lines.push(mk('n', 'สงสัย inhalation injury → พิจารณาใส่ ETT เร็ว ก่อน airway บวม'));
+    if (TM('bn_a', 'circumferential limb') || TM('bn_a', 'circumferential chest')) lines.push(mk('n', 'circumferential burn → เฝ้าระวัง / พิจารณา escharotomy'));
+    var big = p !== null && p >= (kid ? 10 : 20);
+    return { title: 'Burn', lines: lines, verdict: p === null ? 'Burn — ใส่ TBSA' : 'Burn ' + p + '% TBSA' + (big ? ' · fluid resuscitation ตามสูตร' : ''),
+      level: big || inh ? 'bad' : crit.length ? 'warn' : '', short: short, note: 'ATLS 10: ผู้ใหญ่ 2 ml/kg/%TBSA · เด็ก < 15 ปี 3 ml · electrical 4 ml · ครึ่งแรกใน 8 ชม.จากเวลาเกิดเหตุ' };
+  }
+  function elecBox() {
+    var t = S.t, hv = /high|lightning/.test(t.el_v || ''), ekg = imgF('EKG'), ekgAbn = ekg.some(function (f) { return f !== 'normal'; }), lines = [];
+    lines.push(mk(S.img.EKG ? (ekgAbn ? 'n' : 'y') : 'n', S.img.EKG ? 'EKG: ' + (ekg.join(', ') || 'ทำแล้ว') : 'EKG ต้องทำทุกราย'));
+    var adm = hv || TM('el_f', 'LOC') || TM('el_f', 'cardiac arrest / CPR') || ekgAbn;
+    lines.push(adm ? mk('n', 'admit + cardiac monitor ≥ 24 ชม.') : mk('y', 'low voltage, ไม่มี LOC, EKG ปกติ → อาจ D/C ได้'));
+    lines.push(mk(sentPanel('CPK') ? 'y' : 'q', 'CPK / UA (myoglobinuria)' + (TM('el_f', 'dark urine') ? ' — ปัสสาวะสีเข้ม: keep UO 1–1.5 ml/kg/hr' : '')));
+    lines.push(mk('q', 'แผลภายนอกเล็ก แต่เนื้อเยื่อลึกเสียหายได้มาก — ระวัง compartment syndrome'));
+    return { title: 'Electrical injury', lines: lines, verdict: hv ? 'High-voltage electrical injury' : 'Electrical injury' + (adm ? ' · admit' : ''), level: adm ? 'bad' : '', short: hv ? 'high voltage' : '' };
+  }
+  function hangBox() {
+    var t = S.t, lines = [], air = ['stridor / hoarseness', 'neck hematoma', 'subcutaneous emphysema'].filter(function (x) { return TM('hg_f', x); });
+    lines.push(mk(air.length ? 'n' : 'q', air.length ? 'Airway: ' + air.join(', ') + ' → ระวัง laryngotracheal injury พิจารณาใส่ ETT เร็ว' : 'Airway: เฝ้าระวัง stridor / เสียงแหบ / บวม'));
+    lines.push(mk(t.hg_t === 'complete' ? 'n' : 'q', 'C-spine: ' + (t.hg_t === 'complete' ? 'complete suspension → CT C-spine' : 'ประเมิน NEXUS / CT C-spine')));
+    lines.push(mk(TM('hg_f', 'neuro deficit') || TM('hg_f', 'neck hematoma') ? 'n' : 'q', 'Vascular: CTA neck ถ้ามี neuro deficit, hematoma หรือ GCS ลดลง'));
+    lines.push(mk(TM('hg_f', 'LOC') || TM('hg_f', 'CPR') ? 'n' : 'q', 'ระวัง pulmonary edema / anoxic brain injury' + (TM('hg_f', 'CPR') ? ' (หลัง CPR)' : '')));
+    lines.push(mk(S.pl.cons.psychiatry ? 'y' : 'q', 'consult จิตเวช' + (S.pl.cons.psychiatry ? ' แล้ว' : '') + ' · ข้อมูลคดีถ้ามี'));
+    return { title: 'Hanging', lines: lines, verdict: 'Hanging' + (TM('hg_f', 'LOC') || TM('hg_f', 'CPR') ? ' with LOC/CPR' : ''), level: TM('hg_f', 'LOC') || TM('hg_f', 'CPR') || air.length ? 'bad' : 'warn', short: '' };
+  }
+  function drownBox() {
+    var t = S.t, lines = [], cpr = TM('dr_f', 'CPR at scene'), bt = V('bt');
+    lines.push(mk(V('sat') !== null && V('sat') < 94 ? 'n' : 'q', 'SpO₂ / CXR: aspiration, pulmonary edema' + (V('sat') !== null ? ' (SpO₂ ' + V('sat') + '%)' : '')));
+    lines.push(mk(bt !== null && bt < 35 ? 'n' : 'q', 'Hypothermia: วัด core temp' + (bt !== null ? ' (BT ' + bt + ')' : '') + ' · rewarming'));
+    if (TM('dr_f', 'diving (C-spine risk)')) lines.push(mk('n', 'diving → คง C-collar · CT C-spine'));
+    lines.push(mk('q', cpr || TM('dr_f', 'LOC') ? 'มี CPR / LOC → admit ICU / observe ใกล้ชิด' : 'ไม่มีอาการ: observe ≥ 6–8 ชม. ก่อน D/C · ไม่ต้องให้ ATB prophylaxis'));
+    return { title: 'Drowning', lines: lines, verdict: 'Drowning' + (cpr ? ' with CPR at scene' : ''), level: cpr || TM('dr_f', 'LOC') ? 'bad' : 'warn', short: '' };
+  }
+  function trCrit() {
+    var t = S.t, lines = [], short = [], more = [], g = gcsOf(), si = shockIdx(), abc = abcScore();
+    if (g.ok) {
+      var sv = g.vt ? 'intubated' : g.n <= 8 ? 'severe' : g.n <= 12 ? 'moderate' : 'mild';
+      lines.push(mk(g.vt || g.n <= 8 ? 'n' : g.n < 15 ? 'q' : 'y', 'GCS ' + g.short + ' (' + g.txt + ')' + (t.inj.tbi ? ' → ' + sv + ' TBI' : '') + (!g.vt && g.n <= 8 ? ' — secure airway' : '')));
+      if (g.vt || g.n < 15) short.push('GCS ' + g.short);
+    } else lines.push(mk('q', 'GCS: เลือก E / V / M ให้ครบ'));
+    var pb = pupilBad(); if (pb) lines.push(mk('n', 'Pupils: ' + pb));
+    if (si) { lines.push(mk(si.v >= 1 ? 'n' : si.v >= 0.9 ? 'q' : 'y', 'Shock index ' + si.v.toFixed(2) + ' (' + si.why + ')' + (si.v >= 1 ? ' — shock' : ''))); if (si.v >= 0.9) short.push('SI ' + si.v.toFixed(1)); }
+    if (trMajor() || abc.n) {
+      lines.push(mk(abc.n >= 2 ? 'n' : abc.miss.length ? 'q' : 'y', 'ABC score ' + abc.n + '/4' + (abc.pts.length ? ' — ' + abc.pts.join(', ') : '') + (abc.n >= 2 ? ' → activate MTP' : '') +
+        (abc.miss.length ? ' (ยังไม่มี ' + abc.miss.join(', ') + ')' : '')));
+      if (abc.n >= 2) short.push('ABC ' + abc.n + ' → MTP');
+    }
+    var tx = txaLine(); if (tx) lines.push(tx);
+    var nx = nexus(); if (nx) lines.push(nx);
+    if (t.inj.tbi) lines.push(ctHead());
+    var tn = tetanusNeed(); if (tn && !sel(S.pl.proph).length) lines.push(mk('q', 'Tetanus prophylaxis (' + tn + ') — ยังไม่ได้ระบุใน Plan'));
+    if (t.mech.bite && /cat (II|III)/.test(t.bt_c || '') && !S.pl.proph['rabies vaccine']) lines.push(mk('q', 'Rabies ' + t.bt_c + ' → rabies vaccine' + (t.bt_c === 'cat III' ? ' + RIG' : '')));
+    if (t.inj.burn) more.push(burnBox());
+    if (t.mech.elec) more.push(elecBox());
+    if (t.mech.hang) more.push(hangBox());
+    if (t.mech.drown) more.push(drownBox());
+    more.forEach(function (b) { if (b.short) short.push(b.short); });
+    var calls = trCalls();
+    return { title: 'Trauma · ' + (t.sev ? t.sev : 'เลือก Minor / Major'), lines: lines, more: more, short: short.join(' · '),
+      verdict: calls.length ? 'Life / limb threat: ' + calls.slice(0, 3).join(', ') + (calls.length > 3 ? ' …' : '') : 'ยังไม่พบภาวะคุกคามชีวิตจากข้อมูลที่กรอก',
+      ok: !calls.length, level: calls.length ? 'bad' : '', note: 'ไม่คิด ISS (ทำหลัง audit chart) · GCS ≤ 8 = severe, 9–12 moderate, 13–15 mild', urgent: '' };
+  }
+  function trCalls() {
+    var t = S.t, r = [], sbp = V('sbp'), sbp0 = V0('sbp'), g = gcsOf(), si = shockIdx(), abc = abcScore();
+    var add = function (x) { if (x && r.indexOf(x) < 0) r.push(x); };
+    if (on('vsx', 'pressor') || (sbp !== null && sbp < 90)) add('shock / SBP < 90');
+    else if (sbp0 !== null && sbp0 < 90) add('SBP < 90 at ' + S.vsSrc);
+    else if (si && si.v >= 1) add('shock index ' + si.v.toFixed(1));
+    if (abc.n >= 2) add('ABC ' + abc.n + ' → MTP');
+    if (t.x === 'ongoing') add('ongoing external bleeding');
+    if (t.a === 'at risk' || t.a === 'obstructed') add('airway ' + t.a);
+    if (t.a === 'on ETT' || t.a === 'surgical airway' || on('vsx', 'ett')) add('on ETT');
+    if (V('sat') !== null && V('sat') < 92) add('SpO₂ ' + V('sat') + '%');
+    if (g.ok && !g.vt && g.n <= 8) add('GCS ' + g.n);
+    add(pupilBad());
+    if (TM('d_f', 'lateralizing sign')) add('lateralizing sign');
+    if (t.fast === 'positive' && trMajor()) add('FAST positive');
+    ['tension pneumothorax', 'massive hemothorax', 'cardiac tamponade', 'open pneumothorax', 'flail chest', 'suspected aortic injury'].forEach(function (k) { if (TM('ch_f', k)) add(k); });
+    if (t.icd && num(t.icd_ml) >= 1500) add('ICD ' + num(t.icd_ml) + ' ml');
+    if (t.pv_t === 'unstable') add('unstable pelvic fx');
+    if (PEN.some(function (k) { return t.mech[k]; }) && (t.inj.chest || t.inj.abd || t.inj.neck)) add('penetrating ' + (t.inj.neck ? 'neck' : t.inj.chest ? 'chest' : 'abdominal') + ' injury');
+    if (t.inj.neck && (t.nk_t === 'penetrating (platysma violated)' || sel(t.nk_f).length)) add('neck injury with hard/soft signs');
+    if (TM('ab_o', 'bowel / hollow viscus')) add('hollow viscus injury');
+    if (TM('ab_s', 'evisceration')) add('evisceration');
+    if (TM('ab_s', 'impaled object') || t.fb_t === 'impaled object') add('impaled object');
+    if (TM('ex_f', 'vascular injury (hard signs)') || t.ex_p === 'absent') add('limb vascular injury');
+    if (TM('ex_f', 'traumatic amputation')) add('traumatic amputation');
+    if (TM('ex_f', 'compartment syndrome')) add('compartment syndrome');
+    if (TM('sp_fx', 'SCI complete') || TM('sp_fx', 'SCI incomplete')) add('spinal cord injury');
+    if (t.inj.burn) {
+      var p = num(t.bn_p), kid = num(S.age) !== null && num(S.age) < 15;
+      if (p !== null && p >= (kid ? 10 : 20)) add('burn ' + p + '% TBSA');
+      if (sel(t.bn_i).length) add('suspected inhalation injury');
+    }
+    if (t.mech.elec && /high|lightning/.test(t.el_v || '')) add('high-voltage electrical injury');
+    if (t.mech.hang && (TM('hg_f', 'LOC') || TM('hg_f', 'CPR'))) add('hanging with LOC/CPR');
+    if (t.mech.drown && (TM('dr_f', 'CPR at scene') || TM('dr_f', 'LOC'))) add('drowning with LOC/CPR');
+    return r;
+  }
+  function trRequired() {
+    var t = S.t, maj = trMajor(), age = num(S.age), r = [];
+    var hasUD = sel(S.ud).length > 0 || !!$('udx').value.trim();
+    r.push(['mechanism', sel(t.mech).length > 0], ['Minor/Major', !!t.sev]);
+    if (maj) r.push(['เวลาเกิดเหตุ', /^\d{2}:\d{2}$/.test(hm($('tinj').value))]);
+    sel(t.mech).forEach(function (k) { (MECHD[k] || []).forEach(function (x) { if (x.req) r.push([x.l, !!String(t[x.k] || '').trim()]); }); });
+    r.push(['ward', !!wardName()], ['name', !!$('name').value.trim()], ['HN', /^\d{5,9}$/.test($('hn').value.trim())], ['age', age !== null], ['sex', !!S.sex], ['U/D', hasUD]);
+    if (age !== null && age < 15) r.push(['BW (เด็ก)', V('bw') !== null]);
+    r.push(['BP', V('sbp') !== null], ['HR', V('hr') !== null]);
+    if (maj) r.push(['RR', V('rr') !== null], ['SpO₂', V('sat') !== null], ['X', !!t.x], ['A', !!t.a], ['B: breath sounds', !!(t.bs_r && t.bs_l)], ['FAST', !!t.fast]);
+    r.push(['GCS', gcsOf().ok]);
+    if (maj) r.push(['pupils', !!t.pup_x || (num(t.pup_r) !== null && num(t.pup_l) !== null)]);
+    if (maj && S.vsChg === 'changed') r.push(['initial V/S', V0('sbp') !== null || V0('hr') !== null]);
+    if (maj && !S.vsChg) r.push(['V/S vs initial', false]);
+    r.push(['injury', sel(t.inj).length > 0]);
+    if (t.inj.burn) r.push(['TBSA %', num(t.bn_p) !== null], ['BW (burn)', V('bw') !== null]);
+    if (S.type === 'Admit') r.push(['plan', !!S.pl.def || !!$('plan').value.trim()]);
+    return r;
+  }
+  function trPanels() {
+    var t = S.t, out = ['CBC'], maj = trMajor(), g = gcsOf();
+    var add = function (p) { if (out.indexOf(p) < 0) out.push(p); };
+    if (maj) ['BUN/Cr', 'Elyte', 'INR', 'Lactate'].forEach(add);
+    if (maj && (t.inj.abd || t.inj.pelvis)) ['LFT', 'Lipase', 'UA'].forEach(add);
+    if (!maj && (t.inj.abd || t.inj.pelvis)) add('UA');
+    if (t.mech.crush || t.mech.elec || (t.inj.burn && num(t.bn_p) >= 20) || TM('ex_f', 'compartment syndrome')) add('CPK');
+    if (t.mech.elec) ['BUN/Cr', 'Elyte', 'UA'].forEach(add);
+    if (t.inj.burn) ['BUN/Cr', 'Elyte'].forEach(add);
+    if ((maj && (abcScore().n >= 2 || (shockIdx() || { v: 0 }).v >= 1)) || t.mech.drown || (t.inj.burn && sel(t.bn_i).length)) add('ABG');
+    if ((g.ok && (g.vt || g.n < 15)) || S.ud.DM) add('DTX');
+    return out;
+  }
+  /* แนะนำในช่อง Plan (ติดดาว ★) ตามที่กรอก */
+  function trSuggest() {
+    var t = S.t, s = { tx: {}, proc: {}, proph: {}, atb: {}, cons: {} }, g = gcsOf(), abc = abcScore();
+    var add = function (grp, k, why) { (s[grp][k] = s[grp][k] || []).indexOf(why) < 0 && s[grp][k].push(why); };
+    if (abc.n >= 2) add('tx', 'MTP', 'ABC ' + abc.n);
+    var el = sinceInj(); if (trMajor() && bleeding() && (el === null || el <= 180)) add('tx', 'TXA', el === null ? 'bleeding' : '≤ 3 ชม.');
+    if (TM('ch_f', 'tension pneumothorax')) add('proc', 'needle decompression', 'tension PTX');
+    if ((TM('ch_f', 'hemothorax') || TM('ch_f', 'massive hemothorax') || TM('ch_f', 'pneumothorax') || TM('ch_f', 'tension pneumothorax') || TM('ch_f', 'open pneumothorax')) && !t.icd) add('proc', 'ICD', 'PTX/HTX');
+    if ((t.pv_t === 'unstable' || TM('c_f', 'pelvic instability')) && !TM('pv_f', 'pelvic binder applied')) add('proc', 'pelvic binder', 'unstable pelvis');
+    if (['closed fx', 'open fx', 'dislocation'].some(function (x) { return TM('ex_f', x); })) add('proc', 'splint / slab', 'fx');
+    if (TM('bn_a', 'circumferential limb') || TM('bn_a', 'circumferential chest')) add('proc', 'escharotomy', 'circumferential burn');
+    if (TM('ex_f', 'compartment syndrome')) add('proc', 'fasciotomy', 'compartment');
+    if (t.inj.soft) add('proc', 'wound care', 'wound');
+    if (t.cs === 'no collar' && (t.cs_mt === '+' || t.inj.spine)) add('proc', 'C-collar', 'C-spine');
+    var tn = tetanusNeed(); if (tn) add('proph', 'tetanus toxoid', tn);
+    if (t.mech.bite && /cat (II|III)/.test(t.bt_c || '')) add('proph', 'rabies vaccine', t.bt_c);
+    if (t.mech.bite && t.bt_c === 'cat III') add('proph', 'RIG', 'cat III');
+    if (TM('ex_f', 'open fx') || TM('pv_f', 'open pelvic fx')) add('atb', 'cefazolin', 'open fx');
+    if (/^III/.test(t.ex_g || '')) add('atb', 'gentamicin', 'Gustilo ' + t.ex_g);
+    if (t.mech.bite || TM('w_t', 'bite wound')) add('atb', 'amoxi/clav', 'bite');
+    if (TM('ab_o', 'bowel / hollow viscus')) { add('atb', 'ceftriaxone', 'hollow viscus'); add('atb', 'metronidazole', 'hollow viscus'); }
+    var ctb = imgF('CTbrain').filter(function (f) { return f !== 'normal'; });
+    if (t.inj.tbi && ((g.ok && (g.vt || g.n <= 12)) || ctb.length || TM('tbi_f', 'depressed skull fx'))) add('cons', 'neurosurgery', 'TBI');
+    if (TM('sp_fx', 'SCI complete') || TM('sp_fx', 'SCI incomplete') || TM('sp_f', 'focal neuro deficit')) add('cons', 'neurosurgery', 'SCI');
+    if (sel(t.sp_fx).some(function (x) { return / fx$/.test(x); })) add('cons', 'ortho', 'spine fx');
+    if (['closed fx', 'open fx', 'dislocation', 'traumatic amputation'].some(function (x) { return TM('ex_f', x); })) add('cons', 'ortho', 'extremity');
+    if (t.pv_t) add('cons', 'ortho', 'pelvic fx');
+    if (sel(t.fc_f).some(function (x) { return / fx$/.test(x); })) add('cons', 'maxillofacial', 'facial fx');
+    if (TM('fc_f', 'facial laceration')) add('cons', 'plastic', 'face');
+    if (t.inj.burn) add('cons', 'plastic', 'burn');
+    if (TM('w_t', 'degloving') || TM('ex_f', 'degloving') || TM('w_d', 'tendon exposed')) add('cons', 'plastic', 'soft tissue');
+    if (TM('fc_f', 'eye injury')) add('cons', 'eye', 'eye injury');
+    if (TM('ex_f', 'vascular injury (hard signs)') || t.ex_p === 'absent' || TM('ch_f', 'suspected aortic injury') || TM('nk_f', 'expanding / pulsatile hematoma')) add('cons', 'CVT', 'vascular');
+    if (TM('pv_f', 'blood at meatus') || TM('e_f', 'blood at meatus') || TM('ab_o', 'kidney') || TM('ab_o', 'bladder')) add('cons', 'uro', 'GU injury');
+    if (t.inj.neck && (TM('nk_f', 'hoarseness') || TM('nk_f', 'air bubbling'))) add('cons', 'ENT', 'airway');
+    ['assault', 'stab', 'gsw', 'hang'].forEach(function (k) { if (t.mech[k]) add('cons', 'forensic', MECHN[k]); });
+    if (t.legal['คดี']) add('cons', 'forensic', 'คดี');
+    if (t.mech.hang) add('cons', 'psychiatry', 'hanging');
+    if (num(S.age) !== null && num(S.age) < 15 && trMajor()) add('cons', 'pediatric', 'เด็ก');
+    if (imgF('UPT').indexOf('positive') >= 0) add('cons', 'OB-GYN', 'UPT +');
+    return s;
+  }
+  function sugWhy(o) { var k = Object.keys(o); return k.length ? ' <span class="sugw">แนะนำ: ' + esc(k.map(function (x) { return (TLBL[x] || x).replace(/ \(.+\)$/, '') + ' (' + o[x].join(', ') + ')'; }).join(' · ')) + '</span>' : ''; }
+  function renderPlanTr() {
+    var P = S.pl, h = '', sg = trSuggest(), maj = trMajor();
+    var showB = maj || needBlood() || P.showB || hasBlood() || sel(P.tx).length > 0 || Object.keys(sg.tx).length > 0, showE = needEly() || P.showE || hasEly();
+    h += '<div class="plrow"><div class="pll">IV fluid</div>' + plChips('iv', IVF, true) + plInput('ivt', maj ? 'e.g. LRS 1 L bolus → reassess, permissive hypotension' : 'rate e.g. 100 ml/hr') + '</div>';
+    if (showB) {
+      h += '<div class="plrow"><div class="pll">Blood · MTP · TXA' + sugWhy(sg.tx) + (needBlood() ? ' <span class="why">' + esc(['hb', 'hct', 'plt', 'inr'].filter(labAbn).map(function (k) { return LABLBL[k] + ' ' + S.labs[k]; }).join(', ')) + '</span>' : '') + '</div>' +
+        plChips('tx', TX, true, sg.tx) +
+        '<div class="bgrid"><span></span><span class="bh">given (u)</span><span class="bh">plan (u)</span>' + BLOOD.map(function (c) {
+          var b = P.b[c] || {};
+          return '<span class="bc">' + c + '</span><input class="num" inputmode="decimal" data-bl="' + c + '|g" value="' + esc(b.g || '') + '"><input class="num" inputmode="decimal" data-bl="' + c + '|p" value="' + esc(b.p || '') + '">';
+        }).join('') + '</div>' + plInput('gm', 'G/M (จองเลือด) e.g. PRC 6 u, FFP 4 u') + plInput('bt', 'target e.g. SBP 80–90 until bleeding controlled, keep Hb > 7') + '</div>';
+    }
+    if (showE) h += '<div class="plrow"><div class="pll">IV add. / แก้ Elyte' + (needEly() ? ' <span class="why">' + esc(['na', 'k'].filter(labAbn).map(function (k) { return LABLBL[k] + ' ' + S.labs[k]; }).join(', ')) + '</span>' : '') + '</div>' +
+      plChips('ely', ELY, true) + plInput('elyt', 'e.g. KCl 40 mEq in NSS 1 L, recheck K 6 h') + '</div>';
+    h += '<div class="plrow"><div class="pll">Procedure' + sugWhy(sg.proc) + '</div>' + plChips('proc', TPROC, true, sg.proc) + plInput('proct', 'e.g. Rt ICD 28 Fr, long arm slab, suture 4 stitches') + '</div>';
+    h += '<div class="plrow"><div class="pll">Tetanus / rabies' + sugWhy(sg.proph) + '</div>' + plChips('proph', TPROPH, true, sg.proph) + '</div>';
+    h += '<div class="plrow"><div class="pll">ATB' + sugWhy(sg.atb) + '</div>' + plChips('atb', TATBS, true, sg.atb) + plInput('atbt', 'dose e.g. cefazolin 2 g IV q8h') + '</div>';
+    h += '<div class="plrow"><div class="pll">Pain control</div>' + plChips('pain', PAIN, true) + plInput('paint', 'e.g. fentanyl 50 mcg IV prn') + '</div>';
+    h += '<div class="plrow"><div class="pll"><span' + (S.type === 'Admit' ? ' class="need"' : '') + '>Plan</span></div>' + plChips('def', TDEFP, false) +
+      plInput('deft', P.def === 'set OR' ? 'e.g. EL ด่วน, damage control ถ้า unstable' : P.def === 'NOM' ? 'e.g. serial Hct q 6 h + abd exam, bed rest' : 'e.g. observe GCS q 1 h, re-evaluate') + '</div>';
+    h += '<div class="plrow"><div class="pll">Consult' + sugWhy(sg.cons) + '</div>' + plChips('cons', TCONS, true, sg.cons) + plInput('const', 'อื่น ๆ e.g. ICU, nutrition') + '</div>';
+    var add = (!showB ? '<button type="button" class="ghost" data-plshow="B">+ Blood / MTP</button>' : '') + (!showE ? '<button type="button" class="ghost" data-plshow="E">+ แก้ Elyte</button>' : '');
+    if (add) h += '<div class="row">' + add + '</div>';
+    $('planbox').innerHTML = h;
+  }
+  function planPartsTr(j) {
+    var P = S.pl, out = [], t;
+    if ((t = j(sel(P.iv), P.ivt))) out.push(['IV', t]);
+    var got = [], pl = [];
+    BLOOD.forEach(function (c) { var b = P.b[c] || {}; if (num(b.g)) got.push(c + ' ' + b.g + ' u'); if (num(b.p)) pl.push(c + ' ' + b.p + ' u'); });
+    t = [sel(P.tx).map(function (x) { return x === 'TXA' ? 'TXA 1 g' : x; }).join(', '), got.length ? 'given ' + got.join(', ') : '', pl.length ? 'plan ' + pl.join(', ') : '',
+      String(P.gm || '').trim() ? 'G/M ' + String(P.gm).trim() : '', String(P.bt || '').trim()].filter(Boolean).join(' · ');
+    if (t) out.push(['Blood', t]);
+    if ((t = j(sel(P.ely), P.elyt))) out.push(['Elyte', t]);
+    if ((t = j(sel(P.proc), P.proct))) out.push(['Proc', t]);
+    if ((t = sel(P.proph).join(', '))) out.push(['Tetanus', t]);
+    if ((t = j(sel(P.atb), P.atbt))) out.push(['ATB', t]);
+    if ((t = j(sel(P.pain), P.paint))) out.push(['Pain', t]);
+    if ((t = j(P.def ? [P.def] : [], P.deft))) out.push(['Plan', t]);
+    if ((t = j(sel(P.cons), P.const))) out.push(['Consult', t]);
+    if ((t = $('plan').value.trim().replace(/\s*\n\s*/g, '; '))) out.push(['Other', t]);
+    return out;
+  }
+  function trHasContent() { return isTR() && (sel(S.t.mech).length > 0 || sel(S.t.inj).length > 0 || !!S.t.sev); }
+
   /* ================= state ================= */
   var S, started = 0, timerId = null, frozen = null, editing = null, editVer = 0, editPrev = null, stash = null, armed = 0, cfgMode = false, pendingTag = null, busy = false;
   var CONF = window.CASEFORM_CONFIG || {}, MOCK = !!CONF.MOCK || /[?&]mock=1\b/.test(location.search);
@@ -725,12 +1546,15 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   function blank() {
     return { type: 'Admit', refer: false, cat: '', dx: '', ward: '', sex: '', ud: {}, med: {}, prev: {}, vsx: {}, press: {}, vsChg: '', vsSrc: 'ER',
       img: {}, imgd: {}, m: {}, abd: { r: {}, s: {}, bs: '' }, labs: {}, lp: {}, labMore: false, photos: [], npox: '',
-      pl: { iv: {}, ivt: '', b: {}, bt: '', ely: {}, elyt: '', atb: {}, atbt: '', pain: {}, paint: '', def: '', deft: '', showB: false, showE: false } };
+      pl: { iv: {}, ivt: '', b: {}, bt: '', ely: {}, elyt: '', atb: {}, atbt: '', pain: {}, paint: '', def: '', deft: '', showB: false, showE: false,
+        tx: {}, gm: '', proc: {}, proct: '', proph: {}, cons: {}, const: '' },
+      mode: 'gen', t: { sev: '', mech: {}, inj: {}, legal: {}, etoh: false } };
   }
   function fill(x) {
     var b = blank(); Object.keys(b).forEach(function (k) { if (x[k] === undefined || x[k] === null) x[k] = b[k]; });
     x.abd.r = x.abd.r || {}; x.abd.s = x.abd.s || {};
     Object.keys(b.pl).forEach(function (k) { if (x.pl[k] === undefined || x.pl[k] === null) x.pl[k] = b.pl[k]; });
+    Object.keys(b.t).forEach(function (k) { if (x.t[k] === undefined || x.t[k] === null) x.t[k] = b.t[k]; });
     return x;
   }
   /* รายงานเก่า/ร่างเก่า → รูปแบบใหม่ (BP ช่องเดียว, รับ refer, แลปเป็นชุด) */
@@ -784,6 +1608,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   function capFor(tag) { return tag === 'refer' ? REFERMAX : MAXPHOTO; }
   function pres(k) { var a = V0(k); return a !== null ? a : V(k); }
   function on(group, k) { return !!(S[group] && S[group][k]); }
+  function ans() { return S.mode === 'trauma' ? S.t : S.m; } // คำตอบช่องตามโรค: General = S.m · Trauma = S.t
   function M(k) { return S.m[k]; }
   function MM(k, v) { return !!(S.m[k] && S.m[k][v]); }
   function sel(o) { return Object.keys(o || {}).filter(function (k) { return o[k]; }); }
@@ -807,9 +1632,10 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   }
   function live() { var sp = spec(); return sp ? sp.items.filter(function (x) { return !x.hidden; }) : []; }
   function answered(x) {
-    if (x.t === 'tri' || x.t === 'one') return !!S.m[x.k];
-    if (x.t === 'multi') return sel(S.m[x.k]).length > 0;
-    if (x.t === 'field') return !!String(S.m[x.k] || '').trim();
+    var st = ans();
+    if (x.t === 'tri' || x.t === 'one') return !!st[x.k];
+    if (x.t === 'multi') return sel(st[x.k]).length > 0;
+    if (x.t === 'field') return !!String(st[x.k] || '').trim();
     if (x.t === 'abd') return !!abdText();
     if (x.t === 'photo') return S.photos.some(function (p) { return p.tag === x.tag; });
     return true;
@@ -817,6 +1643,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
 
   /* ================= render: static chips ================= */
   function renderStatic() {
+    applyMode(); renderTrHead();
     $('g-type').innerHTML = ['Admit', 'Consult', 'Notify'].map(function (t) { return chip('type', t, t, S.type === t); }).join('');
     $('g-refer').innerHTML = chip('refer', '1', (S.refer ? '✓ ' : '') + 'รับ refer', !!S.refer, 'refer');
     $('refersec').hidden = !S.refer;
@@ -835,16 +1662,16 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     $('g-sex').innerHTML = ['M', 'F'].map(function (x) { return chip('sex', x, x, S.sex === x); }).join('');
     $('g-ud').innerHTML = UD.map(function (u) { return chip('ud', u, esc(u), !!S.ud[u]); }).join('');
     $('g-med').innerHTML = MED.map(function (u) { return chip('med', u, 'on ' + u, !!S.med[u]); }).join('');
-    $('g-prev').innerHTML = PREV.map(function (u) { return chip('prev', u, esc(u), !!S.prev[u]); }).join('');
+    $('g-prev').innerHTML = (isTR() ? TPREV : PREV).map(function (u) { return chip('prev', u, esc(u), !!S.prev[u]); }).join('');
     $('g-npox').innerHTML = NPOX.map(function (x) { return chip('npox', x[0], esc(x[1]), S.npox === x[0]); }).join('');
     $('npoxwrap').hidden = S.npox !== 'other';
     renderVS(); renderImg(); renderPlan();
   }
-  function bwVis() { // BW เฉพาะเด็ก < 15 ปี (บังคับ) หรือมียากระตุ้นความดัน (ไว้คำนวณ dose)
-    var age = num(S.age), kid = age !== null && age < 15, show = kid || !!S.vsx.pressor;
+  function bwVis() { // BW เฉพาะเด็ก < 15 ปี (บังคับ) · burn (คำนวณสารน้ำ) · มียากระตุ้นความดัน (ไว้คำนวณ dose)
+    var age = num(S.age), kid = age !== null && age < 15, burn = isTR() && !!S.t.inj.burn, show = kid || burn || !!S.vsx.pressor;
     $('bwwrap').hidden = !show;
-    $('bwlbl').textContent = kid ? 'BW (kg)' : 'BW (kg) · คำนวณ dose';
-    $('bwlbl').className = kid ? 'need' : '';
+    $('bwlbl').textContent = kid ? 'BW (kg)' : burn ? 'BW (kg) · คำนวณสารน้ำ burn' : 'BW (kg) · คำนวณ dose';
+    $('bwlbl').className = kid || burn ? 'need' : '';
   }
   function renderReferPh() { $('referph').innerHTML = S.refer ? attachUI('refer') : ''; }
   function renderVS() {
@@ -884,10 +1711,10 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   }
 
   function suggestedPanels() { // ตามโรค + preop + shock
-    var out = ['CBC'];
+    var out = isTR() ? trPanels() : ['CBC'];
     preop().forEach(function (p) { if (PANELS.some(function (x) { return x[0] === p.item; }) && out.indexOf(p.item) < 0) out.push(p.item); });
-    (LAB_EXTRA[S.dx] || []).concat(S.cat === 'wound' ? LAB_EXTRA.wound : []).forEach(function (k) { var pn = panelOf(k); if (pn && out.indexOf(pn) < 0) out.push(pn); });
-    if ((S.vsx.pressor || S.dx === 'NF' || S.dx === 'Perforation/peritonitis') && out.indexOf('Lactate') < 0) out.push('Lactate');
+    if (!isTR()) (LAB_EXTRA[S.dx] || []).concat(S.cat === 'wound' ? LAB_EXTRA.wound : []).forEach(function (k) { var pn = panelOf(k); if (pn && out.indexOf(pn) < 0) out.push(pn); });
+    if ((S.vsx.pressor || (!isTR() && (S.dx === 'NF' || S.dx === 'Perforation/peritonitis'))) && out.indexOf('Lactate') < 0) out.push('Lactate');
     return out;
   }
   function panelHasVal(p) { return p[1].some(function (k) { return S.labs[k] !== undefined && S.labs[k] !== ''; }); }
@@ -941,6 +1768,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
 
   /* ================= imaging ================= */
   function dxGroup() {
+    if (isTR()) return 'trauma';
     var d = S.dx;
     if (d === 'Acute cholecystitis' || d === 'Symptomatic gallstone') return 'chole';
     if (d === 'Acute cholangitis') return 'cholangitis';
@@ -951,7 +1779,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     if (d === 'Incarcerated hernia') return 'hernia';
     return S.cat === 'wound' || S.cat === 'ano' || S.cat === 'gib' ? (S.cat === 'gib' ? 'gib' : S.cat) : '';
   }
-  function imgLabel(m) { return m === 'film' && dxGroup() === 'wound' ? 'Film' : IMG[m].label; }
+  function imgLabel(m) { return m === 'film' && dxGroup() === 'trauma' ? 'Film (bone / spine)' : m === 'film' && dxGroup() === 'wound' ? 'Film' : IMG[m].label; }
   function imgSpec(m) { var d = IMG[m]; return d[dxGroup()] || d.all; }
   function imgD(m) { return S.imgd[m] || (S.imgd[m] = { f: {}, n: {}, t: '' }); }
   function imgF(m) { var d = S.img[m] && S.imgd[m]; return d ? sel(d.f) : []; }
@@ -962,7 +1790,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     return out;
   }
   function findRe(re) { var out = []; IMGMODS.forEach(function (m) { imgF(m).forEach(function (f) { if (re.test(f) && out.indexOf(f) < 0) out.push(f); }); }); return out; }
-  function imgMods() { var m = ['EKG', 'CXR', 'film', 'U/S', 'CT']; if (S.sex === 'F' && num(S.age) >= 12 && num(S.age) <= 50) m.push('UPT'); return m; }
+  function imgMods() { var m = isTR() ? ['CXR', 'pelvis', 'film', 'CTbrain', 'CTcs', 'CTchest', 'CTabd', 'EKG', 'U/S'] : ['EKG', 'CXR', 'film', 'U/S', 'CT']; if (S.sex === 'F' && num(S.age) >= 12 && num(S.age) <= 50) m.push('UPT'); return m; }
   function renderImg() {
     var mods = imgMods();
     $('g-img').innerHTML = mods.map(function (m) { return chip('img', m, (S.img[m] ? '✓ ' : '') + esc(imgLabel(m)), !!S.img[m]); }).join('');
@@ -977,7 +1805,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
         }).join('') + '</div>' : '') +
         (m === 'UPT' ? '' : '<label class="f"><span>Details</span><input data-imgt="' + m + '" placeholder="' + esc(sp.ph || 'other key findings') + '" value="' + esc(d.t || '') + '"></label>') +
         (sp.note ? '<div class="hint">' + esc(sp.note) + '</div>' : '') +
-        (m === 'CT' ? '<div class="hint">ภาพ CT ส่งแยกในไลน์ตามปกติ</div>' : m === 'UPT' ? '' : attachUI(m)) + '</div>';
+        (/^CT/.test(m) ? '<div class="hint">ภาพ CT ส่งแยกในไลน์ตามปกติ</div>' : m === 'UPT' ? '' : attachUI(m)) + '</div>';
     }).join('');
   }
   function imgItems() {
@@ -997,17 +1825,18 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   }
 
   /* ================= plan checklist (IV · Blood · Elyte · ATB · Pain · OR/conservative) ================= */
-  function needBlood() { return ['hb', 'hct', 'plt', 'inr'].some(labAbn) || S.cat === 'gib'; }
+  function needBlood() { return ['hb', 'hct', 'plt', 'inr'].some(labAbn) || (!isTR() && S.cat === 'gib'); }
   function needEly() { return ['na', 'k'].some(labAbn); }
   function hasBlood() { return BLOOD.some(function (c) { var b = S.pl.b[c] || {}; return b.g || b.p; }) || !!S.pl.bt; }
   function hasEly() { return sel(S.pl.ely).length > 0 || !!S.pl.elyt; }
-  function plChips(row, list, multi) {
+  function plChips(row, list, multi, sug) {
     return '<div class="chips">' + list.map(function (x) {
-      return chip(multi ? 'plm:' + row : 'pl1:' + row, x, esc(x), multi ? !!S.pl[row][x] : S.pl[row] === x, x === 'no ATB' ? '' : '');
+      return chip(multi ? 'plm:' + row : 'pl1:' + row, x, esc(TLBL[x] || x), multi ? !!S.pl[row][x] : S.pl[row] === x, sug && sug[x] ? 'sug' : '');
     }).join('') + '</div>';
   }
   function plInput(k, ph) { return '<input class="plin" data-pl="' + k + '" placeholder="' + esc(ph) + '" value="' + esc(S.pl[k] || '') + '">'; }
   function renderPlan() {
+    if (isTR()) { renderPlanTr(); return; }
     var P = S.pl, h = '', showB = needBlood() || P.showB || hasBlood(), showE = needEly() || P.showE || hasEly();
     h += '<div class="plrow"><div class="pll">IV fluid</div>' + plChips('iv', IVF, true) + plInput('ivt', 'rate e.g. 100 ml/hr, load 1 L') + '</div>';
     if (showB) {
@@ -1035,6 +1864,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
       txt = String(txt || '').trim(); var low = txt.toLowerCase();
       return [list.filter(function (x) { return !low || low.indexOf(x.toLowerCase()) < 0; }).join(', '), txt].filter(Boolean).join(' · ');
     };
+    if (isTR()) return planPartsTr(j);
     if ((t = j(sel(P.iv), P.ivt))) out.push(['IV', t]);
     var got = [], pl = [];
     BLOOD.forEach(function (c) { var b = P.b[c] || {}; if (num(b.g)) got.push(c + ' ' + b.g + ' u'); if (num(b.p)) pl.push(c + ' ' + b.p + ' u'); });
@@ -1077,24 +1907,28 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   function abdPeri() { return !!(S.abd.s['rebound tenderness'] || S.abd.s.rigidity); }
 
   /* ================= render: disease module (+ config mode) ================= */
+  function badOpt(x, o) { return x.bad && x.bad.indexOf(o) >= 0 ? 'flag' : ''; }
   function tri(x) {
+    var st = ans();
     return '<div class="tri"><span' + (x.req ? ' class="need"' : '') + '>' + esc(x.l) + '</span><div class="seg">' + x.o.map(function (o) {
-      return chip('m:' + x.k, o, esc(o), S.m[x.k] === o);
+      return chip('m:' + x.k, o, esc(o), st[x.k] === o, badOpt(x, o));
     }).join('') + '</div></div>';
   }
   function itemHTML(x) {
-    var req = x.req ? ' class="need"' : '';
+    var req = x.req ? ' class="need"' : '', st = ans();
     if (x.t === 'tri') return tri(x);
-    if (x.t === 'one') return '<div class="sub"><span' + req + '>' + esc(x.l) + '</span></div><div class="chips">' + x.o.map(function (o) { return chip('m:' + x.k, o, esc(o), S.m[x.k] === o); }).join('') + '</div>';
-    if (x.t === 'multi') { S.m[x.k] = S.m[x.k] || {}; return '<div class="sub"><span' + req + '>' + esc(x.l) + '</span></div><div class="chips">' + x.o.map(function (o) { return chip('mm:' + x.k, o, esc(o), !!S.m[x.k][o], x.flag ? 'flag' : ''); }).join('') + '</div>'; }
-    if (x.t === 'field') return '<label class="f"><span' + req + '>' + esc(x.l) + '</span><input data-m="' + x.k + '" ' + (x.num ? 'class="num" inputmode="decimal" ' : '') + 'placeholder="' + esc(x.ph || '') + '" value="' + esc(S.m[x.k] || '') + '"></label>';
+    if (x.t === 'one') return '<div class="sub"><span' + req + '>' + esc(x.l) + '</span></div><div class="chips">' + x.o.map(function (o) { return chip('m:' + x.k, o, esc(o), st[x.k] === o, badOpt(x, o)); }).join('') + '</div>';
+    if (x.t === 'multi') { st[x.k] = st[x.k] || {}; return '<div class="sub"><span' + req + '>' + esc(x.l) + '</span></div><div class="chips">' + x.o.map(function (o) { return chip('mm:' + x.k, o, esc(o), !!st[x.k][o], x.flag || (x.flagv && x.flagv.indexOf(o) >= 0) ? 'flag' : ''); }).join('') + '</div>'; }
+    if (x.t === 'field') return '<label class="f"><span' + req + '>' + esc(x.l) + '</span><input data-m="' + x.k + '" ' + (x.num ? 'class="num" inputmode="decimal" ' : '') + 'placeholder="' + esc(x.ph || '') + '" value="' + esc(st[x.k] || '') + '"></label>';
     if (x.t === 'hint') return '<div class="hint">' + esc(x.x) + '</div>';
+    if (x.t === 'sub') return '<div class="sub">' + esc(x.l) + '</div>';
     if (x.t === 'abd') return abdHTML();
     if (x.t === 'photo') return '<div class="sub"><span' + req + '>' + esc(x.l) + '</span></div>' + attachUI(x.tag);
     return '';
   }
   var TYPENAME = { tri: '+/−', one: 'choices', multi: 'multi', field: 'text', abd: 'abdomen map', photo: 'photo', hint: 'hint' };
   function renderModule() {
+    if (isTR()) { renderTrPS(); renderTrInj(); return; }
     var sp = spec(), el = $('module');
     if (!sp) { el.innerHTML = '<h2>PE ตามโรค</h2><div class="hint">เลือกโรคด้านบน แล้วช่องที่โรคนั้นต้องรู้จะขึ้นตรงนี้</div>'; return; }
     var h = '<div class="sechead"><h2>' + esc(sp.title) + '</h2>' + (ME.isStaff ? '<button type="button" class="linkbtn" id="cfgtoggle">' + (cfgMode ? '✓ เสร็จ' : '⚙ ปรับช่อง') + '</button>' : '') + '</div>';
@@ -1502,19 +2336,21 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     var sent = function (pn) { var p = PANELS.filter(function (x) { return x[0] === pn; })[0]; return S.lp[pn] === 'n' || S.lp[pn] === 'a' || (!!p && panelHasVal(p)); };
     var has = { CBC: sent('CBC'), 'BUN/Cr': sent('BUN/Cr'), Elyte: sent('Elyte'), INR: sent('INR'), LFT: sent('LFT'), DTX: sent('DTX'),
       EKG: !!S.img.EKG, CXR: !!S.img.CXR, UPT: !!S.img.UPT };
-    var cardiac = u.CAD || u.AF || u.HF, renal = u.CKD || u.ESRD, biliary = S.cat === 'hpb', anticoag = S.med.warfarin || S.med.DOAC || u.AF || u.Cirrhosis;
-    var major = S.dx === 'NF' || S.dx === 'Acute cholangitis' || S.dx === 'Perforation/peritonitis' || on('vsx', 'pressor');
-    var obs = S.dx === 'Gut obstruction', gib = S.cat === 'gib';
+    var TR = isTR(), cardiac = u.CAD || u.AF || u.HF, renal = u.CKD || u.ESRD, biliary = !TR && S.cat === 'hpb', anticoag = S.med.warfarin || S.med.DOAC || u.AF || u.Cirrhosis;
+    var major = TR ? trMajor() || on('vsx', 'pressor') : S.dx === 'NF' || S.dx === 'Acute cholangitis' || S.dx === 'Perforation/peritonitis' || on('vsx', 'pressor');
+    var obs = !TR && S.dx === 'Gut obstruction', gib = !TR && S.cat === 'gib';
+    has['G/M'] = !!String(S.pl.gm || '').trim() || hasBlood() || sel(S.pl.tx).length > 0;
     var rules = [
       ['CBC', [true, '']],
       ['BUN/Cr', [age >= 60, 'age ' + age], [u.DM, 'DM'], [u.HT, 'HT'], [renal, 'CKD'], [major, 'major'], [obs, 'obstruction'], [gib, 'GI bleeding']],
       ['Elyte', [age >= 60, 'age ' + age], [renal, 'CKD'], [u.DM, 'DM'], [major, 'major'], [obs, 'vomiting/obstruction']],
       ['INR', [anticoag, u.Cirrhosis ? 'cirrhosis' : 'anticoagulant/AF'], [biliary, 'biliary'], [major, 'major'], [gib, 'GI bleeding']],
       ['LFT', [biliary, 'biliary'], [u.Cirrhosis, 'cirrhosis']],
-      ['EKG', [age >= 40, 'age ' + age], [cardiac, 'cardiac'], [u.HT, 'HT'], [u.DM, 'DM'], [renal, 'CKD']],
+      ['EKG', [age >= 40, 'age ' + age], [cardiac, 'cardiac'], [u.HT, 'HT'], [u.DM, 'DM'], [renal, 'CKD'], [TR && !!S.t.mech.elec, 'electrical']],
       ['CXR', [age >= 60, 'age ' + age], [u.COPD, 'COPD'], [major, 'major']],
       ['DTX', [u.DM, 'DM']],
-      ['UPT', [S.sex === 'F' && age >= 12 && age <= 50, 'F ' + age]]
+      ['UPT', [S.sex === 'F' && age >= 12 && age <= 50, 'F ' + age]],
+      ['G/M', [TR && trMajor(), 'major trauma'], [TR && S.pl.def === 'set OR', 'set OR']]
     ];
     rules.forEach(function (r) {
       var item = r[0], why = null;
@@ -1523,6 +2359,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
       out.push({ item: item, ok: has[item], why: why, pending: !has[item] && (S.lp[item] === 'p' || (!!S.img['lab pending'] && !/EKG|CXR|UPT/.test(item))) });
     });
     if (age !== null && age < 18) out.push({ item: 'guardian consent', ok: false, why: 'age ' + age });
+    if (TR && !trMajor() && S.pl.def !== 'set OR') return []; // minor trauma ที่ไม่ได้ set OR ไม่ต้องเช็ก preop
     return out;
   }
 
@@ -1569,11 +2406,11 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
 
   function buildModel(c, pre, calls) {
     var name = $('name').value.trim(), hn = $('hn').value.trim(), age = S.age, bed = $('bed').value.trim(), bw = $('bw').value.trim();
-    var dx = S.cat === 'other' ? (S.m.freedx || '') : S.dx, imp = $('imp').value.trim();
-    var md = { type: S.type, refer: !!S.refer, calls: calls.slice(), rows: [], nphotos: S.photos.length };
+    var dx = S.cat === 'other' ? (S.m.freedx || '') : S.dx, imp = $('imp').value.trim(), TR = isTR();
+    var md = { type: S.type, refer: !!S.refer, calls: calls.slice(), rows: [], nphotos: S.photos.length, trauma: TR, sev: TR ? S.t.sev || '' : '' };
     md.title = [wardName() + (bed ? ' ' + bed : ''), name].filter(Boolean).join(' · ') || 'ยังไม่ระบุผู้ป่วย';
     md.sub = [hn ? 'HN ' + hn : 'no HN', (S.sex || '') + (age || ''), bw && !$('bwwrap').hidden ? bw + ' kg' : ''].filter(Boolean).join(' · ');
-    md.dx = (dx || 'Dx not selected') + (imp ? ' ' + imp : '');
+    md.dx = TR ? trDx() : (dx || 'Dx not selected') + (imp ? ' ' + imp : '');
     md.badge = c && c.short ? c.short : '';
     md.badgeCls = !c ? '' : c.level !== undefined ? c.level : /Grade III|high risk/.test(c.verdict) ? 'bad' : c.ok ? '' : 'warn';
     function row(k, text, segs, cls) {
@@ -1589,8 +2426,9 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
         [{ t: 'รับ refer' + (rf ? ' จาก ' + rf : ''), s: 'b' }].concat(ex ? [{ t: ' · ' + ex }] : [],
           rph || rt.length > 90 ? [{ t: ' · ' + (rph ? '📄 ' + rph + ' รูป · ' : '') + 'กด "เอกสาร/รูป"', s: 'i' }] : []));
     }
+    if (TR) { var ms = mechSegs(); row('mech', segText(ms), ms); }
     row('pi', $('pi').value.trim().replace(/\s*\n\s*/g, ' '));
-    var prev = PREV.filter(function (k) { return S.prev[k]; }), ptx = $('prevtxt').value.trim();
+    var prev = (TR ? TPREV : PREV).filter(function (k) { return S.prev[k]; }), ptx = $('prevtxt').value.trim();
     row('prev', prev.join(', ') + (ptx ? (prev.length ? ' — ' : '') + ptx : ''));
     var ud = sel(S.ud).filter(function (x) { return x !== 'no U/D'; }).concat($('udx').value.trim() ? [$('udx').value.trim()] : []);
     var med = sel(S.med).map(function (m) { return 'on ' + m; }), al = $('allergy').value.trim();
@@ -1602,11 +2440,19 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     var curT = [vsT(cur)].concat(vsx).filter(Boolean).join(' · ');
     var curS = segsVS(cur).concat(vsx.length && cur.length ? [{ t: ' · ' }] : [], joinSegs(vsx.map(function (x) { return [{ t: x, s: 'bad' }]; }), ' · '));
     var ini = S.vsChg === 'changed' ? vsParts('0') : [];
-    if (ini.length) row('vs', S.vsSrc + ': ' + vsT(ini) + ' → ward: ' + curT, [{ t: S.vsSrc + ' ', s: 'b' }].concat(segsVS(ini), [{ t: '\n' }, { t: 'Ward ', s: 'b' }], curS));
+    if (TR) {
+      if (ini.length) row('vs', S.vsSrc + ': ' + vsT(ini), [{ t: S.vsSrc + ' ', s: 'b' }].concat(segsVS(ini))); // แรกรับก่อน ค่าปัจจุบันอยู่ใน B / C / E (บอทอ่านค่าหลังสุด)
+      PSL.forEach(function (L) { var pp = psParts(L); if (pp.length) row(L.toLowerCase(), pp.map(segText).join(', '), joinSegs(pp, ', ')); });
+      var ij = INJ.filter(function (r) { return S.t.inj[r.k]; }).map(injSegs);
+      row('inj', ij.map(segText).join(' · '), joinSegs(ij, '\n'));
+    }
+    else if (ini.length) row('vs', S.vsSrc + ': ' + vsT(ini) + ' → ward: ' + curT, [{ t: S.vsSrc + ' ', s: 'b' }].concat(segsVS(ini), [{ t: '\n' }, { t: 'Ward ', s: 'b' }], curS));
     else row('vs', curT + (S.vsChg === 'stable' && curT ? ' · stable since ER/รพช.' : ''), curS.concat(S.vsChg === 'stable' && curT ? [{ t: ' · stable since ER/รพช.', s: 'i' }] : []));
 
-    row('abd', abdText(), joinSegs(abdParts().map(function (x) { return [{ t: x.t, s: x.bad ? 'bad' : '' }]; }), ', '));
-    row('pe', peText());
+    if (!TR) {
+      row('abd', abdText(), joinSegs(abdParts().map(function (x) { return [{ t: x.t, s: x.bad ? 'bad' : '' }]; }), ', '));
+      row('pe', peText());
+    }
     var labs = LABS.filter(function (l) { return Lraw(l[0]) !== null && S.lp[panelOf(l[0])] !== 'p'; }).map(function (l) {
       var v = Lraw(l[0]), t = l[0] === 'plt' ? Math.round(v / 1000) + 'k' : l[0] === 'wbc' ? fmt(v) : l[0] === 'neut' ? v + '%' : String(v), lb = l[2] || l[1];
       return { t: lb + ' ' + t, s: [{ t: lb + ' ' }, { t: t, s: LAB_ABN[l[0]] && LAB_ABN[l[0]](v) ? 'bad' : '' }] };
@@ -1633,6 +2479,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     row('plan', pp.map(function (x) { return x[0] + ': ' + x[1]; }).join('; '),
       joinSegs(pp.map(function (x) { return [{ t: x[0] + ': ', s: 'b' }, { t: x[1] }]; }), '\n'), 'plan');
     row('npo', npoText().text);
+    if (TR) { var lg = sel(S.t.legal).concat($('legalx').value.trim() ? [$('legalx').value.trim()] : []); row('legal', lg.join(' · ')); }
     return md;
   }
   function peText() {
@@ -1656,7 +2503,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   function plain(md) {
     var out = [];
     if (md.calls.length) out.push('⚠ Call: ' + md.calls.join(', '));
-    out.push('[' + md.type + '] ' + md.title + ' · ' + md.sub);
+    out.push('[' + md.type + (md.trauma ? ' · Trauma' + (md.sev ? ' ' + md.sev : '') : '') + '] ' + md.title + ' · ' + md.sub);
     out.push('Dx: ' + md.dx + (md.badge ? ' (' + md.badge + ')' : ''));
     md.rows.forEach(function (r) {
       if (r.k === 'refer') { var full = $('refertxt').value.trim(); out.push(r.label + ': ' + r.text.split(' · ')[0] + (full ? '\n' + full.slice(0, 1500) : '')); return; }
@@ -1666,7 +2513,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   }
 
   /* ================= LINE Flex card (what actually goes into the group) ================= */
-  var COL = { Admit: '#0f6b78', Consult: '#44579e', Notify: '#55666d', upd: '#9a5b00', urgent: '#b3261e', ink: '#142228', mute: '#5b6d74',
+  var COL = { Admit: '#0f6b78', Consult: '#44579e', Notify: '#55666d', Trauma: '#8a4513', upd: '#9a5b00', urgent: '#b3261e', ink: '#142228', mute: '#5b6d74',
     bad: '#b3261e', warn: '#8a5300', acc: '#0f6b78', ok: '#1d6f46', badSoft: '#fde6e4', warnSoft: '#fff1d6', accSoft: '#dcf0f2', line: '#d3dfe1' };
   function ftext(text, extra) { return Object.assign({ type: 'text', text: String(text), wrap: true }, extra || {}); }
   function fspan(sg) {
@@ -1688,8 +2535,8 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   function buildFlex(md, o) {
     var upd = o.kind === 'upd', only = upd ? o.changes : null;
     var want = function (k) { return !only || only.indexOf(k) >= 0; };
-    var head = upd ? COL.upd : md.calls.length ? COL.urgent : COL[md.type] || COL.Admit;
-    var tag = (upd ? 'Update' : md.type) + (o.id ? ' #' + o.id : '') + (upd && o.ver ? ' · v' + o.ver : '') + (!upd && md.refer ? ' · รับ refer' : '') + (!upd && md.calls.length ? ' · urgent' : '');
+    var head = upd ? COL.upd : md.calls.length ? COL.urgent : md.trauma ? COL.Trauma : COL[md.type] || COL.Admit;
+    var tag = (upd ? 'Update' : md.type) + (o.id ? ' #' + o.id : '') + (!upd && md.trauma ? ' · Trauma' + (md.sev ? ' ' + md.sev : '') : '') + (upd && o.ver ? ' · v' + o.ver : '') + (!upd && md.refer ? ' · รับ refer' : '') + (!upd && md.calls.length ? ' · urgent' : '');
     var body = [];
     if (upd) body.push(ftint(only.length ? 'แก้: ' + only.map(function (k) { return ROWLBL[k]; }).join(', ') : 'ยังไม่มีช่องที่เปลี่ยน', COL.warnSoft, COL.warn));
     if (want('calls')) {
@@ -1773,8 +2620,8 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   }
   function update() {
     DEFD = {};
-    var c = criteria(), pre = preop(), req = required(), calls = callReasons(c);
-    if (c) { c.lines = c.lines.map(function (l) { return [l[0], showNormals(l[1])]; }); c.verdict = showNormals(c.verdict); if (c.note) c.note = showNormals(c.note); }
+    var TR = isTR(), c = TR ? trCrit() : criteria(), pre = preop(), req = TR ? trRequired() : required(), calls = TR ? trCalls() : callReasons(c);
+    (c ? [c].concat(c.more || []) : []).forEach(function (x) { x.lines = x.lines.map(function (l) { return [l[0], showNormals(l[1])]; }); x.verdict = showNormals(x.verdict); if (x.note) x.note = showNormals(x.note); });
     calls = calls.map(showNormals);
     var done = req.filter(function (r) { return r[1]; }).length, pct = Math.round(done / req.length * 100);
     $('barfill').style.width = pct + '%';
@@ -1782,14 +2629,17 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     $('missing').textContent = need.length ? 'ครบ ' + pct + '% · ยังขาด: ' + need.join(', ') : 'ครบ 100% · ส่งได้';
     $('dockinfo').innerHTML = 'ครบ <b>' + pct + '%</b>' + (need.length ? ' · ขาด ' + esc(need.slice(0, 3).join(', ')) + (need.length > 3 ? ' …' : '') : ' · ส่งได้');
 
-    $('critbox').innerHTML = c ? '<div class="box ' + (c.level !== undefined ? (c.level === 'bad' ? 'bad' : c.level === 'warn' ? 'warn' : 'info') : c.ok ? (/Grade III|high risk/.test(c.verdict) ? 'bad' : 'info') : 'warn') + '">' +
-      '<div class="sub">' + esc(c.title) + '</div><div class="crit">' + c.lines.map(function (l) {
-        return '<div class="line"><span class="mark ' + l[0] + '">' + (l[0] === 'y' ? '✓' : l[0] === 'n' ? '✗' : '?') + '</span><span>' + esc(l[1]) + '</span></div>';
-      }).join('') + '</div><div class="verdict">' + esc(c.verdict) + '</div>' + (c.note ? '<div class="hint">' + esc(c.note) + '</div>' : '') + '</div>' : '';
+    var boxHTML = function (c) {
+      return '<div class="box ' + (c.level !== undefined ? (c.level === 'bad' ? 'bad' : c.level === 'warn' ? 'warn' : 'info') : c.ok ? (/Grade III|high risk/.test(c.verdict) ? 'bad' : 'info') : 'warn') + '">' +
+        '<div class="sub">' + esc(c.title) + '</div><div class="crit">' + c.lines.map(function (l) {
+          return '<div class="line"><span class="mark ' + l[0] + '">' + (l[0] === 'y' ? '✓' : l[0] === 'n' ? '✗' : '?') + '</span><span>' + esc(l[1]) + '</span></div>';
+        }).join('') + '</div><div class="verdict">' + esc(c.verdict) + '</div>' + (c.note ? '<div class="hint">' + esc(c.note) + '</div>' : '') + '</div>';
+    };
+    $('critbox').innerHTML = c ? [c].concat(c.more || []).map(boxHTML).join('') : '';
     $('preop').innerHTML = pre.length ? pre.map(function (p) {
       return '<div><span class="' + (p.ok ? 'y' : 'q') + '">' + (p.ok ? '✓' : '❔') + '</span><span>' + esc(p.item) + (p.why ? ' <span class="hint">(' + esc(p.why) + ')</span>' : '') +
         (p.pending ? ' <span class="hint">· pending</span>' : '') + '</span></div>';
-    }).join('') : '<div class="hint">ใส่อายุ / U/D แล้วจะขึ้นรายการที่ต้องมี</div>';
+    }).join('') : '<div class="hint">' + (TR && !trMajor() && S.pl.def !== 'set OR' ? 'Minor trauma ที่ไม่ได้ set OR — ไม่ต้องเช็ก preop' : 'ใส่อายุ / U/D แล้วจะขึ้นรายการที่ต้องมี') + '</div>';
 
     var call = $('call');
     call.hidden = !calls.length;
@@ -1809,7 +2659,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     saveDraft();
     return { md: md, need: need };
   }
-  function hasContent() { return !!($('name').value.trim() || $('hn').value.trim() || S.dx || S.cat || S.ward); }
+  function hasContent() { return !!($('name').value.trim() || $('hn').value.trim() || S.dx || S.cat || S.ward || trHasContent()); }
 
   /* ================= lab paste ================= */
   function parsePaste(t) {
@@ -1819,7 +2669,8 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
       na: /\bna\s*[:=]?\s*(\d+(?:\.\d+)?)/i, k: /(?:^|[^a-z])k\s*[:=]?\s*(\d(?:\.\d+)?)(?!\d)/i, inr: /\binr\s*[:=]?\s*(\d+(?:\.\d+)?)/i,
       dtx: /\b(?:dtx|fbs|glucose|bs)\s*[:=]?\s*(\d+)/i, crp: /\bcrp\s*[:=]?\s*(\d+(?:\.\d+)?)/i, tb: /\b(?:tb|t\.?\s*bil\w*)\s*[:=]?\s*(\d+(?:\.\d+)?)/i,
       alp: /\balp\s*[:=]?\s*(\d+)/i, ast: /\b(?:ast|sgot)\s*[:=]?\s*(\d+)/i, alt: /\b(?:alt|sgpt)\s*[:=]?\s*(\d+)/i, alb: /\balb\w*\s*[:=]?\s*(\d(?:\.\d+)?)/i,
-      lipase: /\blipase\s*[:=]?\s*(\d+)/i, lactate: /\blactate\s*[:=]?\s*(\d+(?:\.\d+)?)/i, neut: /\b(?:pmn|neut\w*)\s*[:=]?\s*(\d+(?:\.\d+)?)/i };
+      lipase: /\blipase\s*[:=]?\s*(\d+)/i, lactate: /\blactate\s*[:=]?\s*(\d+(?:\.\d+)?)/i, neut: /\b(?:pmn|neut\w*)\s*[:=]?\s*(\d+(?:\.\d+)?)/i,
+      cpk: /\b(?:cpk|ck)\s*[:=]?\s*(\d+)/i, ph: /\bph\s*[:=]?\s*(\d\.\d+)/i, be: /\b(?:be|base\s*excess)\s*[:=]?\s*(-?\d+(?:\.\d+)?)/i };
     Object.keys(pats).forEach(function (k) {
       var m = s.match(pats[k]); if (!m) return;
       var v = parseFloat(m[1]); if (m[2]) v = v * 1000;
@@ -1853,13 +2704,24 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     if (t.id === 'cfgtoggle') { cfgMode = !cfgMode; renderModule(); return; }
     if (t.id === 'cfg-add') { addCfgItem(); return; }
     if (t.id === 'cfg-reset') { delete CFG[dxKey()]; saveCfg(); renderModule(); update(); toast('คืนค่าเริ่มต้นแล้ว'); return; }
+    var tn = t.closest('[data-tnorm]'); if (tn) { trNorm(tn.dataset.tnorm); startTimer(); renderStatic(); renderModule(); renderLabs(); update(); return; }
+    if (t.id === 'ps-allnormal') { trNorm('all'); startTimer(); renderStatic(); renderModule(); renderLabs(); update(); return; }
     var cd = t.closest('[data-cfgdel]');
     if (cd) { var c = CFG[dxKey()] || {}; c.add = (c.add || []).filter(function (x) { return x.k !== cd.dataset.cfgdel; }); saveCfg(); renderModule(); update(); return; }
 
-    var b = t.closest('.chip, .cat'); if (!b || !b.dataset.g) return;
+    var b = t.closest('.chip, .cat, .mode'); if (!b || !b.dataset.g) return;
     startTimer();
     var g = b.dataset.g, v = b.dataset.v;
-    if (g === 'type' || g === 'ward' || g === 'sex') { S[g] = v; renderStatic(); if (g === 'ward' && v === 'other') $('wardx').focus(); }
+    if (g === 'mode') {
+      if (S.mode !== v) { S.mode = v; cfgMode = false; try { localStorage.setItem(MODEKEY, v); } catch (e) { } }
+      renderStatic(); renderModule(); renderLabs();
+    }
+    else if (g === 'tsev') { S.t.sev = S.t.sev === v ? '' : v; }
+    else if (g === 'tmech') { S.t.mech[v] = !S.t.mech[v]; if (v === 'burn' && S.t.mech[v]) S.t.inj.burn = true; }
+    else if (g === 'tinj') { S.t.inj[v] = !S.t.inj[v]; }
+    else if (g === 'tetoh') { S.t.etoh = !S.t.etoh; }
+    else if (g === 'tlegal') { S.t.legal[v] = !S.t.legal[v]; }
+    else if (g === 'type' || g === 'ward' || g === 'sex') { S[g] = v; renderStatic(); if (g === 'ward' && v === 'other') $('wardx').focus(); }
     else if (g === 'refer') {
       S.refer = !S.refer;
       if (S.refer && S.vsSrc === 'ER') S.vsSrc = 'รพ.ต้นทาง';
@@ -1906,11 +2768,12 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
       if (d.f[v]) Object.keys(d.f).forEach(function (k) { if (k !== v && (excl.test(v) || excl.test(k))) d.f[k] = false; });
       renderImg();
     }
-    else if (g.indexOf('mm:') === 0) { var k = g.slice(3); S.m[k] = S.m[k] || {}; S.m[k][v] = !S.m[k][v]; b.setAttribute('aria-pressed', S.m[k][v] ? 'true' : 'false'); }
+    else if (g.indexOf('mm:') === 0) { var k = g.slice(3), am = ans(); am[k] = am[k] || {}; am[k][v] = !am[k][v]; b.setAttribute('aria-pressed', am[k][v] ? 'true' : 'false'); }
     else if (g.indexOf('m:') === 0) {
-      var key = g.slice(2); S.m[key] = S.m[key] === v ? '' : v;
-      b.parentNode.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.v === S.m[key] ? 'true' : 'false'); });
+      var key = g.slice(2), a1 = ans(); a1[key] = a1[key] === v ? '' : v;
+      b.parentNode.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.v === a1[key] ? 'true' : 'false'); });
     }
+    if (isTR() && g !== 'mode') { renderStatic(); renderModule(); renderLabs(); } // trauma: ช่องที่ขึ้นตามเงื่อนไข / คำแนะนำใน Plan เปลี่ยนตามทุกการแตะ
     update();
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('fx-btn')) flexButton(e.target.dataset.uri); });
@@ -1927,7 +2790,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
     else if (t.dataset.pl) S.pl[t.dataset.pl] = t.value;
     else if (t.dataset.bl) { var bl = t.dataset.bl.split('|'); S.pl.b[bl[0]] = S.pl.b[bl[0]] || {}; S.pl.b[bl[0]][bl[1]] = t.value; }
     else if (t.id === 'freedx') S.m.freedx = t.value;
-    else if (t.dataset.m) S.m[t.dataset.m] = t.value;
+    else if (t.dataset.m) ans()[t.dataset.m] = t.value;
     else if (t.dataset.imgn) { var pr = t.dataset.imgn.split('|'); imgD(pr[0]).n[pr[1]] = t.value; }
     else if (t.dataset.imgt) imgD(t.dataset.imgt).t = t.value;
     else if (t.dataset.press) { var pp = t.dataset.press.split('|'); S.press[pp[0]] = S.press[pp[0]] || { on: true }; S.press[pp[0]][pp[1]] = t.value; refreshDoses(); }
@@ -1939,7 +2802,7 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
   document.addEventListener('change', function (e) { // จัดรูปแบบตอนออกจากช่อง: BP 120.80 → 120/80 · เวลา 8.30 → 08:30
     var t = e.target, b;
     if ((t.id === 'bp' || t.id === 'bp0') && (b = bpOf(t.id === 'bp' ? '' : '0')).s !== null) { t.value = b.s + (b.d !== null ? '/' + b.d : ''); update(); }
-    if (t.id === 'npo' && t.value.trim()) { t.value = hm(t.value); update(); }
+    if ((t.id === 'npo' || t.id === 'tinj' || t.dataset.m === 'x_tq') && t.value.trim()) { t.value = hm(t.value); if (t.dataset.m) ans()[t.dataset.m] = t.value; update(); }
   });
   document.addEventListener('change', function (e) {
     var t = e.target; if (!t.dataset || !t.dataset.cfg) return;
@@ -2241,8 +3104,11 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
 
   /* ================= examples (mock / training only, fictional) ================= */
   function setVals(o) { Object.keys(o).forEach(function (k) { $(k).value = o[k]; }); }
+  var MODEKEY = 'caseform.mode';
   function load(ex) {
-    S = blank(); started = 0; frozen = null; clearInterval(timerId); tick();
+    var keep = S ? S.mode : (function () { try { return localStorage.getItem(MODEKEY) || ''; } catch (e) { return ''; } })();
+    S = blank(); if (!ex && keep === 'trauma') S.mode = 'trauma';
+    started = 0; frozen = null; clearInterval(timerId); tick();
     FIELDS.concat(['paste']).forEach(function (k) { $(k).value = ''; });
     toast(''); $('copybox').hidden = true; armed = 0;
     if (EXAMPLES[ex]) EXAMPLES[ex]();
@@ -2313,8 +3179,60 @@ label.f input.abn { border-color: var(--bad); color: var(--bad); font-weight: 60
       setVals({ pi: 'Hematemesis 2 episodes + melena since this morning, syncope 1 episode; alcohol use', prevtxt: 'PRC 1 U, omeprazole 80 mg IV, ceftriaxone 1 g at ER',
         name: 'นายสมมติ เลือดออก', hn: '135790', bed: '15', age: '64', bt: '37.2', bp: '108/66', hr: '102', rr: '20', sat: '98',
         bt0: '37.0', bp0: '86/50', hr0: '118', rr0: '22', sat0: '97', npo: '12:00' });
+    },
+    /* trauma (สมมติทั้งหมด) · เวลาเกิดเหตุคิดย้อนจากตอนนี้ ให้ TXA / burn fluid คำนวณได้ */
+    mca: function () {
+      Object.assign(S, { mode: 'trauma', ward: 'ศช', sex: 'M', age: '24', vsChg: 'changed', vsSrc: 'ER' });
+      S.ud = { 'no U/D': true };
+      S.t = Object.assign(blank().t, { sev: 'major', mech: { MCA: true }, mca_r: 'rider', mca_h: 'no helmet', mca_x: 'vs car / truck', etoh: true,
+        x: 'none', a: 'patent', cs: 'C-collar on', cs_mt: 'cannot assess', bs_r: 'decreased', bs_l: 'normal', b_f: { 'chest wall tenderness': true },
+        icd: 'Rt ICD', icd_ml: '600', icd_c: 'blood', c_f: { 'cold / clammy': true }, fast: 'positive', fast_s: { 'Morison pouch': true }, c_resp: 'transient responder',
+        gcs_e: '3', gcs_v: '4', gcs_m: '6', pup_r: '3', pup_l: '3', pup_x: 'both RTL', e_t: 'abrasion Rt shoulder',
+        inj: { tbi: true, chest: true, abd: true, ext: true }, tbi_sx: { LOC: true, amnesia: true }, tbi_loc: '5', ch_s: 'Rt', ch_f: { 'rib fx': true, hemothorax: true }, ch_r: '4–6',
+        ab_s: { 'abrasion / contusion': true }, ab_o: { liver: true }, gr_liver: 'III', ex_s: 'Lt', ex_l: { forearm: true }, ex_f: { 'closed fx': true }, ex_p: 'palpable' });
+      S.abd = { r: { RUQ: true }, s: { guarding: true }, bs: 'hypoactive' };
+      S.labs = { hb: '9.8', hct: '29', lactate: '3.6' };
+      S.lp = { CBC: 'a', 'BUN/Cr': 'n', Elyte: 'n', INR: 'n', Lactate: 'a', LFT: 'p' };
+      S.img = { CXR: true, CTabd: true };
+      S.imgd = { CXR: { f: { hemothorax: true, 'rib fx': true }, n: {}, t: 'Rt 4th–6th rib fx, ICD in place' }, CTabd: { f: { hemoperitoneum: true, 'liver injury': true }, n: {}, t: 'liver gr III segment 6–7, no blush' } };
+      S.prev = { 'IV fluid': true, 'blood transfusion': true, TXA: true, 'C-collar': true, ICD: true };
+      S.pl = Object.assign(blank().pl, { iv: { LRS: true }, ivt: 'permissive hypotension SBP 80–90', tx: { MTP: true, TXA: true }, b: { PRC: { g: '2', p: '4' }, FFP: { p: '4' } }, gm: 'PRC 6 u, FFP 4 u',
+        proc: { ICD: true, 'splint / slab': true, Foley: true }, proph: { 'tetanus toxoid': true }, pain: { fentanyl: true }, def: 'set OR', deft: 'EL ด่วน · damage control ถ้า unstable',
+        cons: { neurosurgery: true, ortho: true } });
+      S.npox = 'meal';
+      setVals({ pi: 'ขับ จยย. ชนรถกระบะ ไม่สวมหมวก หมดสติ ~5 นาที, ดื่มสุรา', prevtxt: 'LRS 1 L, PRC 2 u, TXA 1 g ที่ ER', name: 'นายสมมติ ทดลองชน', hn: '112233', bed: '3', age: '24',
+        bt: '36.4', bp: '92/60', hr: '118', rr: '24', sat: '95', bt0: '36.2', bp0: '84/50', hr0: '128', rr0: '26', sat0: '93', tinj: agoHM(135), npo: agoHM(160) });
+    },
+    burn: function () {
+      Object.assign(S, { mode: 'trauma', ward: 'ศช', sex: 'M', age: '35', vsChg: 'stable', vsSrc: 'ER' });
+      S.ud = { 'no U/D': true };
+      S.t = Object.assign(blank().t, { sev: 'major', mech: { burn: true }, bu_t: 'flame', bu_e: 'enclosed space',
+        x: 'none', a: 'at risk', a_f: { 'facial / airway burn': true }, cs: 'no collar', cs_mt: '−', bs_r: 'normal', bs_l: 'normal', fast: 'not done', cOK: true,
+        gcs_e: '4', gcs_v: '5', gcs_m: '6', pup_r: '3', pup_l: '3', pup_x: 'both RTL',
+        inj: { burn: true }, bn_p: '25', bn_d: { 'deep partial': true, 'full thickness': true }, bn_a: { face: true, hands: true, 'circumferential limb': true },
+        bn_i: { 'facial burn': true, 'singed nasal hair': true, 'hoarseness / stridor': true } });
+      S.lp = { CBC: 'n', 'BUN/Cr': 'n', Elyte: 'n', ABG: 'p' };
+      S.img = { CXR: true }; S.imgd = { CXR: { f: { normal: true }, n: {}, t: '' } };
+      S.prev = { 'IV fluid': true, analgesics: true };
+      S.pl = Object.assign(blank().pl, { iv: { LRS: true }, ivt: 'ตามสูตร burn ปรับตาม UO', proc: { Foley: true, escharotomy: true }, proph: { 'tetanus toxoid': true }, pain: { morphine: true },
+        def: 'admit SICU', deft: 'early intubation, monitor UO q 1 h', cons: { plastic: true } });
+      setVals({ pi: 'ไฟไหม้ห้องนอน ติดอยู่ในห้อง ~10 นาที', prevtxt: 'LRS 1 L ที่ ER, morphine 3 mg IV', name: 'นายสมมติ ไฟลวก', hn: '223344', bed: '7', age: '35', bw: '60',
+        bt: '36.8', bp: '128/78', hr: '108', rr: '22', sat: '96', tinj: agoHM(90) });
+    },
+    lac: function () {
+      Object.assign(S, { mode: 'trauma', type: 'Consult', ward: 'AE', sex: 'F', age: '41', vsChg: 'stable', vsSrc: 'ER' });
+      S.ud = { HT: true };
+      S.t = Object.assign(blank().t, { sev: 'minor', mech: { fall: true }, fall_h: '1.5', fall_l: 'back / side',
+        x: 'controlled', x_how: { 'pressure dressing': true }, x_site: 'Lt forearm', a: 'patent', cs: 'cleared', cs_mt: '−', bs_r: 'normal', bs_l: 'normal', cOK: true, eOK: true,
+        gcs_e: '4', gcs_v: '5', gcs_m: '6', pup_r: '3', pup_l: '3', pup_x: 'both RTL',
+        inj: { soft: true }, w_t: { laceration: true }, w_s: 'Lt forearm', w_z: '5x1', w_c: 'contaminated', w_d: {} });
+      S.prev = { 'wound dressing': true };
+      S.pl = Object.assign(blank().pl, { proc: { 'wound care': true, suture: true }, proct: 'suture 6 stitches', proph: { 'tetanus toxoid': true }, pain: { paracetamol: true },
+        def: 'D/C + F/U', deft: 'stitch off 10 d' });
+      setVals({ pi: 'ตกบันไดสูง ~1.5 ม. แขนซ้ายกระแทกขอบเหล็ก', name: 'นางสมมติ ตกบันได', hn: '334455', bed: '', age: '41', bt: '36.9', bp: '138/84', hr: '86', rr: '18', sat: '99', tinj: agoHM(50) });
     }
   };
+  function agoHM(min) { var d = new Date(Date.now() - min * 60000); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
 
   /* ================= mock backend + LIFF (preview / training without LINE) ================= */
   var MKEY = 'caseform.mock.v1', memDb = null;
